@@ -1,5 +1,5 @@
-#ifndef CARTA_H
-#define CARTA_H
+#ifndef CARTAS_H
+#define CARTAS_H
 
 #include <string>
 
@@ -27,8 +27,7 @@ enum class Valor {
     Dez,
     Valete,
     Dama,
-    Rei,
-    Coringa
+    Rei
 };
 
 class Carta { //para cada carta específica
@@ -40,12 +39,14 @@ public:
     Carta();
     Carta(Valor valor, Naipe naipe);
 
-    Valor mostarValor();
-    Naipe mostrarNaipe();
+    Valor mostraValor() const; //Retorna ex: Valor::REI
+    Naipe mostraNaipe() const; //Retorna ex: Naipe::Copa
 
-    std::string valorString();
-    std::string naipeString();
-    std::string cartaString();
+    bool validacaoCarta() const;
+
+    std::string valorString() const; //tranforma mostraValor() em string
+    std::string naipeString() const; //tranforma mostraNaipe() em string
+    std::string cartaString() const; //tranforma a carta em string, ex: As de Copa
 
 };
 
