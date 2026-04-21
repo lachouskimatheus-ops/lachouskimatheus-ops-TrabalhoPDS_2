@@ -40,6 +40,13 @@ public:
     Carta();
     Carta(Valor valor, Naipe naipe);
 
+    Valor mostarValor();
+    Naipe mostrarNaipe();
+
+    std::string valorString();
+    std::string naipeString();
+    std::string cartaString();
+
 };
 
 #endif
