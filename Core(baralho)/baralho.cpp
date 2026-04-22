@@ -4,7 +4,7 @@
 #include <algorithm>
 
 
-baralho::baralho() {
+Baralho::Baralho() {
 
 std::vector<Valor> valor = {
         Valor::As, Valor::Dois, Valor::Tres, Valor::Quatro,

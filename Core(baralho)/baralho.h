@@ -3,13 +3,13 @@
 #include <vector>
 #include "cartas.h"
  
-class baralho{
+class Baralho{
 
 private: std::vector<Carta> cartas;
 
 public: 
 //Construtor
-    baralho();
+    Baralho();
     
     void embaralhar();
     Carta retirarCarta();

@@ -42,11 +42,11 @@ public:
     Valor mostraValor() const; //Retorna ex: Valor::REI
     Naipe mostraNaipe() const; //Retorna ex: Naipe::Copa
 
-    bool validacaoCarta() const;
+    bool validacaoCarta() const; //retorna true de a carta for valida
 
-    std::string valorString() const; //tranforma mostraValor() em string
-    std::string naipeString() const; //tranforma mostraNaipe() em string
-    std::string cartaString() const; //tranforma a carta em string, ex: As de Copa
+    std::string valorString() const; //retorna mostraValor() em string
+    std::string naipeString() const; //retorna mostraNaipe() em string
+    std::string cartaString() const; //retorna a carta em string, ex:"As de Copa"
 
 };
 
