@@ -6,5 +6,5 @@ Carta::Carta(int valor, Naipe naipe){
 }
 
 void Carta::imprimir() {
-	std::cout << "Valor: " << this->valor << " " << "Naipe: " << static_cast<int>(this->naipe) << std::endl;
+	std::cout << "\nValor: " << this->valor << " " << "Naipe: " << static_cast<int>(this->naipe) << std::endl;
 }

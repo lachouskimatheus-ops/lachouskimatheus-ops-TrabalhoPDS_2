@@ -1,8 +1,10 @@
 #include <iostream>
 #include "Baralho.hpp"
 #include "Jogador.hpp"
+#include "Menu.hpp"
 
-int main() {
+void iniciar_truco() {
+	std::cout << "teste\n";
 
 	Baralho baralho;
 	baralho.embaralhar();
@@ -14,6 +16,21 @@ int main() {
 	};
 
 	jogador1.mostrarmao();
+
+	std::cout << "\n(Aperte Enter para voltar ao menu)";
+	std::cin.ignore();
+	std::cin.get();
+
+
+};
+
+int main() {
+
+	Menu menu;
+	menu.addOpcao("Truco", iniciar_truco);
+	while (true) {
+		menu.exibir();
+	}
 
 
 	return 0;
