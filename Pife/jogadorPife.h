@@ -10,16 +10,15 @@
 
 class JogadorPife {
 private:
-    std::vector<Carta> mao;
+    //pensei primenro em usar Carta mao[9] direto;, mas seria dificil quand precisase add ou remover cartas
+    //aí fui ver como fazer com array dinâmico, e tinha essa forma
+    std::vector<Carta> mao; //vetor do tipo carta que se chama 'mao'
 
 public:
-    JogadorPife();
-
     void receberCarta(const Carta& carta);
     int tmnhMao() const;
     Carta descartarCarta(int indice); //usar if(c = quantasCartas() >9) : descartar carta -> no regrasPife.cpp dps
 
-    const std::vector<Carta>& verMao() const;
-};
-
+    const std::vector<Carta>& verMao() const; //retorna o vetor 'mao', mas sem poder alterar
+}
 #endif
