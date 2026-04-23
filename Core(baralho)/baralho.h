@@ -13,8 +13,8 @@ public:
     
     void embaralhar();
     Carta retirarCarta();
-    int tamanho();
-    bool estavazio();
+    int tamanho() const;
+    bool estaVazio() const;
 
 };
 
