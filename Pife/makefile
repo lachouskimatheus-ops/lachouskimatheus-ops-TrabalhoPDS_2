@@ -1,19 +1,21 @@
-CORE = ../Core/CoreBaralho1
+main.exe: obj/pife.o obj/jogadorPife.o obj/distribuirPife.o obj/regrasPife.o
+	g++ obj/pife.o obj/jogadorPife.o obj/distribuirPife.o obj/regrasPife.o ../Core/CoreBaralho1/baralho.o ../Core/CoreBaralho1/cartas.o -o main.exe
 
-main.exe: pife.o jogadorPife.o distribuirPife.o regrasPife.o
-	g++ pife.o jogadorPife.o distribuirPife.o regrasPife.o $(CORE)/baralho.o $(CORE)/cartas.o -o main.exe
+obj/pife.o: src/pife.cpp
+	mkdir -p obj
+	g++ -Iinclude -I../Core/CoreBaralho1 -c src/pife.cpp -o obj/pife.o
 
-pife.o: pife.cpp pife.h
-	g++ -I$(CORE) -c pife.cpp -o pife.o
+obj/jogadorPife.o: src/jogadorPife.cpp
+	mkdir -p obj
+	g++ -Iinclude -I../Core/CoreBaralho1 -c src/jogadorPife.cpp -o obj/jogadorPife.o
 
-jogadorPife.o: jogadorPife.cpp jogadorPife.h
-	g++ -I$(CORE) -c jogadorPife.cpp -o jogadorPife.o
+obj/distribuirPife.o: src/distribuirPife.cpp
+	mkdir -p obj
+	g++ -Iinclude -I../Core/CoreBaralho1 -c src/distribuirPife.cpp -o obj/distribuirPife.o
 
-distribuirPife.o: distribuirPife.cpp distribuirPife.h
-	g++ -I$(CORE) -c distribuirPife.cpp -o distribuirPife.o
-
-regrasPife.o: regrasPife.cpp regrasPife.h
-	g++ -I$(CORE) -c regrasPife.cpp -o regrasPife.o
+obj/regrasPife.o: src/regrasPife.cpp
+	mkdir -p obj
+	g++ -Iinclude -I../Core/CoreBaralho1 -c src/regrasPife.cpp -o obj/regrasPife.o
 
 clean:
-	rm -f *.o main.exe
+	rm -rf obj main.exe
