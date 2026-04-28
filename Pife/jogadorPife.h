@@ -1,7 +1,7 @@
 #ifndef JOGADORPIFE_H
 #define JOGADORPIFE_H
 
-#include "cartas.h"
+#include <cartas.h>
 #include <vector>
 #include <string.h>
 
@@ -20,5 +20,5 @@ public:
     Carta descartarCarta(int indice); //usar if(c = quantasCartas() >9) : descartar carta -> no regrasPife.cpp dps
 
     const std::vector<Carta>& verMao() const; //retorna o vetor 'mao', mas sem poder alterar
-}
+};
 #endif

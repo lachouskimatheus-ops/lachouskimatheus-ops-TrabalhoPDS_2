@@ -5,6 +5,6 @@ void JogadorPife::receberCarta(const Carta& carta) { //adiona a carta ao final d
 }
 
 int JogadorPife::tmnhMao() const { //retorna tamnaho do vetor  'mao'
-    return sizeof.mao();
+    return mao.size();
 }
 
