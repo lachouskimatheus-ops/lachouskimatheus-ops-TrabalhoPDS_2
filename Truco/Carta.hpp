@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <string>
 
 enum class Naipe {
 	paus,
@@ -15,7 +16,8 @@ private:
 	Naipe naipe;
 
 public:
-	Carta(int valor, Naipe naipe);
+	Carta(int valor, std::string naipeS);
 	void imprimir();
+	int forca();
 
 };
