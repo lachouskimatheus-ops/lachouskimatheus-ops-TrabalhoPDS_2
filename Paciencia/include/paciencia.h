@@ -37,13 +37,14 @@ public:
     Paciencia();
     bool existeJogadaPossivel();
     bool verificarVitoria();
+    bool cartaVisivel(int colunaIdx, int cartaIdx) const;
     bool mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoTipo, int destinoIndice);
     bool desfazer();
     void salvarJogada();
     void iniciarJogo();
     void imprimirJogo();
     void comprarCarta();
-
+    
     
     //void jogadasPossiveis(); Função caso sobre tempo!
     //~Paciencia();
