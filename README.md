@@ -3,3 +3,5 @@ A proposta central é construir uma arquitetura reutilizável, onde componentes 
 A central terá os seguintes jogos: Truco, Pife, Paciência, Rouba Monte, Poker, FDP
 
 [README do PIFE](PIFE/README(PIFE).md)
+
+[README do PACIENCIA](Paciencia/README(PACIENCIA).md)
