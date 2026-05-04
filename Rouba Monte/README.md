@@ -1,17 +1,16 @@
-🃏 Projeto: Jogo Rouba-Monte em C++
-Este projeto consiste na implementação do clássico jogo de cartas Rouba-Monte, desenvolvido como parte de um trabalho acadêmico. O objetivo é aplicar conceitos de lógica de programação, estruturas de dados e manipulação de fluxos em C++.
+_Jogo Rouba-Monte_
 
 📖 Regras do Jogo
 O Rouba-Monte é um jogo de paciência e atenção, cujo objetivo final é terminar a partida com o maior monte de cartas.
 
-O Início
+_O Início_
 O baralho (geralmente de 52 cartas) é embaralhado.
 
 Oito cartas são viradas na mesa (o Descarte).
 
 Cada jogador recebe uma mão inicial (opcional, dependendo da variação) ou as cartas permanecem no Monte de Compra.
 
-Dinâmica da Rodada
+_Dinâmica da Rodada_
 Em seu turno, o jogador compra uma carta do monte e verifica as seguintes possibilidades:
 
 Pescar da Mesa: Se a carta comprada for igual (mesmo valor/número) a alguma carta da mesa, o jogador as junta e inicia seu próprio Monte. A carta comprada deve ficar sempre no topo.
