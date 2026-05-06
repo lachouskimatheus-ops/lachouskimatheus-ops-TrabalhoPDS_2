@@ -22,7 +22,7 @@ O foco deste módulo é atuar como a autoridade (servidor) da partida, gerencian
 * O sistema deve eliminar jogadores que zerarem suas vidas e declarar vitória ao último sobrevivente.
 
 #### 🔹 Requisitos Não Funcionais
-* O módulo deve reutilizar as classes `Mesa`, `Jogador`, `BaralhoSujo` e `Carta` do Core.
+* O módulo deve reutilizar as classes `Mesa`, `Jogador`, `Baralho` e `Carta` do Core.
 * O código deve ser modular, separado em arquivos `.hpp` e `.cpp`.
 * A validação das regras de negócio deve ocorrer de forma centralizada (Server-Side), impedindo manipulações por parte do jogador.
 * O gerenciamento do histórico de danos deve utilizar containers da STL (como `std::map`).
