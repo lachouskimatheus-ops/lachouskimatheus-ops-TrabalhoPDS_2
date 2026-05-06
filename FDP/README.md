@@ -1,7 +1,7 @@
 # 🃏 FDP (Fodinha / Oh Hell)
 
 ### 📌 Descrição
-O módulo FDP é responsável por implementar a lógica do jogo de vazas e sobrevivência "FDP" (também conhecido como Fodinha), utilizando as classes base `Mesa`, `Jogador`, `BaralhoSujo` e `Carta` definidas no Core do projeto.
+O módulo FDP é responsável por implementar a lógica do jogo de vazas e sobrevivência "FDP" (também conhecido como Fodinha), utilizando as classes base `Mesa`, `Jogador`, `Baralho` e `Carta` definidas no Core do projeto.
 
 O foco deste módulo é atuar como a autoridade (servidor) da partida, gerenciando a máquina de estados das rodadas, validando o sistema de apostas restritas, resolvendo os combates de cartas com trunfo e aplicando os danos de sobrevivência aos jogadores.
 
