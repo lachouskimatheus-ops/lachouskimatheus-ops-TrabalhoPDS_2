@@ -5,3 +5,5 @@ A central terá os seguintes jogos: Truco, Pife, Paciência, Rouba Monte, Poker,
 [README do PIFE](PIFE/README(PIFE).md)
 
 [README do PACIENCIA](Paciencia/README(PACIENCIA).md)
+
+[README do FDP](FDP/README.md)
