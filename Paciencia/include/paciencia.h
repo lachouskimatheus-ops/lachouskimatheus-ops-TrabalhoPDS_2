@@ -2,7 +2,7 @@
 #define PACIENCIA_H
 #include <stack>
 #include <vector>
-#include "../Core/CoreBaralho1/baralho.h"
+#include "baralho.h"
 using std::vector;
 using std::stack;
 
@@ -47,7 +47,7 @@ public:
     
     
     //void jogadasPossiveis(); Função caso sobre tempo!
-    //~Paciencia();
+    ~Paciencia();
 };
 
 #endif
