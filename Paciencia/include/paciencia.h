@@ -47,7 +47,7 @@ public:
     
     
     //void jogadasPossiveis(); Função caso sobre tempo!
-    //~Paciencia();
+    ~Paciencia();
 };
 
 #endif
