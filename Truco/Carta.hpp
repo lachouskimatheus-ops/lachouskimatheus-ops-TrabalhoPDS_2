@@ -20,4 +20,7 @@ public:
 	void imprimir();
 	int forca();
 
+	int getValor() const;
+	Naipe getNaipe() const;
+	int getForcaNaipe() const;
 };

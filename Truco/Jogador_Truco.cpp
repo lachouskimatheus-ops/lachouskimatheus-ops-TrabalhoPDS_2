@@ -18,3 +18,10 @@ void Jogador::mostrarmao(){
 	}
 
 }
+
+Carta Jogador::jogarCarta(int indice){
+	Carta cartaParaJogar = mao[indice];
+
+	mao.erase(mao.begin() + indice);
+	return cartaParaJogar;
+}

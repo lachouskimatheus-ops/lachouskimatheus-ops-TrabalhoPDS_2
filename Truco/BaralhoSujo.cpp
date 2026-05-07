@@ -11,8 +11,8 @@ void BaralhoSujo::inicializar(){
 	for (const std::string& naipe : naipes) {
 		for(int i = 1; i <= 13; i++) {
 			if(i == 8 || i == 9 || i == 10) continue;
-			Carta* novaCarta = Carta(i, naipe);
-			cartas_.push_back(novaCarta);
+
+			cartas_.push_back(Carta(i, naipe));
 		};
 	};
 }

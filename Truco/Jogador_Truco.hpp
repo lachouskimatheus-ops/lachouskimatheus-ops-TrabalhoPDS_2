@@ -14,4 +14,6 @@ public:
 	Jogador(std::string nome);
 	void receberCarta(Carta novacarta);
 	void mostrarmao();
+
+	Carta jogarCarta(int indice);
 };

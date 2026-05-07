@@ -31,3 +31,21 @@ int Carta::forca(){
 	}
 
 }
+
+int Carta::getValor() const{
+	return this->valor;
+}
+
+Naipe Carta::getNaipe() const{
+	return this->naipe;
+}
+
+int Carta::getForcaNaipe() const{
+	switch(this->naipe) {
+		case Naipe::paus:	 return 4;
+		case Naipe::copas:   return 3;
+		case Naipe::espadas: return 2;
+		case Naipe::ouros:	 return 1;
+		default:			 return 0;
+	}
+}
