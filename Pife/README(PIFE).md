@@ -6,7 +6,6 @@
 
 - jogadorPife.h / jogadorPife.cpp: mão do jogador.
 - pife.h / pife.cpp: lógica principal do jogo.
-- distribuirPife.h / distribuirPife.cpp: distribuição de cartas.
 - regrasPife.h / regrasPife.cpp: regras e combinações do Pife.
 
 ---
@@ -66,23 +65,12 @@ Responsabilidades:
 - Controlar a lógica do jogo.
 - Gerenciar o baralho.
 - Controlar compra e descarte.
+- Distribuir as cartas
 
 Colabora com:
 - JogadorPife
 - Baralho
 - Carta
-
----
-
-### Classe DistribuirPife
-
-Responsabilidades:
-- Distribuir cartas.
-- Retirar cartas do baralho.
-
-Colabora com:
-- Baralho
-- JogadorPife
 
 ---
 
