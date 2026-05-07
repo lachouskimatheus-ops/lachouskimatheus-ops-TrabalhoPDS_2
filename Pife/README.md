@@ -74,7 +74,7 @@ Colabora com:
 
 ---
 
-### Classe RegrasPife
+### Módulo RegrasPife
 
 Responsabilidades:
 - Verificar combinações.
