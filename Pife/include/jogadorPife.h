@@ -15,9 +15,11 @@ private:
     std::vector<Carta> mao; //vetor do tipo carta que se chama 'mao'
 
 public:
-    void receberCarta(const Carta& carta);
+    void receberCarta(const Carta& carta); //apenas recebe a carta que vai ser comprada pelo pife.h
     int tmnhMao() const;
     Carta descartarCarta(int indice); //usar if(c = quantasCartas() >9) : descartar carta -> no regrasPife.cpp dps
+    void organizarMao(JogadorPife& mao); //Organiza a mão do jogador <da pra usar dps pra ajudar na validação dos pares>
+    void fixarPar(JogadorPife& mao, const Carta& carta); //fixa par para não não ser afetado pelo organizarMao()
 
     const std::vector<Carta>& verMao() const; //retorna o vetor 'mao', mas sem poder alterar
 };
