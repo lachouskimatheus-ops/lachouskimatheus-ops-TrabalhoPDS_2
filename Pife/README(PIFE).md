@@ -1,97 +1,98 @@
-# Arquivos principais
+# Pife
+  
+---
 
-- jogadorPife.h / jogadorPife.cpp: classe responsável pela mão do jogador.
-- pife.h / pife.cpp: classe principal do jogo.
-- distribuirPife.h / distribuirPife.cpp: funções relacionadas à distribuição de cartas.
-- regrasPife.h / regrasPife.cpp: funções relacionadas às regras e combinações do Pife.
+## Arquivos principais
 
-# Requisitos Funcionais
+- jogadorPife.h / jogadorPife.cpp: mão do jogador.
+- pife.h / pife.cpp: lógica principal do jogo.
+- distribuirPife.h / distribuirPife.cpp: distribuição de cartas.
+- regrasPife.h / regrasPife.cpp: regras e combinações do Pife.
 
-O sistema deve permitir:
+---
 
-- criar uma mão de jogador;
-- adicionar cartas à mão;
-- remover cartas da mão;
-- comprar cartas do baralho;
-- descartar cartas;
-- consultar a quantidade de cartas na mão;
-- verificar combinações básicas do Pife, como trincas e sequências;
-- permitir futuramente integrar o módulo Pife ao menu principal da Central de Jogos.
+## Requisitos Funcionais
 
-# Requisitos Não Funcionais
+- Criar uma mão de jogador.
+- Adicionar cartas à mão.
+- Remover cartas da mão.
+- Comprar cartas do baralho.
+- Descartar cartas.
+- Consultar a quantidade de cartas na mão.
+- Verificar combinações básicas, como trincas e sequências.
+- Permitir futura integração com a Central de Jogos.
 
-- O módulo deve reutilizar as classes Carta, Valor, Naipe e Baralho do Core.
-- O código deve ser modular.
-- O código deve ser de fácil manutenção e extensão.
-- O módulo deve seguir boas práticas de orientação a objetos.
+---
 
-# User Stories
+## Requisitos Não Funcionais
+
+- Reutilizar as classes Carta, Valor, Naipe e Baralho do Core.
+- Código modular em arquivos `.h` e `.cpp`.
+- Lógica independente de interface gráfica.
+- Código de fácil manutenção e extensão.
+
+---
+
+## User Stories
 
 - Como jogador, quero receber cartas para formar minha mão.
 - Como jogador, quero visualizar minha mão.
-- Como jogador, quero comprar uma carta do baralho.
-- Como jogador, quero descartar uma carta.
+- Como jogador, quero comprar cartas do baralho.
+- Como jogador, quero descartar cartas.
 - Como jogador, quero saber quantas cartas tenho.
-- Como sistema, quero verificar se uma combinação é válida.
-- Como desenvolvedor, quero separar a lógica do jogo em classes diferentes para facilitar manutenção.
+- Como sistema, quero verificar combinações válidas.
+- Como desenvolvedor, quero separar a lógica em classes diferentes.
 
-# Cartões CRC
+---
 
-## Classe JogadorPife
+## Cartões CRC
+
+### Classe JogadorPife
 
 Responsabilidades:
-
-- Armazenar a mão do jogador.
+- Armazenar a mão.
 - Receber cartas.
 - Descartar cartas.
-- Informar a quantidade de cartas na mão.
-- Permitir acesso às cartas da mão.
+- Informar a quantidade de cartas.
 
 Colabora com:
-
 - Carta
 
-## Classe Pife
+---
+
+### Classe Pife
 
 Responsabilidades:
-
-- Controlar a lógica geral do jogo.
+- Controlar a lógica do jogo.
 - Gerenciar o baralho.
-- Gerenciar os jogadores.
 - Controlar compra e descarte.
-- Coordenar a execução de uma rodada.
 
 Colabora com:
-
 - JogadorPife
 - Baralho
 - Carta
 
-## Classe DistribuirPife
+---
+
+### Classe DistribuirPife
 
 Responsabilidades:
-
-- Distribuir cartas iniciais aos jogadores.
+- Distribuir cartas.
 - Retirar cartas do baralho.
-- Entregar cartas aos jogadores.
 
 Colabora com:
-
 - Baralho
 - JogadorPife
-- Carta
 
-## Classe RegrasPife
+---
+
+### Classe RegrasPife
 
 Responsabilidades:
-
-- Verificar combinações válidas.
-- Identificar trincas.
-- Identificar sequências.
-- Auxiliar na validação das jogadas.
+- Verificar combinações.
+- Identificar trincas e sequências.
 
 Colabora com:
-
 - Carta
 - Valor
 - Naipe
