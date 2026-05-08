@@ -14,4 +14,4 @@ Entregas
 
 [README do TRUCO](Truco/README.md)
 
-[README do ROUBA MONTE](Rouba monte/README.md)
+[README do ROUBA MONTE](Roubamonte/README.md)
