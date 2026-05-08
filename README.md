@@ -12,6 +12,6 @@ Entregas
 
 [README do POKER](Poker/README.md)
 
-[README do TRUCO](Truco/README.md)
+[README do TRUCO](Truco/README_Truco.md)
 
 [README do ROUBA MONTE](Roubamonte/README.md)
