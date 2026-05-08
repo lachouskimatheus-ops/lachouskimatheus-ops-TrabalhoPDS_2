@@ -1,6 +1,6 @@
 #include "JuizMineiro.hpp"
 
-int JuizMineiro::decidirVencedor(std::vector<Carta> cartasNaMesa, Carta vira, bool forcarVencedor) {
+int JuizMineiro::decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira, bool forcarVencedor) {
 
     int indiceVencedor = -1;
     int maiorForcaTotal = -1;
@@ -8,8 +8,8 @@ int JuizMineiro::decidirVencedor(std::vector<Carta> cartasNaMesa, Carta vira, bo
 
     for (int i=0; i < cartasNaMesa.size(); i++){
         int forcaDaCarta;
-        int v = cartasNaMesa[i].getValor();
-        Naipe n = cartasNaMesa[i].getNaipe();
+        int v = cartasNaMesa[i]->getValor();
+        Naipe n = cartasNaMesa[i]->getNaipe();
 
         //Forca Manilhas
         if (v == 4 && n == Naipe::paus)          {forcaDaCarta = 100;}
@@ -17,7 +17,7 @@ int JuizMineiro::decidirVencedor(std::vector<Carta> cartasNaMesa, Carta vira, bo
         else if (v == 1 && n == Naipe::espadas)  {forcaDaCarta = 98;}
         else if (v == 7 && n == Naipe::ouros)    {forcaDaCarta = 97;}
         else{
-            forcaDaCarta = cartasNaMesa[i].forca();//Forca Normal
+            forcaDaCarta = cartasNaMesa[i]->forca();//Forca Normal
         }
 
         //Comparacao Forcas
@@ -27,7 +27,7 @@ int JuizMineiro::decidirVencedor(std::vector<Carta> cartasNaMesa, Carta vira, bo
             empate = false;
         }else if (forcaDaCarta == maiorForcaTotal){
             if(forcarVencedor){//Caso empate 2 primeiras
-                if(cartasNaMesa[i].getForcaNaipe() > cartasNaMesa[indiceVencedor].getForcaNaipe()){
+                if(cartasNaMesa[i]->getForcaNaipe() > cartasNaMesa[indiceVencedor]->getForcaNaipe()){
                     indiceVencedor = i;
                     empate = false;
                 }

@@ -1,37 +1,51 @@
 #include <iostream>
-#include "Baralho.hpp"
-#include "Jogador.hpp"
+#include <vector>
 #include "Menu.hpp"
+#include "Mesa.hpp"
+#include "BaralhoSujo.hpp"
+#include "JuizPaulista.hpp"
+#include "Jogador_Truco.hpp"
 
 void iniciar_truco() {
-	std::cout << "teste\n";
 
-	Baralho baralho;
-	baralho.embaralhar();
+    JuizPaulista* juiz = new JuizPaulista();
+    BaralhoSujo* baralho = new BaralhoSujo();
+    
+    Mesa mesa(juiz, baralho);
 
-	Jogador jogador1("João Luís");
+    Jogador_Truco* j1 = new Jogador_Truco("Voce");
+    Jogador_Truco* j2 = new Jogador_Truco("Bot 1 (Oponente)");
+    Jogador_Truco* j3 = new Jogador_Truco("Parceiro");
+    Jogador_Truco* j4 = new Jogador_Truco("Bot 2 (Oponente)");
 
-	for (int i = 0; i < 3; i++) {
-		jogador1.receberCarta(baralho.puxarCarta());
-	};
+    mesa.adicionarJogador(j1);
+    mesa.adicionarJogador(j2);
+    mesa.adicionarJogador(j3);
+    mesa.adicionarJogador(j4);
 
-	jogador1.mostrarmao();
+    std::cout << "--- Iniciando Partida de Truco ---" << std::endl;
 
-	std::cout << "\n(Aperte Enter para voltar ao menu)";
-	std::cin.ignore();
-	std::cin.get();
+    mesa.prepararRodada();
+    mesa.jogarTurno();
 
+    std::cout << "\nFim da rodada!" << std::endl;
+    std::cout << "Pressione Enter para voltar ao menu principal...";
+    std::cin.ignore();
+    std::cin.get();
 
-};
+    delete j1; delete j2; delete j3; delete j4;
+    delete juiz;
+    delete baralho;
+}
 
 int main() {
+    Menu menu;
 
-	Menu menu;
-	menu.addOpcao("Truco", iniciar_truco);
-	while (true) {
-		menu.exibir();
-	}
+    menu.addOpcao("Jogar Truco Paulista (Sujo)", iniciar_truco);
+    
+    while (true) {
+        menu.exibir();
+    }
 
-
-	return 0;
-};
+    return 0;
+}
