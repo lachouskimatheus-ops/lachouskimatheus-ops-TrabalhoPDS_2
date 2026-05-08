@@ -1,14 +1,10 @@
 # Pife
-  
----
 
 ## Arquivos principais
 
 - jogadorPife.h / jogadorPife.cpp: mão do jogador.
 - pife.h / pife.cpp: lógica principal do jogo.
 - regrasPife.h / regrasPife.cpp: regras e combinações do Pife.
-
----
 
 ## Requisitos Funcionais
 
@@ -21,16 +17,12 @@
 - Verificar combinações básicas, como trincas e sequências.
 - Permitir futura integração com a Central de Jogos.
 
----
-
 ## Requisitos Não Funcionais
 
 - Reutilizar as classes Carta, Valor, Naipe e Baralho do Core.
 - Código modular em arquivos `.h` e `.cpp`.
 - Lógica independente de interface gráfica.
 - Código de fácil manutenção e extensão.
-
----
 
 ## User Stories
 
@@ -41,8 +33,6 @@
 - Como jogador, quero saber quantas cartas tenho.
 - Como sistema, quero verificar combinações válidas.
 - Como desenvolvedor, quero separar a lógica em classes diferentes.
-
----
 
 ## Cartões CRC
 
@@ -57,8 +47,6 @@ Responsabilidades:
 Colabora com:
 - Carta
 
----
-
 ### Classe Pife
 
 Responsabilidades:
@@ -71,8 +59,6 @@ Colabora com:
 - JogadorPife
 - Baralho
 - Carta
-
----
 
 ### Módulo RegrasPife
 
