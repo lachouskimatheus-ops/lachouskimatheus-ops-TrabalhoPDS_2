@@ -10,7 +10,7 @@ class Pife {
 private:
     Baralho baralho;
     JogadorPife jogador;
-
+    std::vector<Carta> mesa;
     void distribirCartas(); 
 
 public:

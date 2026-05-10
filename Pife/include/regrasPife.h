@@ -6,8 +6,9 @@
 
 //Lógica das regras principais do jogo, como as combinações.
 
-bool Trinca(const std::vector<Carta>& cartas); //par de cartas iguais mas naipes diferentes
-bool Sequencia(const std::vector<Carta>& cartas); //par de  mesma sequencia e naipes iguais
-bool CombinacaoValida(const std::vector<Carta>& cartas);
+bool trinca(const std::vector<Carta>& cartas, int i1, int i2, int i3); //Verifica se as treis cartas são iguais
+bool sequencia(const std::vector<Carta>& cartas, int i1, int i2, int i3); //par de  mesma sequencia e naipes iguais
+bool combinacaoValida(const std::vector<Carta>& cartas, int i1, int i2, int i3); 
+bool indiceValido(const std::vector<Carta>& mao, int i);
 
 #endif
