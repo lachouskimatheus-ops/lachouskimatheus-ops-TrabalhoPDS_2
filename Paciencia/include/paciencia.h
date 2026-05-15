@@ -1,11 +1,14 @@
 #ifndef PACIENCIA_H
 #define PACIENCIA_H
+
 #include <stack>
 #include <vector>
 #include "baralho.h"
+#include "pontuacao.h"
+#include <map>
+
 using std::vector;
 using std::stack;
-
 
 enum class TipoPilha {
     Coluna,
@@ -13,25 +16,26 @@ enum class TipoPilha {
     Fundacao
 };
 
-class Paciencia
-{
+class Paciencia {
 private:
-
     struct EstadoJogo {
-        vector<std::vector<Carta>> colunas;
-        vector<std::vector<Carta>> fundacoes;
+        vector<vector<Carta>> colunas;
+        vector<vector<Carta>> fundacoes;
         vector<Carta> descarte;
         Baralho cava;
+        int pontos;        // snapshot da pontuação
+        int passadasCava;  // snapshot das passadas
+        int cartasEscondidas[7];
     };
-    vector<vector<Carta>> colunas; 
+    
+    int cartasEscondidas[7];
+    bool vitoria;
+    vector<vector<Carta>> colunas;
     Baralho cava;
-    vector<Carta> descarte; //Cartas após clicar no Cava
+    vector<Carta> descarte;
+    vector<vector<Carta>> fundacoes;
     stack<EstadoJogo> historico;
-/*  stack<Carta> pilhaCopas;
-    stack<Carta> pilhaOuros;
-    stack<Carta> pilhaEspadas;
-    stack<Carta> pilhaPaus; */
-    vector<vector<Carta>> fundacoes; //Pilha onde fica cada naipe 
+    Pontuacao pontuacao; 
 
 public:
     Paciencia();
@@ -44,9 +48,9 @@ public:
     void iniciarJogo();
     void imprimirJogo();
     void comprarCarta();
-    
-    
-    //void jogadasPossiveis(); Função caso sobre tempo!
+    int getPontuacao() const;
+    void virarParaCima(int coluna);
+    bool estaExposta(int coluna, int linha);
     ~Paciencia();
 };
 
