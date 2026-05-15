@@ -39,7 +39,7 @@ void Pife::distribuirCartas(){
 
 void Pife::proximoJogador(){
     jogadorAtual_++;
-    if(jogadorAtual_ > jogadores_.size()){
+    if(jogadorAtual_ >= jogadores_.size()){
         jogadorAtual_ = 0;
     }
 }
