@@ -5,25 +5,29 @@
 #include <cstdlib>
 #include <ctime>
 
-Baralho::Baralho() {
+Baralho::Baralho(int quantidadeBaralhos) {
 
-std::vector<Valor> valor = {
+    std::vector<Valor> valor = {
         Valor::As, Valor::Dois, Valor::Tres, Valor::Quatro,
         Valor::Cinco, Valor::Seis, Valor::Sete, Valor::Oito,
         Valor::Nove, Valor::Dez, Valor::Valete, Valor::Dama, Valor::Rei
 
-};
+    };
 
-std::vector<Naipe> naipe = {
+    std::vector<Naipe> naipe = {
 
-    Naipe::Ouro, Naipe::Copa, Naipe::Espada, Naipe::Paus
-};
+        Naipe::Ouro, Naipe::Copa, Naipe::Espada, Naipe::Paus
+    };
 //percorre as cartas tudo e atribui
-for (int i = 0; i < naipe.size(); i++) {
-    for (int j = 0; j < valor.size(); j++) {
-        cartas.push_back(Carta(valor[j], naipe[i]));
+    for (int b = 0; b < quantidadeBaralhos; b++){
+        for (int i = 0; i < naipe.size(); i++) {
+            for (int j = 0; j < valor.size(); j++) {
+                cartas.push_back(Carta(valor[j], naipe[i]));
+            }
+        }
     }
-}}
+}
+
 
 
 void Baralho::embaralhar() {
