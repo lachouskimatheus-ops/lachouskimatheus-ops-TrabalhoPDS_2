@@ -5,21 +5,23 @@
 #include "pife.h"
 
 void limparTela() {
-
 #ifdef _WIN32
     system("cls");
 #else
     system("clear");
 #endif
+}
 
+void pausar() {
+    std::cout << "\nPressione ENTER para continuar...";
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
 }
 
 void mostrarMao(const JogadorPife& jogador) {
-
     const std::vector<Carta>& mao = jogador.verMao();
 
-    for (int i = 0; i < mao.size(); i++) {
-
+    for (int i = 0; i < static_cast<int>(mao.size()); i++) {
         std::cout
             << i + 1
             << " - "
@@ -29,20 +31,16 @@ void mostrarMao(const JogadorPife& jogador) {
 }
 
 void mostrarMesa(const Pife& jogo) {
-
     const std::vector<Carta>& mesa = jogo.consultarMesa();
 
     if (mesa.empty()) {
-
         std::cout << "Mesa vazia." << std::endl;
-
         return;
     }
 
     std::cout << "Cartas na mesa:" << std::endl;
 
-    for (int i = 0; i < mesa.size(); i++) {
-
+    for (int i = 0; i < static_cast<int>(mesa.size()); i++) {
         std::cout
             << i + 1
             << " - "
@@ -57,7 +55,6 @@ void mostrarMesa(const Pife& jogo) {
 }
 
 int main() {
-
     int quantidadeJogadores;
 
     std::cout << "Quantidade de jogadores: ";
@@ -65,7 +62,10 @@ int main() {
 
     Pife jogo(quantidadeJogadores);
 
-    while (true) {
+    while (!jogo.jogoFinalizado()) {
+        JogadorPife& jogador = jogo.consultarJogador();
+
+        jogador.organizarMao();
 
         limparTela();
 
@@ -75,73 +75,97 @@ int main() {
             << std::endl;
 
         std::cout << "\nMesa:\n";
-
         mostrarMesa(jogo);
 
-        JogadorPife& jogador = jogo.consultarJogador();
-
         std::cout << "\nSua mao:\n";
-
         mostrarMao(jogador);
 
         int opcao;
 
-        std::cout << "\n1 - Comprar carta do baralho" << std::endl;
-        std::cout << "2 - Organizar mao" << std::endl;
-        std::cout << "3 - Ver mesa" << std::endl;
-        std::cout << "0 - Sair" << std::endl;
+        std::cout << "\n1 - Comprar carta do baralho";
+        std::cout << "\n2 - Comprar carta da mesa";
+        std::cout << "\n3 - Ver mesa";
+        std::cout << "\n4 - Bati";
+        std::cout << "\n0 - Sair";
 
-        std::cout << "\nEscolha: ";
-
+        std::cout << "\n\nEscolha: ";
         std::cin >> opcao;
 
         if (opcao == 0) {
             break;
         }
 
-        if (opcao == 2) {
-
-            jogador.organizarMao();
-
-            continue;
-        }
-
         if (opcao == 3) {
-
             limparTela();
 
             std::cout << "\nMesa:\n";
-
             mostrarMesa(jogo);
 
-            std::cout << "\nPressione ENTER para voltar...";
-
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            std::cin.get();
-
+            pausar();
             continue;
         }
 
-        if (opcao == 1) {
+        if (opcao == 4) {
+            if (jogo.bati()) {
+                limparTela();
 
-            jogo.comprarCarta();
+                std::cout << "\n===================================";
+                std::cout << "\n           VOCE GANHOU!";
+                std::cout << "\n===================================\n";
 
-            jogador.organizarMao();
+                std::cout
+                    << "\nJogador "
+                    << jogo.consultarIndiceJogadorAtual() + 1
+                    << " venceu!"
+                    << std::endl;
+
+                std::cout << "\nMao vencedora:\n";
+                mostrarMao(jogador);
+
+                break;
+            }
+
+            std::cout
+                << "\nBatida invalida!"
+                << "\nVoce perdeu o direito de comprar da mesa neste turno."
+                << std::endl;
+
+            pausar();
+            continue;
+        }
+
+        if (opcao == 1 || opcao == 2) {
+            int tamanhoAntes = static_cast<int>(jogador.verMao().size());
+
+            if (opcao == 1) {
+                jogo.comprarBaralho();
+            }
+
+            if (opcao == 2) {
+                jogo.comprarMesa();
+            }
+
+            int tamanhoDepois = static_cast<int>(jogador.verMao().size());
+
+            if (tamanhoDepois == tamanhoAntes) {
+                std::cout << "\nVoce nao conseguiu comprar essa carta." << std::endl;
+                std::cout << "Escolha outra acao." << std::endl;
+
+                pausar();
+                continue;
+            }
 
             limparTela();
 
             std::cout << "Mesa atual:\n";
-
             mostrarMesa(jogo);
 
             std::cout << "\nSua mao apos comprar:\n";
-
             mostrarMao(jogador);
 
             int descarte;
 
             std::cout << "\nCarta para descartar: ";
-
             std::cin >> descarte;
 
             jogo.colocarNaMesa(descarte - 1);
