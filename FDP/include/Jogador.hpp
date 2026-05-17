@@ -16,12 +16,12 @@ public:
 	void receberCarta(Carta* novaCarta);
 	virtual ~Jogador(); //Esse virtual basicamente garante que a interação entre as classes mãe e filha não vai ignorar nenhum atributo ou método
 	void mostrarMao() const;
-	virtual void limparMao();
 	virtual Carta* jogarCarta(int posicao); //Devolve um ponteiro de carta pq o vetor é formado de ponteiros de cartas 
 
 	//Getters:
 	std::string getNome() const;
 	int getId() const;
+    int getQtdCartasMao() const;
 
 	//Esses métodos ainda podem mudar ou podem ter outros métodos aqui, à medida que a gente for programando os outros jogos
 	//Não vou colocar nada envolvendo os servidores ainda, até a gente ter os jogos rodando

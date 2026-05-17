@@ -11,11 +11,18 @@ enum class Naipe {
 class Carta {
 
 private:
-	int valor;
-	Naipe naipe;
+	int valor_;
+	Naipe naipe_;
 
 public:
+	Carta() = default;
 	Carta(int valor, Naipe naipe);
 	void imprimir();
+
+	int getValor() const;
+	Naipe getNaipe() const;
+
+	int forca() const; 
+    int getForcaNaipe() const;
 
 };

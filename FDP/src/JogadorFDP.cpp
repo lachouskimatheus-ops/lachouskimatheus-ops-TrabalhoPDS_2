@@ -25,14 +25,14 @@ void JogadorFDP::dano() {
 	};
 }
 
-int getVidas() const {
+int JogadorFDP::getVidas() const {
 	return vidas_;
 }
 
-int getAposta() const {
+int JogadorFDP::getAposta() const {
 	return aposta_atual_;
 }
 
-int getVezesGanhas() const {
+int JogadorFDP::getVezesGanhas() const {
 	return vezes_ganhas_;
 }

@@ -12,7 +12,7 @@ void Baralho::embaralhar() {
 }
 
 Baralho::~Baralho() {
-	for(int i = 0; i < cartas_.size(); i++) {
+	for(size_t i = 0; i < cartas_.size(); i++) {
 		delete cartas_[i];
 	};
 }
