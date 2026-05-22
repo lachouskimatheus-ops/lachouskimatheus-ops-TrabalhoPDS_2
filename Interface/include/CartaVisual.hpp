@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 
-#include "cartas.h"
+#include "../../Jogos/Core/CoreBaralho1/cartas.h"
 
 class CartaVisual {
 
