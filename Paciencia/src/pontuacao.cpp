@@ -2,7 +2,7 @@
 #include <fstream>
 using namespace std;
 
-Pontuacao::Pontuacao() : pontos(0), passadasCava(0) {
+Pontuacao::Pontuacao() : pontos(0), passadasCava(0), record(0) {
     carregarRecord();
 }
 
@@ -14,8 +14,8 @@ void Pontuacao::carregarRecord() {
     
 }
 bool Pontuacao::salvarRecord() {
-    if (pontos <= record)
-        return false;
+    if (pontos <= record){
+        return false;}
         record = pontos;
         ofstream arquivo(ARQUIVO_RECORD);
         if (arquivo.is_open())
