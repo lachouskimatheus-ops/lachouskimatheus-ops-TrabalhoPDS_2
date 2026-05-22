@@ -10,7 +10,7 @@ private: std::vector<Carta> cartas;
 public: 
 //Construtor
     Baralho(int quantidadeBaralhos = 1); //adicionei esse quantidadeBaralhos,se quiser 2 baralhos, só chamar baralho(2). Aquele =1 é so para iniciação padrão
-    
+    void inserirCarta(const Carta& c);
     void embaralhar();
     Carta retirarCarta();
     int tamanho() const;
@@ -18,4 +18,4 @@ public:
 
 };
 
-#endif
+#endif 

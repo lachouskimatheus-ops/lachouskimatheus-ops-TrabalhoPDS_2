@@ -33,8 +33,8 @@ Baralho::Baralho(int quantidadeBaralhos) {
 void Baralho::embaralhar() {
     std::srand(std::time(0)); 
 
-    for (int i = 0; i < cartas.size(); i++) {
-        int j = std::rand() % cartas.size();
+    for (size_t i = 0; i < cartas.size(); i++) {
+        size_t j = std::rand() % cartas.size();
 
    
         Carta temp = cartas[i];
@@ -64,7 +64,9 @@ bool Baralho::estaVazio() const{
 }
 
 
-
+void Baralho::inserirCarta(const Carta& c) {
+    cartas.push_back(c);
+}
 
 
 
