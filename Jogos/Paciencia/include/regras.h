@@ -1,7 +1,7 @@
 #ifndef REGRAS_H
 #define REGRAS_H
 
-#include "baralho.h"
+#include "../CoreBaralho1/baralho.h"
 #include <vector>
 
 class Regras {
@@ -16,5 +16,6 @@ private:
     Regras() {} 
     static bool ehVermelha(const Carta& c);
 };
+
 
 #endif
