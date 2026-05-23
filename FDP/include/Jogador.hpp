@@ -15,8 +15,10 @@ public:
 	Jogador(int id, std::string nome);
 	void receberCarta(Carta* novaCarta);
 	virtual ~Jogador(); //Esse virtual basicamente garante que a interação entre as classes mãe e filha não vai ignorar nenhum atributo ou método
-	void mostrarMao() const;
 	virtual Carta* jogarCarta(int posicao); //Devolve um ponteiro de carta pq o vetor é formado de ponteiros de cartas 
+	const std::vector<Carta*>& getMao() const { 
+        return mao_; 
+    }
 
 	//Getters:
 	std::string getNome() const;

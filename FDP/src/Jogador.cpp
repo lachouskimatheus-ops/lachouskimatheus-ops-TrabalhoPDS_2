@@ -22,14 +22,6 @@ void Jogador::receberCarta(Carta* novaCarta) {
 Jogador::~Jogador() {
 }
 
-void Jogador::mostrarMao() const {
-    for (size_t i = 0; i < mao_.size(); i++) {
-        std::cout << "[" << i + 1 << "] "; // Mostra [1], [2], etc.
-        mao_[i]->imprimir(); 
-        std::cout << "\n";
-    }
-}
-
 Carta* Jogador::jogarCarta(int posicao) {
 
 	Carta* carta = mao_[posicao];

@@ -5,7 +5,7 @@ Carta::Carta(int valor, Naipe naipe){
 	this->naipe_ = naipe;
 }
 
-void Carta::imprimir() {
+std::string Carta::toString() const {
 
     std::string valor;
 
@@ -27,7 +27,7 @@ void Carta::imprimir() {
         default: naipe = "?"; break;
     };
 
-	std::cout << valor << " de " << naipe << std::endl;
+	return valor + " de " + naipe;
 }
 
 int Carta::getValor() const {
@@ -39,10 +39,7 @@ Naipe Carta::getNaipe() const {
 }
 
 int Carta::forca() const {
-    // Exemplo básico: você precisa retornar um número de força 
-    // baseado nas regras do seu jogo.
-    // Se o valor for 3 (ou 13 no seu enum), a força é altíssima.
-    return valor_; // Modifique isso para a lógica real do seu jogo
+    return valor_; 
 }
 
 int Carta::getForcaNaipe() const {

@@ -12,9 +12,16 @@ public:
 	void registrarGanhador();
 	void dano();
 	void prepararNovaRodada();
+	std::vector<int> ordemJogadoresDaVaza_;
 
 	//Getters
 	int getVidas() const;
 	int getAposta() const;
 	int getVezesGanhas() const;
+	void setAposta(int aposta) { 
+        aposta_atual_ = aposta;
+    }
+    void adicionarVazaFeita() { 
+        vezes_ganhas_++;
+    }
 };

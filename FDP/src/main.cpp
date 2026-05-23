@@ -3,32 +3,50 @@
 #include "../include/JogadorFDP.hpp"
 #include "../include/BaralhoSujo.hpp"
 #include "../include/Placar.hpp"
+#include <SFML/Graphics.hpp>
+#include <optional>
+
+enum class EstadoJogo {
+    DISTRIBUINDO_CARTAS,
+    FASE_APOSTAS,
+    FASE_JOGADAS,
+    RESOLVENDO_VAZA,
+    FIM_DE_RODADA,
+    FIM_DE_PARTIDA
+};
 
 int main() {
-    BaralhoSujo* baralho = new BaralhoSujo();
-    Placar* placar = new Placar();
+    // SFML 3: Exige chaves {} para criar um Vector2u
+    sf::RenderWindow window(sf::VideoMode({800, 600}), "Cassino FDP - Teste SFML 3");
+    window.setFramerateLimit(60);
 
-    MesaFDP mesa(baralho, placar);
+    sf::Font font;
+    // SFML 3: O método loadFromFile foi renomeado para openFromFile
+    bool fonteCarregada = font.openFromFile("/usr/share/fonts/TTF/DejaVuSans.ttf");
 
-    JogadorFDP* j1 = new JogadorFDP(1, "Thiago", 5);
-    JogadorFDP* j2 = new JogadorFDP(2, "Matheus", 5);
-    JogadorFDP* j3 = new JogadorFDP(3, "Joao", 5);
-    JogadorFDP* j4 = new JogadorFDP(4, "Maria", 5);
+    // SFML 3: A ordem dos parâmetros mudou (A fonte vem primeiro)
+    sf::Text texto(font, "Mesa do Cassino Aberta!", 30);
+    texto.setFillColor(sf::Color::White);
+    // SFML 3: Exige chaves {} e o sufixo 'f' (float) para criar um Vector2f
+    texto.setPosition({200.f, 250.f});
 
-    mesa.adicionarJogador(j1);
-    mesa.adicionarJogador(j2);
-    mesa.adicionarJogador(j3);
-    mesa.adicionarJogador(j4);
+    while (window.isOpen()) {
+        // SFML 3: O pollEvent agora retorna um std::optional moderno
+        while (const std::optional<sf::Event> event = window.pollEvent()) {
+            // Verifica o tipo do evento de forma segura
+            if (event->is<sf::Event::Closed>()) {
+                window.close();
+            }
+        }
 
-    mesa.iniciarPartida();
+        window.clear(sf::Color(34, 139, 34));
 
-    delete j1;
-    delete j2;
-    delete j3;
-    delete j4;
-    delete baralho;
-    delete placar;
+        if (fonteCarregada) {
+            window.draw(texto);
+        }
 
-    std::cout << "\nJogo encerrado.\n";
+        window.display();
+    }
+
     return 0;
 }
