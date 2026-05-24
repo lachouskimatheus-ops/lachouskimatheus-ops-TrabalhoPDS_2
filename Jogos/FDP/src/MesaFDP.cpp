@@ -183,3 +183,47 @@ void MesaFDP::apurarVencedorDaVaza() {
     cartasNaMesa_.clear(); 
     ordemJogadoresDaVaza_.clear();
 }
+
+void MesaFDP::prepararNovaPartida(int qtdJogadores) {
+    jogadores_.clear(); 
+    
+    // Passando 0 como ID do jogador Humano
+    adicionarJogador(new JogadorFDP(0, "Você", 3));
+
+    for (int j = 1; j < qtdJogadores; ++j) {
+        // Passando a variável 'j' como ID do Bot
+        adicionarJogador(new JogadorFDP(j, "Bot " + std::to_string(j), 3));
+    };
+
+    // 3. Prepara as variáveis de controle da rodada 1
+    cartasNaRodada_ = 1;
+    indicePrimeiro_ = 0;
+    cartasSubindo_ = true;
+    
+    // 4. Embaralha usando o ponteiro do Baralho que a Mesa mãe já tem
+    baralho_->embaralhar();
+
+    // 5. Distribui as cartas (Como é a primeira rodada, cartasNaRodada_ vale 1)
+    for (auto* jogadorAbstrato : jogadores_) {
+        // Converte para FDP
+        JogadorFDP* jogador = static_cast<JogadorFDP*>(jogadorAbstrato);
+        
+        for (int c = 0; c < cartasNaRodada_; ++c) {
+            // ATENÇÃO: Substitua 'puxarCarta()' e 'receberCarta()' 
+            // pelos nomes exatos que estão no seu Baralho.cpp e Jogador.cpp
+            Carta* carta = baralho_->puxarCarta();
+            jogador->receberCarta(carta);
+        };
+    };
+
+    // 6. começar as apostas!
+    iniciarFaseApostas();
+}
+
+int MesaFDP::getCartasNaRodada() const {
+    return cartasNaRodada_;
+};
+
+int MesaFDP::getJogadorDaVezIndex() const {
+    return jogadorDaVezIndex_;
+}

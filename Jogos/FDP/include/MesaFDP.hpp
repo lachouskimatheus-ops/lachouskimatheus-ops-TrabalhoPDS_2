@@ -36,4 +36,7 @@ public:
     bool jogarCarta(int indiceCartaNaMao); 
     bool vazaFinalizada();
     void apurarVencedorDaVaza();
+    void prepararNovaPartida(int qtdJogadores);
+    int getCartasNaRodada() const;
+    int getJogadorDaVezIndex() const;
 };

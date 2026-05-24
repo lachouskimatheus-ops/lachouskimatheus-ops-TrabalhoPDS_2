@@ -2,7 +2,8 @@
 #define CARTAVISUAL_HPP
 
 #include <SFML/Graphics.hpp>
-#include "cartas.h"
+//#include "../../Jogos/Core/CoreBaralho1/cartas.h"
+#include "../../Jogos/Core/CoreBaralhoTruco/Carta.hpp"
 
 class CartaVisual {
 private:

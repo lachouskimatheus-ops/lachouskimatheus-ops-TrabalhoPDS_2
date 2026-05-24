@@ -12,7 +12,7 @@ protected:
 	int indiceVez_;
 public:
 	Mesa(BaralhoSujo* baralho_mesa);
-	
+	std::vector<Jogador*> getJogadores() const { return jogadores_; }
 	virtual ~Mesa();
 
 	void adicionarJogador(Jogador* j);

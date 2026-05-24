@@ -19,7 +19,7 @@ public:
 	const std::vector<Carta*>& getMao() const { 
         return mao_; 
     }
-
+    Carta* getCartaMao(int indice) { return mao_[indice]; }
 	//Getters:
 	std::string getNome() const;
 	int getId() const;
