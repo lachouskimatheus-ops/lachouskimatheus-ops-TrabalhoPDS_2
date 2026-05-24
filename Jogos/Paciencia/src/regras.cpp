@@ -14,7 +14,7 @@ bool Regras::podeMoverParaColuna(const Carta& origem, const Carta& destino) {
         return false;
     }
 
-    return ((int)origem.mostraNaipe() == (int)destino.mostraValor() - 1);
+    return ((int)origem.mostraValor() == (int)destino.mostraValor() - 1);
 }
 
 // Valida o movimento para as pilhas de fundação.

@@ -1,32 +1,55 @@
-# Variáveis para facilitar a manutenção
 CXX = g++
-CXXFLAGS = -Iinclude -I../Core/CoreBaralho1 -Wall -Wextra -std=c++17
-CORE_OBJS = ../Core/CoreBaralho1/baralho.o ../Core/CoreBaralho1/cartas.o
-GAME_OBJS = build/paciencia.o build/regras.o build/pontuacao.o
+CXXFLAGS = -Wall -Wextra -g3
 
-# Alvo principal: Gera o jogo
-main.exe: $(GAME_OBJS)
-	$(CXX) $(GAME_OBJS) $(CORE_OBJS) -o main.exe
+CORE = ../Core/CoreBaralho1
+INCLUDES = -I include -I $(CORE)
 
-# Compilação do Paciencia
-build/paciencia.o: src/paciencia.cpp include/paciencia.h
-	mkdir -p build
-	$(CXX) $(CXXFLAGS) -c src/paciencia.cpp -o build/paciencia.o
+BUILD = build
 
-# Compilação das Regras (Novo!)
-build/regras.o: src/regras.cpp include/regras.h
-	mkdir -p build
-	$(CXX) $(CXXFLAGS) -c src/regras.cpp -o build/regras.o
+SRCS = src/paciencia.cpp \
+       src/regras.cpp \
+       src/pontuacao.cpp \
+       $(CORE)/baralho.cpp \
+       $(CORE)/cartas.cpp
 
-# Compilação da Pontuação (Novo!)
-build/pontuacao.o: src/pontuacao.cpp include/pontuacao.h
-	mkdir -p build
-	$(CXX) $(CXXFLAGS) -c src/pontuacao.cpp -o build/pontuacao.o
+OBJS = $(BUILD)/paciencia.o \
+       $(BUILD)/regras.o \
+       $(BUILD)/pontuacao.o \
+       $(BUILD)/baralho.o \
+       $(BUILD)/cartas.o
 
-# Alvo de Teste: Compila o test_paciencia.cpp e linka com tudo
-test: $(GAME_OBJS)
-	$(CXX) $(CXXFLAGS) test/test_paciencia.cpp $(GAME_OBJS) $(CORE_OBJS) -o test.exe
-	./test.exe
+TEST_SRC = test/test_paciencia.cpp
+TEST_OBJ = $(BUILD)/test_paciencia.o
+TARGET = $(BUILD)/test_paciencia.exe
+
+all: $(BUILD) $(TARGET)
+
+$(BUILD):
+	if not exist $(BUILD) mkdir $(BUILD)
+
+$(BUILD)/paciencia.o: src/paciencia.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/regras.o: src/regras.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/pontuacao.o: src/pontuacao.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/baralho.o: $(CORE)/baralho.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/cartas.o: $(CORE)/cartas.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(BUILD)/test_paciencia.o: $(TEST_SRC)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+$(TARGET): $(OBJS) $(TEST_OBJ)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+run: $(TARGET)
+	$(TARGET)
 
 clean:
-	rm -rf build main.exe test.exe
+	del /Q $(BUILD)\*.o $(BUILD)\*.exe
