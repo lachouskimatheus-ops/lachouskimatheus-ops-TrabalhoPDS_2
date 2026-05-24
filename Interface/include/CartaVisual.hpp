@@ -2,7 +2,7 @@
 #define CARTAVISUAL_HPP
 
 #include <SFML/Graphics.hpp>
-#include "Carta.hpp"
+#include "cartas.h"
 
 class CartaVisual {
 private:
