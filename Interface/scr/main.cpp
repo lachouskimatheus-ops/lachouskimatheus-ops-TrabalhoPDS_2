@@ -14,19 +14,19 @@ int main() {
     sf::Texture tex1, tex2, tex3;
     
     // ATENÇÃO: Ajuste os nomes dos arquivos .png para os nomes exatos que você baixou!
-    if (!tex1.loadFromFile("../../Interface/assets/cartas/hearts_ace.png") ||
-        !tex2.loadFromFile("../../Interface/assets/cartas/spades_07.png") ||
-        !tex3.loadFromFile("../../Interface/assets/cartas/diamonds_king.png")) {
+    if (!tex1.openFromFile("../../Interface/assets/cartas/ace_of_hearts.png") ||
+        !tex2.openFromFile("../../Interface/assets/cartas/7_of_spades.png") ||
+        !tex3.openFromFile("../../Interface/assets/cartas/king_of_diamonds2.png")) {
         std::cout << "Erro ao carregar as imagens! Verifique os nomes e os caminhos." << "\n";
         return -1; // Encerra o teste se não achar as imagens
     };
 
     // 3. Cria as cartas lógicas do backend 
     // (Ajuste os parâmetros abaixo de acordo com o construtor real da sua classe Carta)
-    Carta cartaLogica1(1, static_cast<Naipe>(1)); 
-    Carta cartaLogica2(7, static_cast<Naipe>(2)); 
-    Carta cartaLogica3(13, static_cast<Naipe>(3));
-    
+    Carta cartaLogica1(1, 1); // Exemplo: 1=Ás, 1=Copas
+    Carta cartaLogica2(7, 2); // Exemplo: 7=Sete, 2=Espadas
+    Carta cartaLogica3(13, 3); // Exemplo: 13=Rei, 3=Ouros
+
     // 4. Cria as cartas visuais, unindo a lógica com a imagem
     CartaVisual cartaVis1(cartaLogica1, tex1);
     CartaVisual cartaVis2(cartaLogica2, tex2);
