@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include "TelaBase.hpp"
 #include "Botao.hpp"
-
+#include <optional>
 enum class OpcaoMenu {
     Nenhuma,
     Paciencia,
@@ -18,6 +18,9 @@ enum class OpcaoMenu {
 
 class TelaMenu : public TelaBase {
 private:
+    sf::Texture textureFundo_;
+    std::optional<sf::Sprite> fundoSprite_;
+
     sf::Text titulo_;
 
     Botao btnPaciencia_;

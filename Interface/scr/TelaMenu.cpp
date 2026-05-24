@@ -4,28 +4,35 @@ using namespace sf;
 TelaMenu::TelaMenu(sf::Font& fonte, sf::RenderWindow& janela)
     : TelaBase(fonte, janela),
       titulo_(fonte, "ESCOLHA UM JOGO", 40),
-      btnPaciencia_("PACIENCIA", fonte),
-      btnPife_("PIFE", fonte),
-      btnPoker_("POKER", fonte),
-      btnTruco_("TRUCO", fonte),
-      btnRoubaMonte_("ROUBA MONTE", fonte),
-      btnFDP_("FDP", fonte),
+      btnPaciencia_("Interface/assets/icones/btn_paciencia.png", 250.f, 100.f, fonte),
+      btnPife_("Interface/assets/icones/btn_pife.png", 250.f, 100.f, fonte),
+      btnPoker_("Interface/assets/icones/btn_poker.png", 250.f, 100.f, fonte),
+      btnTruco_("Interface/assets/icones/btn_truco.png", 250.f, 100.f, fonte),
+      btnRoubaMonte_("Interface/assets/icones/btn_roubamonte.png", 250.f, 100.f, fonte),
+      btnFDP_("Interface/assets/icones/btn_fdp.png", 250.f, 100.f, fonte),
       btnSair_("SAIR", fonte),
       opcaoSelecionada_(OpcaoMenu::Nenhuma)
 {
-    titulo_.setFillColor(Color::White);
+    // Carrega a textura e cria o sprite depois
+ if (textureFundo_.loadFromFile("Interface/assets/fundo.jpg")) {
+    fundoSprite_.emplace(textureFundo_);
+    float scaleX = 900.f / textureFundo_.getSize().x;
+    float scaleY = 700.f / textureFundo_.getSize().y;
+    fundoSprite_->setScale({scaleX, scaleY});
+}
+    titulo_.setFillColor(sf::Color::White);
     posicionarBotoes();
+
 }
 
 void TelaMenu::posicionarBotoes() {
     float largura = janela_.getSize().x;
-    float centroX = (largura - 300.f) / 2.f;
-    float inicioY = 150.f;
-    float espacamento = 70.f;
+    float centroX = (largura - 250.f) / 2.f;  // 250 = largura dos botões
+    float inicioY = 80.f;
+    float espacamento = 90.f;  // 100 altura + margem
 
-    // Centraliza o título (SFML 3: getLocalBounds().size.x)
-    FloatRect limiteTitulo = titulo_.getLocalBounds();
-    titulo_.setPosition({(largura - limiteTitulo.size.x) / 2.f, 60.f});
+    sf::FloatRect limiteTitulo = titulo_.getLocalBounds();
+    titulo_.setPosition({(largura - limiteTitulo.size.x) / 2.f, 20.f});
 
     btnPaciencia_.definirPosicao (centroX, inicioY);
     btnPife_.definirPosicao      (centroX, inicioY + espacamento * 1);
@@ -37,7 +44,9 @@ void TelaMenu::posicionarBotoes() {
 }
 
 void TelaMenu::desenhar() {
-    janela_.clear(Color(30, 30, 30));
+    janela_.clear();
+if (fundoSprite_.has_value())
+    janela_.draw(*fundoSprite_);
     janela_.draw(titulo_);
     btnPaciencia_.desenharBotao(janela_);
     btnPife_.desenharBotao(janela_);
@@ -59,7 +68,6 @@ void TelaMenu::processarClique(sf::Vector2f mouse) {
 }
 
 void TelaMenu::processarEvento(const sf::Event& evento) {
-    // No menu o Esc não faz nada
     (void)evento;
 }
 
