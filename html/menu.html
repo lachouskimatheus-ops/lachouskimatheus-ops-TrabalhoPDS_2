@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR"> 
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jogos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Fundo com padrão de cartas */
+  .bg {
+    position: fixed;
+    inset: 0;
+    background-image: url('../Interface/assets/fundo.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.35);
+    z-index: 0;
+  }
+
+  /* Overlay escuro para legibilidade */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    z-index: 1;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 30px 20px;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 28px;
+    color: #fff;
+    text-align: center;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(255,200,50,0.5);
+    margin-bottom: 10px;
+  }
+
+  h1 span {
+    color: #f0c040;
+  }
+
+  /* Grade de botões dos jogos */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .btn-jogo {
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 16px 4px 16px 4px;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-jogo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0);
+    transition: background 0.2s;
+    border-radius: inherit;
+  }
+
+  .btn-jogo:hover::before {
+    background: rgba(255,255,255,0.07);
+  }
+
+  .btn-jogo:hover {
+    border-color: #f0c040;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(240,192,64,0.2);
+  }
+
+  .btn-jogo:active {
+    transform: translateY(0);
+  }
+
+  .btn-jogo img {
+    width: 100%;
+    max-height: 70px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+
+  .btn-jogo span {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Botão Sair */
+  .btn-sair {
+    width: 100%;
+    background: rgba(180, 30, 30, 0.3);
+    border: 1.5px solid rgba(220,50,50,0.4);
+    border-radius: 8px 20px 8px 20px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #ff8080;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  .btn-sair:hover {
+    background: rgba(220, 50, 50, 0.4);
+    border-color: #ff5555;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  .btn-sair:active {
+    transform: translateY(0);
+  }
+
+  /* Naipes decorativos no título */
+  .naipes {
+    font-size: 18px;
+    color: #f0c040;
+    letter-spacing: 8px;
+    opacity: 0.8;
+  }
+
+  /* Animação de entrada */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .container > * {
+    animation: fadeUp 0.5s ease both;
+  }
+  .container > *:nth-child(1) { animation-delay: 0.0s; }
+  .container > *:nth-child(2) { animation-delay: 0.1s; }
+  .container > *:nth-child(3) { animation-delay: 0.2s; }
+  .container > *:nth-child(4) { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="overlay"></div>
+
+<div class="container">
+
+  <div class="naipes">♠ ♥ ♦ ♣</div>
+
+  <h1>ESCOLHA UM <span>JOGO</span></h1>
+
+  <div class="grid">
+
+    <a class="btn-jogo" href="paciencia.html">
+      <img src="../Interface/assets/icones/btn_paciencia.png" alt="Paciência">
+      <span>Paciência</span>
+    </a>
+
+    <a class="btn-jogo" href="pife.html">
+      <img src="../Interface/assets/icones/btn_pife.png" alt="Pife">
+      <span>Pife</span>
+    </a>
+
+    <a class="btn-jogo" href="poker.html">
+      <img src="../Interface/assets/icones/btn_poker.png" alt="Poker">
+      <span>Poker</span>
+    </a>
+
+    <a class="btn-jogo" href="truco.html">
+      <img src="../Interface/assets/icones/btn_truco.png" alt="Truco">
+      <span>Truco</span>
+    </a>
+
+    <a class="btn-jogo" href="roubamonte.html">
+      <img src="../Interface/assets/icones/btn_roubamonte.png" alt="Rouba Monte">
+      <span>Rouba Monte</span>
+    </a>
+
+    <a class="btn-jogo" href="fdp.html">
+      <img src="../Interface/assets/icones/btn_fdp.png" alt="FDP">
+      <span>FDP</span>
+    </a>
+
+  </div>
+
+  <button class="btn-sair" onclick="window.close()">✕ &nbsp; SAIR</button>
+
+</div>
+
+</body>
+</html>
