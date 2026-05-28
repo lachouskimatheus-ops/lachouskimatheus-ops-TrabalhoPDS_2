@@ -23,10 +23,13 @@ Jogador::~Jogador() {
 }
 
 Carta* Jogador::jogarCarta(int posicao) {
-
-	Carta* carta = mao_[posicao];
-	mao_.erase(mao_.begin() + posicao);
-	return carta;
+    // Garante que a posição não é negativa e não passa do tamanho do vetor
+    if (posicao >= 0 && posicao < mao_.size()) {
+        Carta* carta = mao_[posicao];
+        mao_.erase(mao_.begin() + posicao);
+        return carta;
+    }
+    return nullptr;
 }
 
 int Jogador::getQtdCartasMao() const {

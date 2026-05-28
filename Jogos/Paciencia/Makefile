@@ -1,55 +1,40 @@
 CXX = g++
-CXXFLAGS = -Wall -Wextra -g3
+CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -I../Core
 
-CORE = ../Core/CoreBaralho1
-INCLUDES = -I include -I $(CORE)
+OBJ = obj/main.o obj/pife.o obj/jogadorPife.o obj/regrasPife.o
+CORE_OBJ = obj/Carta.o obj/Baralho.o
 
-BUILD = build
+all: pife.exe
 
-SRCS = src/paciencia.cpp \
-       src/regras.cpp \
-       src/pontuacao.cpp \
-       $(CORE)/baralho.cpp \
-       $(CORE)/cartas.cpp
+pife.exe: $(OBJ) $(CORE_OBJ)
+	$(CXX) $(OBJ) $(CORE_OBJ) -o pife.exe
 
-OBJS = $(BUILD)/paciencia.o \
-       $(BUILD)/regras.o \
-       $(BUILD)/pontuacao.o \
-       $(BUILD)/baralho.o \
-       $(BUILD)/cartas.o
+obj/main.o: Testes/PifeMain.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c Testes/PifeMain.cpp -o obj/main.o
 
-TEST_SRC = test/test_paciencia.cpp
-TEST_OBJ = $(BUILD)/test_paciencia.o
-TARGET = $(BUILD)/test_paciencia.exe
+obj/pife.o: src/pife.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/pife.cpp -o obj/pife.o
 
-all: $(BUILD) $(TARGET)
+obj/jogadorPife.o: src/jogadorPife.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/jogadorPife.cpp -o obj/jogadorPife.o
 
-$(BUILD):
-	if not exist $(BUILD) mkdir $(BUILD)
+obj/regrasPife.o: src/regrasPife.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/regrasPife.cpp -o obj/regrasPife.o
 
-$(BUILD)/paciencia.o: src/paciencia.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+# ==========================================
+# NOVAS REGRAS PARA COMPILAR O CORE
+# ==========================================
+obj/Carta.o: ../Core/Carta.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c ../Core/Carta.cpp -o obj/Carta.o
 
-$(BUILD)/regras.o: src/regras.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-$(BUILD)/pontuacao.o: src/pontuacao.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-$(BUILD)/baralho.o: $(CORE)/baralho.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-$(BUILD)/cartas.o: $(CORE)/cartas.cpp
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-$(BUILD)/test_paciencia.o: $(TEST_SRC)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
-$(TARGET): $(OBJS) $(TEST_OBJ)
-	$(CXX) $(CXXFLAGS) $^ -o $@
-
-run: $(TARGET)
-	$(TARGET)
+obj/Baralho.o: ../Core/Baralho.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c ../Core/Baralho.cpp -o obj/Baralho.o
 
 clean:
-	del /Q $(BUILD)\*.o $(BUILD)\*.exe
+	rm -rf obj pife.exe

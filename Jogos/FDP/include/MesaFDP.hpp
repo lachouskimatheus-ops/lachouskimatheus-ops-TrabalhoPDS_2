@@ -2,6 +2,7 @@
 #include "Mesa.hpp"
 #include "Carta.hpp"
 #include "Placar.hpp"
+#include <json.hpp>
 
 class Carta;
 
@@ -29,7 +30,7 @@ public:
 	void anunciarVencedor();
 	void iniciarFaseApostas();
     JogadorFDP* getJogadorDaVez();
-    int getApostaProibida();
+    int getApostaProibida() const;
     bool registrarAposta(int apostaDesejada);
     bool faseApostasFinalizada();
     void iniciarFaseDeCartas();
@@ -39,4 +40,8 @@ public:
     void prepararNovaPartida(int qtdJogadores);
     int getCartasNaRodada() const;
     int getJogadorDaVezIndex() const;
+    nlohmann::json paraJson() const;
+    void iniciarRodada();
+    bool rodadaFinalizada() const;
+    void finalizarRodada();
 };

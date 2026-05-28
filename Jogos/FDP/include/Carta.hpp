@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <json.hpp>
 
 enum class Naipe {
 	paus,
@@ -25,5 +26,6 @@ public:
 
 	int forca() const; 
     int getForcaNaipe() const;
+    nlohmann::json paraJson() const;
 
 };

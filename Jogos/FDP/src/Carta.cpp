@@ -49,3 +49,24 @@ int Carta::getForcaNaipe() const {
     if (naipe_ == Naipe::paus) return 4;
     return 0;
 }
+
+nlohmann::json Carta::paraJson() const {
+    nlohmann::json dadosCarta;
+    
+    dadosCarta["valor"] = valor_;
+    
+    if (naipe_ == Naipe::paus) {
+        dadosCarta["naipe"] = "paus";
+    };
+    if (naipe_ == Naipe::copas) {
+        dadosCarta["naipe"] = "copas";
+    };
+    if (naipe_ == Naipe::espadas) {
+        dadosCarta["naipe"] = "espadas";
+    };
+    if (naipe_ == Naipe::ouros) {
+        dadosCarta["naipe"] = "ouros";
+    };
+    
+    return dadosCarta;
+};

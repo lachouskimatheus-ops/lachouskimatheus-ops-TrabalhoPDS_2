@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Coletânea de Jogos - Fodinha (FDP)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="mesa-de-pano-verde">
+        
+        <div id="cadeira-esquerda" class="assento-oponente"></div>
+        <div id="cadeira-topo" class="assento-oponente"></div>
+        <div id="cadeira-direita" class="assento-oponente"></div>
+
+        <div class="centro-da-mesa">
+            
+            <div id="baralho-central" class="baralho-visual">
+                <div class="verso-grande empilhada" style="bottom: 8px; right: 8px; box-shadow: none;"></div>
+                <div class="verso-grande empilhada" style="bottom: 4px; right: 4px; box-shadow: none;"></div>
+                <div class="verso-grande empilhada" style="bottom: 0; right: 0;"></div>
+            </div>
+
+            <div class="painel-vira">
+                <h3>Vira</h3>
+                <div id="carta-vira" class="carta"></div>
+            </div>
+            
+            <div class="vaza-atual">
+                <h3>Cartas na Mesa</h3>
+                <div id="cartas-na-mesa" class="linhas-cartas"></div>
+            </div>
+        </div>
+
+        <div id="cadeira-base" class="assento-local area-jogador-local">
+            <div id="status-local" class="status-box">
+                <h2>Você (Jogador)</h2>
+                <p>Vidas: <span id="local-vidas">5</span></p>
+                <p>Aposta: <span id="local-aposta">0</span> / Feitas: <span id="local-ganhas">0</span></p>
+                
+                <div id="painel-apostas" class="escondido">
+                    <p style="margin-bottom: 10px; font-weight: bold; color: #9ca3af;">Faça sua aposta:</p>
+                    <div id="botoes-aposta" class="botoes-aposta"></div>
+                </div>
+            </div>
+
+            <div id="minha-mao" class="mao-jogador"></div>
+        </div>
+
+    </div>
+
+    <div id="modal-notificacao" class="modal-overlay modal-oculto">
+        <div class="modal-conteudo" id="modal-texto">
+            </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
