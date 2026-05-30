@@ -51,6 +51,14 @@ public:
     int getPontuacao() const;
     void virarParaCima(int coluna);
     bool estaExposta(int coluna, int linha);
+    
+    // Getters para o servidor web
+const std::vector<std::vector<Carta>>& getColunas() const { return colunas; }
+const std::vector<std::vector<Carta>>& getFundacoes() const { return fundacoes; }
+const std::vector<Carta>& getDescarte() const { return descarte; }
+int getCavaTamanho() const { return cava.tamanho(); }
+int getCartasEscondidas(int i) const { return cartasEscondidas[i]; }
+bool getVitoria() const { return vitoria; }
     ~Paciencia();
 };
 

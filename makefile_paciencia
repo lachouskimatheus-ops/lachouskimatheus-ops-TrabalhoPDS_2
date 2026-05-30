@@ -1,0 +1,26 @@
+CXX      = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
+           -I./include \
+           -I./dependencias \
+           -I./Jogos/Paciencia/include \
+           -I./Jogos/Core/CoreBaralho1
+
+LIBS = -lws2_32 -lmswsock
+
+PACIENCIA_SRCS = servidor_paciencia.cpp \
+                 Jogos/Paciencia/src/paciencia.cpp \
+                 Jogos/Paciencia/src/pontuacao.cpp \
+                 Jogos/Paciencia/src/regras.cpp \
+                 Jogos/Core/CoreBaralho1/baralho.cpp \
+                 Jogos/Core/CoreBaralho1/cartas.cpp
+
+TARGET = servidor_paciencia
+
+all: $(TARGET)
+
+$(TARGET):
+	$(CXX) $(CXXFLAGS) $(PACIENCIA_SRCS) -o $(TARGET) $(LIBS)
+	@echo "Compilado! Rode com ./$(TARGET)"
+
+clean:
+	rm -f $(TARGET)

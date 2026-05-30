@@ -1,0 +1,316 @@
+/* ==========================================
+   PAINEL TOPO
+   ========================================== */
+.painel-topo {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 20;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 50px;
+    padding: 10px 25px;
+}
+
+.info-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.info-box span {
+    font-size: 0.65rem;
+    color: #9ca3af;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.info-box strong {
+    font-size: 1.2rem;
+    color: #4ade80;
+}
+
+.btn-acao {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #f3f4f6;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.btn-acao:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+
+.btn-novo {
+    background: rgba(74, 222, 128, 0.15);
+    border-color: rgba(74, 222, 128, 0.3);
+    color: #4ade80;
+}
+
+.btn-novo:hover {
+    background: rgba(74, 222, 128, 0.25);
+}
+
+/* ==========================================
+   ÁREA DE FUNDAÇÕES
+   ========================================== */
+.area-fundacoes {
+    position: absolute;
+    top: 90px;
+    right: 60px;
+    z-index: 10;
+}
+
+.label-area {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.fundacoes-container {
+    display: flex;
+    gap: 10px;
+}
+
+.pilha-fundacao {
+    width: 80px;
+    height: 110px;
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.pilha-fundacao.highlight {
+    border-color: #4ade80;
+    box-shadow: 0 0 15px rgba(74,222,128,0.3);
+}
+
+.pilha-fundacao .placeholder {
+    font-size: 1.8rem;
+    opacity: 0.2;
+}
+
+/* ==========================================
+   ÁREA DA CAVA E DESCARTE
+   ========================================== */
+.area-cava {
+    position: absolute;
+    top: 90px;
+    left: 60px;
+    z-index: 10;
+}
+
+.cava-container {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.pilha-cava {
+    position: relative;
+    cursor: pointer;
+    width: 80px;
+    height: 110px;
+}
+
+.pilha-cava:hover .verso-grande {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+
+.cava-count {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.pilha-descarte {
+    width: 80px;
+    height: 110px;
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.pilha-descarte .placeholder {
+    font-size: 1.8rem;
+    opacity: 0.2;
+}
+
+/* ==========================================
+   ÁREA DAS COLUNAS (TABLEAU)
+   ========================================== */
+.area-colunas {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    z-index: 10;
+}
+
+.colunas-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.coluna {
+    width: 80px;
+    min-height: 110px;
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 5px;
+}
+
+.coluna.highlight {
+    border-color: #4ade80;
+    box-shadow: 0 0 15px rgba(74,222,128,0.2);
+}
+
+/* ==========================================
+   CARTAS NAS COLUNAS
+   ========================================== */
+.carta-coluna {
+    width: 75px;
+    height: 105px;
+    border-radius: 8px;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+
+.carta-coluna.frente {
+    background: #ffffff;
+}
+
+.carta-coluna.verso {
+    background-color: #1e3a8a;
+    background-image: 
+        repeating-linear-gradient(45deg, #2563eb 25%, transparent 25%, transparent 75%, #2563eb 75%, #2563eb),
+        repeating-linear-gradient(45deg, #2563eb 25%, #1e3a8a 25%, #1e3a8a 75%, #2563eb 75%, #2563eb);
+    background-position: 0 0, 4px 4px;
+    background-size: 8px 8px;
+    cursor: default;
+}
+
+.carta-coluna.frente::after {
+    content: attr(data-naipe-simbolo);
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    font-size: 1.3rem;
+    opacity: 0.9;
+}
+
+.carta-coluna.paus, .carta-coluna.espadas { color: #1f2937; }
+.carta-coluna.copas, .carta-coluna.ouros  { color: #dc2626; }
+
+.carta-coluna.selecionada {
+    transform: translateY(-15px);
+    box-shadow: 0 15px 30px rgba(74,222,128,0.4);
+    outline: 2px solid #4ade80;
+}
+
+.carta-coluna.frente:hover:not(.selecionada) {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+/* ==========================================
+   CARTA NO DESCARTE
+   ========================================== */
+.carta-descarte {
+    width: 75px;
+    height: 105px;
+    background: #ffffff;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    cursor: pointer;
+    position: absolute;
+    transition: transform 0.15s ease;
+}
+
+.carta-descarte::after {
+    content: attr(data-naipe-simbolo);
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    font-size: 1.3rem;
+}
+
+.carta-descarte.paus, .carta-descarte.espadas { color: #1f2937; }
+.carta-descarte.copas, .carta-descarte.ouros  { color: #dc2626; }
+
+.carta-descarte.selecionada {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(74,222,128,0.4);
+    outline: 2px solid #4ade80;
+}
+
+.carta-descarte:hover:not(.selecionada) {
+    transform: translateY(-5px);
+}
+
+/* ==========================================
+   CAVA VAZIA
+   ========================================== */
+.cava-vazia {
+    width: 80px;
+    height: 110px;
+    border: 2px dashed rgba(255,255,255,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.5rem;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.cava-vazia:hover {
+    opacity: 0.7;
+}
