@@ -14,10 +14,13 @@ function atualizarInterface(dados) {
     const estadoAnterior = window.estadoMesaAtual; 
     let iniciarAnimacao = false; 
 
+    // DETECTOR DE RODADA CEGA (1 Carta)
+    const isRodadaCega = (dados.cartas_na_rodada === 1);
+
     const eu = dados.jogadores.find(j => j.id === meuId);
     if (!eu) return;
 
-    // DETETIVE DE DISTRIBUIÇÃO: Mão estava vazia e agora encheu?
+    // DETETIVE DE DISTRIBUIÇÃO
     const euAnterior = estadoAnterior ? estadoAnterior.jogadores.find(j => j.id === meuId) : null;
     if (eu.mao.length > 0 && (!euAnterior || euAnterior.mao.length === 0)) {
         iniciarAnimacao = true;
@@ -27,7 +30,6 @@ function atualizarInterface(dados) {
     // DETETIVE DE VAZAS E RODADAS
     // ==========================================
     if (estadoAnterior && estadoAnterior.cartas_na_mesa && estadoAnterior.cartas_na_mesa.length > 0 && (!dados.cartas_na_mesa || dados.cartas_na_mesa.length === 0)) {
-        
         const perdedores = dados.jogadores.filter(j => {
             const oldJ = estadoAnterior.jogadores.find(o => o.id === j.id);
             return oldJ && j.vidas < oldJ.vidas;
@@ -57,7 +59,6 @@ function atualizarInterface(dados) {
 
     window.estadoMesaAtual = dados; 
 
-    // Atualiza status local
     document.getElementById('local-vidas').innerText = eu.vidas;
     document.getElementById('local-aposta').innerText = eu.aposta_atual === -1 ? '?' : eu.aposta_atual;
     document.getElementById('local-ganhas').innerText = eu.vezes_ganhas;
@@ -92,7 +93,14 @@ function atualizarInterface(dados) {
                 
                 let htmlCartasVerso = '<div class="mao-oponente">';
                 for (let c = 0; c < j.mao.length; c++) {
-                    htmlCartasVerso += '<div class="carta-verso"></div>';
+                    // LÓGICA DA RODADA CEGA AQUI
+                    if (isRodadaCega && j.mao[c] && j.mao[c].valor) {
+                        const textoValor = traduzirValorCarta(j.mao[c].valor);
+                        const simboloNaipe = obterSimboloNaipe(j.mao[c].naipe);
+                        htmlCartasVerso += `<div class="carta mini-carta ${j.mao[c].naipe}" data-naipe-simbolo="${simboloNaipe}">${textoValor}</div>`;
+                    } else {
+                        htmlCartasVerso += '<div class="carta-verso"></div>';
+                    }
                 }
                 htmlCartasVerso += '</div>';
 
@@ -154,12 +162,18 @@ function atualizarInterface(dados) {
     
     eu.mao.forEach((carta, indice) => {
         const elementoCarta = document.createElement('div');
-        const textoValor = traduzirValorCarta(carta.valor);
-        const simboloNaipe = obterSimboloNaipe(carta.naipe);
+        
+        // LÓGICA DA SUA CARTA NA RODADA CEGA
+        if (isRodadaCega) {
+            elementoCarta.className = 'minha-carta-cega';
+        } else {
+            const textoValor = traduzirValorCarta(carta.valor);
+            const simboloNaipe = obterSimboloNaipe(carta.naipe);
 
-        elementoCarta.className = `carta ${carta.naipe}`;
-        elementoCarta.innerText = `${textoValor}`;
-        elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
+            elementoCarta.className = `carta ${carta.naipe}`;
+            elementoCarta.innerText = `${textoValor}`;
+            elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
+        }
         
         if (ehMinhaVez && dados.jogadores_que_ja_apostaram >= dados.jogadores.length) {
             elementoCarta.onclick = () => jogarCarta(indice);
@@ -199,9 +213,13 @@ function atualizarInterface(dados) {
         painelApostas.classList.add('escondido');
     }
 
-    // Dispara o efeito visual se a rodada for nova
+    // Dispara o efeito visual e o alerta de rodada cega
     if (iniciarAnimacao) {
         animarDistribuicao(dados);
+        
+        if (isRodadaCega) {
+            mostrarModal("<h2 style='color: #a855f7;'>🙈 Rodada Cega!</h2><p>Você não vê sua própria carta, mas vê as cartas na testa dos oponentes!</p>", 6000);
+        }
     }
 }
 

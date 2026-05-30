@@ -40,7 +40,7 @@ public:
     void prepararNovaPartida(int qtdJogadores);
     int getCartasNaRodada() const;
     int getJogadorDaVezIndex() const;
-    nlohmann::json paraJson() const;
+    nlohmann::json paraJson(int idJogadorSolicitante = -1) const;
     void iniciarRodada();
     bool rodadaFinalizada() const;
     void finalizarRodada();

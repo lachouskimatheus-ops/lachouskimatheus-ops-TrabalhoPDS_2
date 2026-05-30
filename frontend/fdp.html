@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Coletânea de Jogos - Fodinha (FDP)</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="fdp_style.css">
 </head>
 <body>
 
+    <!-- A Mesa Verde que envelopa todo o jogo -->
     <div class="mesa-de-pano-verde">
         
+        <!-- Cadeiras dos Oponentes -->
         <div id="cadeira-esquerda" class="assento-oponente"></div>
         <div id="cadeira-topo" class="assento-oponente"></div>
         <div id="cadeira-direita" class="assento-oponente"></div>
 
+        <!-- Centro da Mesa -->
         <div class="centro-da-mesa">
             
+            <!-- O Baralho Físico no Centro -->
             <div id="baralho-central" class="baralho-visual">
                 <div class="verso-grande empilhada" style="bottom: 8px; right: 8px; box-shadow: none;"></div>
                 <div class="verso-grande empilhada" style="bottom: 4px; right: 4px; box-shadow: none;"></div>
@@ -32,28 +36,43 @@
             </div>
         </div>
 
+        <!-- A sua cadeira (Sempre fixa na base da tela) -->
         <div id="cadeira-base" class="assento-local area-jogador-local">
+            
+            <!-- Suas Cartas (AGORA VEM PRIMEIRO, PARA FICAR ACIMA DO PAINEL) -->
+            <div id="minha-mao" class="mao-jogador"></div>
+
+            <!-- Status do Jogador Local (Layout Moderno, Clean e em formato de pílula) -->
             <div id="status-local" class="status-box">
-                <h2>Você (Jogador)</h2>
-                <p>Vidas: <span id="local-vidas">5</span></p>
-                <p>Aposta: <span id="local-aposta">0</span> / Feitas: <span id="local-ganhas">0</span></p>
                 
+                <!-- Lado Esquerdo: Informações -->
+                <div class="info-local">
+                    <h2>Você (Jogador)</h2>
+                    <div class="dados-local">
+                        <p>Vidas: <strong id="local-vidas">5</strong></p>
+                        <p>Aposta: <strong id="local-aposta">?</strong> / Feitas: <strong id="local-ganhas">0</strong></p>
+                    </div>
+                </div>
+                
+                <!-- Lado Direito: Painel de Apostas -->
                 <div id="painel-apostas" class="escondido">
-                    <p style="margin-bottom: 10px; font-weight: bold; color: #9ca3af;">Faça sua aposta:</p>
+                    <p class="titulo-aposta">Faça sua aposta:</p>
                     <div id="botoes-aposta" class="botoes-aposta"></div>
                 </div>
+
             </div>
 
-            <div id="minha-mao" class="mao-jogador"></div>
         </div>
 
     </div>
 
+    <!-- Modal Dinâmico de Notificações -->
     <div id="modal-notificacao" class="modal-overlay modal-oculto">
         <div class="modal-conteudo" id="modal-texto">
-            </div>
+            <!-- O JavaScript vai injetar os textos aqui -->
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="fdp_app.js"></script>
 </body>
 </html>

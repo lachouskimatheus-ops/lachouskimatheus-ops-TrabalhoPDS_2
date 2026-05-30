@@ -1,51 +1,67 @@
-# Nome do executável final
-TARGET = bin/fdp_teste
-
-# Compilador e Flags
 CXX = g++
-# Os -I ensinam o compilador onde procurar os .hpp voltando (../../) para a raiz
-CXXFLAGS = -Wall -Wextra -std=c++17 -I../../Interface/include -Iinclude -I../../Jogos/Core/include
+CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -I../Core -I../../include/dependencias -pthread
 
-# Flags do SFML
-LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
+# Adicionamos obj/Placar.o na lista do FDP
+OBJ = obj/main.o obj/Servidor.o obj/MesaFDP.o obj/BaralhoSujo.o obj/JogadorFDP.o obj/JuizPaulista.o obj/Placar.o
 
-# Encontra os arquivos .cpp usando caminhos relativos à pasta FDP
-SRCS = $(wildcard ../../Interface/src/*.cpp) \
-       $(wildcard src/*.cpp) \
-       $(wildcard ../../Jogos/Core/src/*.cpp) \
-       $(wildcard testes/*.cpp)
+# Adicionamos obj/Mesa.o e obj/Jogador.o na lista do Core
+CORE_OBJ = obj/Carta.o obj/Baralho.o obj/Mesa.o obj/Jogador.o
 
-# Remove os caminhos longos e joga todos os .o direto para a pasta local build/
-OBJS = $(patsubst %.cpp, build/%.o, $(notdir $(SRCS)))
+all: fdp_server.exe
 
-# Ensina ao Make onde ele deve procurar pelos arquivos .cpp listados acima
-vpath %.cpp ../../Interface/src src ../../Jogos/Core/src testes
+fdp_server.exe: $(OBJ) $(CORE_OBJ)
+	$(CXX) $(CXXFLAGS) $(OBJ) $(CORE_OBJ) -o fdp_server.exe
 
 # ==========================================
-# REGRAS DE COMPILAÇÃO
+# REGRAS DE COMPILAÇÃO DO FDP
 # ==========================================
+obj/main.o: src/main.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/main.cpp -o obj/main.o
 
-all: $(TARGET)
+obj/Servidor.o: src/Servidor.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/Servidor.cpp -o obj/Servidor.o
 
-$(TARGET): $(OBJS)
-	@mkdir -p bin
-	@echo "Linkando o executável..."
-	$(CXX) $(OBJS) -o $(TARGET) $(LDFLAGS)
-	@echo "✨ Build completo! Rode com: ./$(TARGET)"
+obj/MesaFDP.o: src/MesaFDP.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/MesaFDP.cpp -o obj/MesaFDP.o
 
-# Regra para compilar cada .cpp em um .o na pasta local
-build/%.o: %.cpp
-	@mkdir -p build
-	@echo "Compilando $<..."
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+obj/BaralhoSujo.o: src/BaralhoSujo.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/BaralhoSujo.cpp -o obj/BaralhoSujo.o
+
+obj/JogadorFDP.o: src/JogadorFDP.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/JogadorFDP.cpp -o obj/JogadorFDP.o
+
+obj/JuizPaulista.o: src/JuizPaulista.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/JuizPaulista.cpp -o obj/JuizPaulista.o
+
+# Nova regra para o Placar
+obj/Placar.o: src/Placar.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/Placar.cpp -o obj/Placar.o
+
+# ==========================================
+# REGRAS DO CORE UNIFICADO E CLASSES MÃE
+# ==========================================
+obj/Carta.o: ../Core/Carta.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c ../Core/Carta.cpp -o obj/Carta.o
+
+obj/Baralho.o: ../Core/Baralho.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c ../Core/Baralho.cpp -o obj/Baralho.o
+
+obj/Mesa.o: src/Mesa.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/Mesa.cpp -o obj/Mesa.o
+
+obj/Jogador.o: src/Jogador.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c src/Jogador.cpp -o obj/Jogador.o
 
 clean:
-	@echo "Limpando os arquivos de compilação locais..."
-	rm -rf build bin
-	@echo "Limpeza concluída!"
-
-run: all
-	@echo "Iniciando o teste..."
-	./$(TARGET)
-
-.PHONY: all clean run
+	rm -rf obj fdp_server.exe

@@ -9,11 +9,15 @@ Servidor::Servidor(MesaFDP* mesa) {
 };
 
 void Servidor::notificarTodos() {
-    // 1. Pega o estado completo da mesa
-    std::string estadoJson = mesa_->paraJson().dump();
-    
-    // 2. Dispara essa string para todos os jogadores conectados
-    for (auto* conn : conexoes_) {
+    // 1. Iteramos pelo MAP, pegando a conexão e o ID do jogador ao mesmo tempo
+    for (auto const& par : conexoes_) {
+        crow::websocket::connection* conn = par.first;
+        int idJogador = par.second;
+        
+        // 2. Gera o JSON de forma EXCLUSIVA para esse jogador (aqui a mágica do Anti-Cheat acontece!)
+        std::string estadoJson = mesa_->paraJson(idJogador).dump();
+        
+        // 3. Envia o JSON seguro
         conn->send_text(estadoJson);
     };
 };
@@ -23,14 +27,16 @@ void Servidor::iniciar(int porta) {
     CROW_WEBSOCKET_ROUTE(app_, "/ws")
       .onopen([this](crow::websocket::connection& conn) {
           std::cout << "Novo jogador conectado!" << std::endl;
-          conexoes_.insert(&conn);
           
-          // Sempre que alguém entra, mandamos o estado atual da mesa
+          // Quando a conexão abre, ainda não sabemos quem é o jogador, então associamos ao ID -1
+          conexoes_[&conn] = -1; 
+          
+          // Manda o estado atual da mesa
           notificarTodos();
       })
       .onclose([this](crow::websocket::connection& conn, const std::string& reason, uint16_t code) {
           std::cout << "Jogador desconectado!" << std::endl;
-          conexoes_.erase(&conn);
+          conexoes_.erase(&conn); // Remove do mapa usando a chave
       })
       .onmessage([this](crow::websocket::connection& conn, const std::string& data, bool is_binary) {
           std::cout << "\n========================================" << std::endl;
@@ -46,6 +52,12 @@ void Servidor::iniciar(int porta) {
 
               int idRemetente = comando["jogador_id"];
               std::string acao = comando["acao"];
+
+              // ==========================================
+              // IDENTIFICAÇÃO DO JOGADOR
+              // Agora o servidor aprende e vincula que esta conexão (aba/navegador) pertence a esse ID!
+              // ==========================================
+              conexoes_[&conn] = idRemetente;
 
               // SEGURANÇA: Só processa o comando se o ID de quem enviou for igual ao jogador da vez no C++
               if (idRemetente != mesa_->getJogadorDaVezIndex()) {
