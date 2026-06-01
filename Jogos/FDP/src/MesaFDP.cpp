@@ -109,14 +109,15 @@ std::vector<std::string> MesaFDP::obterResumoRodada() {
         if (apostou == fez) {
             resumo.push_back("[SALVO] " + jogador->getNome() + " acertou a aposta de quebradinha!");
         } else {
+            // Mensagem atualizada para a regra fixa de 1 vida
             resumo.push_back("[TOMOU] " + jogador->getNome() + " apostou " + 
                              std::to_string(apostou) + " mas fez " + 
-                             std::to_string(fez) + " rodada(s). Perdeu uma vida!");
-        }
-    }
+                             std::to_string(fez) + " vaza(s). Perdeu 1 vida!");
+        };
+    };
 
     return resumo;
-}
+};
 
 void MesaFDP::iniciarFaseDeCartas() {
     cartasNaMesa_.clear(); 
@@ -161,15 +162,27 @@ bool MesaFDP::vazaFinalizada() {
 }
 
 void MesaFDP::apurarVencedorDaVaza() {
+    // BLINDAGEM 1: Se a função for chamada quando a mesa já estiver limpa, aborta silenciosamente.
+    if (cartasNaMesa_.empty() || ordemJogadoresDaVaza_.empty()) {
+        return;
+    }
+
     JuizPaulista juiz;
-    
     int indiceVencedorVaza = juiz.decidirVencedor(cartasNaMesa_, cartaVira_, true);
+
+    // BLINDAGEM 2: Se o Juiz falhar e retornar um índice que não existe no vetor, aborta a execução.
+    if (indiceVencedorVaza < 0 || indiceVencedorVaza >= (int)ordemJogadoresDaVaza_.size()) {
+        std::cout << "[ERRO CRITICO] Juiz retornou indice fora dos limites: " << indiceVencedorVaza << std::endl;
+        return;
+    }
+
     int indiceVencedorReal = ordemJogadoresDaVaza_[indiceVencedorVaza];
     JogadorFDP* jogadorVencedor = static_cast<JogadorFDP*>(jogadores_[indiceVencedorReal]);
 
     jogadorVencedor->adicionarVazaFeita(); 
     jogadorDaVezIndex_ = indiceVencedorReal;
 
+    // Limpa a mesa para a próxima vaza
     cartasNaMesa_.clear(); 
     ordemJogadoresDaVaza_.clear();
 }
@@ -289,22 +302,21 @@ void MesaFDP::finalizarRodada() {
     for (auto* j : jogadores_) {
         JogadorFDP* jogador = static_cast<JogadorFDP*>(j);
         if (jogador->getVidas() > 0) {
-            int diferenca = std::abs(jogador->getAposta() - jogador->getVezesGanhas());
-            
-            if (diferenca > 0) {
-                jogador->setVidas(jogador->getVidas() - diferenca);
-            }
-        }
-    }
+            // A MÁGICA ACONTECE AQUI: Só perde vida se errar a aposta!
+            if (jogador->getAposta() != jogador->getVezesGanhas()) {
+                jogador->setVidas(jogador->getVidas() - 1);
+            };
+        };
+    };
 
     int vivos = 0;
     for (auto* j : jogadores_) {
         if (static_cast<JogadorFDP*>(j)->getVidas() > 0) vivos++;
-    }
+    };
     if (vivos <= 1) {
         std::cout << "GAME OVER! Temos um vencedor definitivo." << std::endl;
         return; 
-    }
+    };
 
     atualizarQtdCartas();
 

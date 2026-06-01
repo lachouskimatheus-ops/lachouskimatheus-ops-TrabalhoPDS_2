@@ -1,3 +1,51 @@
+// ==========================================
+// SISTEMA DE ÁUDIO DE ALTA PERFORMANCE
+// ==========================================
+
+// 1. Cria um "banco" na memória RAM para guardar os sons
+const bancoDeSons = {};
+
+// 2. Função para carregar o som na RAM antes do jogo começar
+function preCarregarSom(nomeDoArquivo) {
+    bancoDeSons[nomeDoArquivo] = new Audio(`./assets/sons/${nomeDoArquivo}`);
+    bancoDeSons[nomeDoArquivo].preload = 'auto'; // Força o Firefox a decodificar agora
+}
+
+// 3. Carrega os sons que precisam ser rápidos como um raio (adicione outros se quiser)
+preCarregarSom('click.ogg');
+preCarregarSom('jogar_carta.ogg');
+
+// 4. A nova função tocarSom
+function tocarSom(nomeDoArquivo) {
+    let audio;
+    
+    if (bancoDeSons[nomeDoArquivo]) {
+        // Se já está na RAM, clona instantaneamente! 
+        // (O clone permite tocar o mesmo som várias vezes sobrepostas sem engasgar)
+        audio = bancoDeSons[nomeDoArquivo].cloneNode();
+    } else {
+        // Sons menos importantes que não foram pré-carregados seguem o fluxo normal
+        audio = new Audio(`./assets/sons/${nomeDoArquivo}`);
+    }
+    
+    audio.volume = 0.5; 
+    
+    audio.play().catch(erro => {
+        console.log("O navegador bloqueou o som automático. O usuário precisa interagir com a tela antes.");
+    });
+};
+
+// 1. Resgata o nome da memória do navegador (ou define "Anônimo" se vier vazio)
+const meuNome = localStorage.getItem('jogador_nickname') || 'Anônimo';
+
+// 2. Atualiza a sua própria tela localmente
+document.addEventListener("DOMContentLoaded", () => {
+    const tituloJogador = document.querySelector('.info-local h2');
+    if (tituloJogador) {
+        tituloJogador.innerText = `${meuNome} (Você)`;
+    }
+});
+
 // 1. Pega o ID do jogador
 const urlParams = new URLSearchParams(window.location.search);
 const meuId = parseInt(urlParams.get('id')) || 0;
@@ -22,7 +70,13 @@ function atualizarInterface(dados) {
 
     // DETETIVE DE DISTRIBUIÇÃO
     const euAnterior = estadoAnterior ? estadoAnterior.jogadores.find(j => j.id === meuId) : null;
-    if (eu.mao.length > 0 && (!euAnterior || euAnterior.mao.length === 0)) {
+    
+    if (!euAnterior && eu.mao.length > 0) {
+        // Primeira rodada de todas (quando entra na mesa)
+        iniciarAnimacao = true;
+    } else if (euAnterior && eu.mao.length > euAnterior.mao.length) {
+        // Nova rodada! Se o número de cartas AUMENTOU em relação à jogada anterior,
+        // é porque o carteador do C++ acabou de dar as cartas novas!
         iniciarAnimacao = true;
     }
 
@@ -40,7 +94,7 @@ function atualizarInterface(dados) {
             perdedores.forEach(j => {
                 const oldJ = estadoAnterior.jogadores.find(o => o.id === j.id);
                 const perdeu = oldJ.vidas - j.vidas;
-                msg += `<p><b>${j.name || j.nome || 'Jogador '+j.id}</b> perdeu ${perdeu} vida(s)</p>`;
+                msg += `<p><b>${j.name || j.nome || 'Jogador '+j.id}</b> perdeu ${perdeu} vida</p>`;
             });
             
             const vivos = dados.jogadores.filter(j => j.vidas > 0);
@@ -48,11 +102,13 @@ function atualizarInterface(dados) {
                 msg += `<h2 style='color: #4ade80; margin-top: 25px;'>👑 ${vivos[0].name || vivos[0].nome} VENCEU A PARTIDA! 👑</h2>`;
             }
             
-            mostrarModal(msg, 5000); 
+            mostrarModal(msg, 2500); 
+            tocarSom('knife-cut.mp3');
         } else {
             const ganhador = dados.jogadores.find(j => j.id === dados.jogador_da_vez_index);
             if (ganhador) {
                 mostrarModal(`<h2 style='color: #60a5fa;'>✨ ${ganhador.name || ganhador.nome || 'Jogador '+ganhador.id} levou a vaza!</h2>`, 2500);
+                tocarSom('victory_6.mp3');
             }
         }
     }
@@ -176,7 +232,7 @@ function atualizarInterface(dados) {
         }
         
         if (ehMinhaVez && dados.jogadores_que_ja_apostaram >= dados.jogadores.length) {
-            elementoCarta.onclick = () => jogarCarta(indice);
+            elementoCarta.onmousedown = () => jogarCarta(indice);
         } else {
             elementoCarta.style.opacity = "0.6";
             elementoCarta.style.cursor = "not-allowed";
@@ -202,9 +258,12 @@ function atualizarInterface(dados) {
             
             if (dados.aposta_proibida === i) {
                 btn.classList.add('proibido');
-                btn.onclick = () => alert(`O número ${i} está bloqueado!`);
+                btn.onmousedown = () => {
+                    tocarSom('click.ogg');
+                    alert(`O número ${i} está bloqueado!`);
+                };
             } else {
-                btn.onclick = () => enviarAposta(i);
+                btn.onmousedown = () => enviarAposta(i);
             }
             
             containerBotoes.appendChild(btn);
@@ -213,13 +272,19 @@ function atualizarInterface(dados) {
         painelApostas.classList.add('escondido');
     }
 
-    // Dispara o efeito visual e o alerta de rodada cega
+    // ==========================================
+    // ALERTA DA RODADA CEGA E SOM NO INÍCIO
+    // ==========================================
+    const eraRodadaCega = (estadoAnterior && estadoAnterior.cartas_na_rodada === 1);
+
+    if (isRodadaCega && !eraRodadaCega) {
+        mostrarModal("<h2 style='color: #a855f7;'>🙈 Rodada Cega!</h2><p>Você não vê sua própria carta, mas vê as cartas na testa dos oponentes!</p>", 3000);
+        tocarSom('funny_82hiegE.mp3');
+    }
+
+    // Dispara o efeito visual das cartas voando
     if (iniciarAnimacao) {
         animarDistribuicao(dados);
-        
-        if (isRodadaCega) {
-            mostrarModal("<h2 style='color: #a855f7;'>🙈 Rodada Cega!</h2><p>Você não vê sua própria carta, mas vê as cartas na testa dos oponentes!</p>", 6000);
-        }
     }
 }
 
@@ -227,6 +292,7 @@ function atualizarInterface(dados) {
 // FUNÇÕES AUXILIARES E ANIMAÇÃO
 // ==========================================
 function jogarCarta(indice) {
+    tocarSom('jogar_carta.ogg');
     socket.send(JSON.stringify({
         acao: "JOGAR_CARTA",
         jogador_id: meuId,
@@ -235,6 +301,7 @@ function jogarCarta(indice) {
 }
 
 function enviarAposta(valorDesejado) {
+    tocarSom('click.mp3');
     socket.send(JSON.stringify({
         acao: "APOSTAR",
         jogador_id: meuId,
@@ -267,6 +334,7 @@ function mostrarModal(htmlContent, tempoMs) {
 }
 
 function animarDistribuicao(dados) {
+    tocarSom('shuffle.mp3');
     const baralho = document.getElementById('baralho-central');
     if (!baralho) return;
 

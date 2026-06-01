@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FDP - Lobby e Regras</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    min-height: 100vh;
+    background: #0a0a0a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    overflow: hidden;
+  }
+
+  /* Fundo Escuro */
+  .bg {
+    position: fixed;
+    inset: 0;
+    /* Lembre-se de ajustar este caminho depois para o relativo */
+    background-image: url('/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/fundo.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.25);
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+    width: 100%;
+    max-width: 600px;
+    background: rgba(15, 15, 20, 0.75);
+    border: 1px solid rgba(255, 200, 50, 0.3);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    animation: fadeIn 0.6s ease;
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 32px;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255,200,50,0.5);
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
+  h1 span { color: #f0c040; }
+
+  .saudacao {
+    color: #aaa;
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+  }
+
+  /* Caixa de Regras */
+  .regras-box {
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 4px solid #f0c040;
+    padding: 20px 25px;
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 30px;
+  }
+
+  .regras-box h3 {
+    color: #f0c040;
+    margin-bottom: 15px;
+    letter-spacing: 2px;
+  }
+
+  .regras-lista {
+    list-style: none;
+    color: #ddd;
+    line-height: 1.8;
+    font-size: 15px;
+  }
+
+  .regras-lista li {
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .regras-lista li::before {
+    content: "♦";
+    position: absolute;
+    left: 0;
+    color: #f0c040;
+  }
+
+  /* Botões */
+  .acoes {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+
+  .btn-voltar {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .btn-voltar:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-jogar {
+    background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%);
+    border: 1px solid rgba(240,192,64,0.6);
+    color: #f0c040;
+  }
+
+  .btn-jogar:hover {
+    background: linear-gradient(135deg, rgba(240,192,64,0.5) 0%, rgba(240,192,64,0.2) 100%);
+    box-shadow: 0 0 20px rgba(240,192,64,0.4);
+    color: #fff;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+  <h1>LOBBY <span>FDP</span></h1>
+  <div class="saudacao" id="texto-saudacao">Bem-vindo, Jogador!</div>
+
+  <div class="regras-box">
+    <h3>COMO JOGAR</h3>
+    <ul class="regras-lista">
+      <li><strong>Rodada Cega:</strong> A primeira rodada inicia com 1 carta para cada. Você vê as cartas dos oponentes, mas não a sua.</li>
+      <li><strong>Apostas:</strong> Acerte exatamente quantas vazas você fará. O último a falar está proibido de apostar o número que empate a conta com o total de cartas da rodada.</li>
+      <li><strong>Sistema de Vidas:</strong> Errar a aposta custa exatamente <strong>1 vida</strong> por rodada, independentemente da diferença.</li>
+      <li><strong>Vira:</strong> A carta na mesa define a manilha da rodada, seguindo a ordem de força tradicional.</li>
+    </ul>
+  </div>
+
+  <div class="acoes">
+    <a href="selecao.html" class="btn btn-voltar">VOLTAR</a>
+    
+    <a href="fdp.html" class="btn btn-jogar">CONECTAR À MESA</a>
+  </div>
+</div>
+
+<script>
+  // Puxa o nome da memória para dar boas-vindas personalizadas!
+  document.addEventListener("DOMContentLoaded", () => {
+    const meuNome = localStorage.getItem('jogador_nickname');
+    if (meuNome && meuNome !== 'Anônimo') {
+      document.getElementById('texto-saudacao').innerText = `Bem-vindo à mesa, ${meuNome}!`;
+    }
+  });
+</script>
+
+</body>
+</html>
