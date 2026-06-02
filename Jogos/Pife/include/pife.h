@@ -6,6 +6,8 @@
 #include "regrasPife.h"
 #include <vector>
 
+#include "../Core/Baralho.hpp"
+
 class Pife {
 private:
     Baralho baralho_;
@@ -32,7 +34,7 @@ public:
     const std::vector<Carta>& consultarMesa() const;
 
     int consultarIndiceJogadorAtual() const;
-    int numeroDejogadores() const;
+    int numeroDeJogadores() const;
 };
 
 #endif
