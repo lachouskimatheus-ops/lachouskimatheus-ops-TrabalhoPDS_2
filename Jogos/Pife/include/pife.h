@@ -1,12 +1,11 @@
 #ifndef PIFE_H
 #define PIFE_H
 
-#include "Baralho.hpp"
+#include "../../Core/Baralho.hpp"
 #include "jogadorPife.h"
 #include "regrasPife.h"
 #include <vector>
 
-#include "../Core/Baralho.hpp"
 
 class Pife {
 private:

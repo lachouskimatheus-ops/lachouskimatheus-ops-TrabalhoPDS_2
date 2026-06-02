@@ -88,6 +88,6 @@ int Pife::consultarIndiceJogadorAtual() const {
     return jogadorAtual_;
 }
 
-int Pife::numeroDejogadores() const {
+int Pife::numeroDeJogadores() const {
     return jogadores_.size();
 }

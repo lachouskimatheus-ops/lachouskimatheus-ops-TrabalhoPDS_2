@@ -1,8 +1,19 @@
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -I../Core/CoreBaralho1
 
-OBJ = obj/main.o obj/pife.o obj/jogadorPife.o obj/regrasPife.o
-CORE_OBJ = ../Core/CoreBaralho1/cartas.o ../Core/CoreBaralho1/baralho.o
+CXXFLAGS = -Wall -Wextra -std=c++17 \
+-Iinclude \
+-I../Core \
+-I../../include/dependencias
+
+OBJ = \
+obj/main.o \
+obj/pife.o \
+obj/jogadorPife.o \
+obj/regrasPife.o
+
+CORE_OBJ = \
+obj/Carta.o \
+obj/Baralho.o
 
 all: pife.exe
 
@@ -24,6 +35,14 @@ obj/jogadorPife.o: src/jogadorPife.cpp
 obj/regrasPife.o: src/regrasPife.cpp
 	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -c src/regrasPife.cpp -o obj/regrasPife.o
+
+obj/Carta.o: ../Core/Carta.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c ../Core/Carta.cpp -o obj/Carta.o
+
+obj/Baralho.o: ../Core/Baralho.cpp
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -c ../Core/Baralho.cpp -o obj/Baralho.o
 
 clean:
 	rm -rf obj pife.exe
