@@ -2,43 +2,31 @@
 // SISTEMA DE ÁUDIO DE ALTA PERFORMANCE
 // ==========================================
 
-// 1. Cria um "banco" na memória RAM para guardar os sons
 const bancoDeSons = {};
 
-// 2. Função para carregar o som na RAM antes do jogo começar
 function preCarregarSom(nomeDoArquivo) {
     bancoDeSons[nomeDoArquivo] = new Audio(`./assets/sons/${nomeDoArquivo}`);
-    bancoDeSons[nomeDoArquivo].preload = 'auto'; // Força o Firefox a decodificar agora
+    bancoDeSons[nomeDoArquivo].preload = 'auto';
 }
 
-// 3. Carrega os sons que precisam ser rápidos como um raio (adicione outros se quiser)
 preCarregarSom('click.ogg');
 preCarregarSom('jogar_carta.ogg');
 
-// 4. A nova função tocarSom
 function tocarSom(nomeDoArquivo) {
     let audio;
-    
     if (bancoDeSons[nomeDoArquivo]) {
-        // Se já está na RAM, clona instantaneamente! 
-        // (O clone permite tocar o mesmo som várias vezes sobrepostas sem engasgar)
         audio = bancoDeSons[nomeDoArquivo].cloneNode();
     } else {
-        // Sons menos importantes que não foram pré-carregados seguem o fluxo normal
         audio = new Audio(`./assets/sons/${nomeDoArquivo}`);
     }
-    
     audio.volume = 0.5; 
-    
     audio.play().catch(erro => {
         console.log("O navegador bloqueou o som automático. O usuário precisa interagir com a tela antes.");
     });
 };
 
-// 1. Resgata o nome da memória do navegador (ou define "Anônimo" se vier vazio)
 const meuNome = localStorage.getItem('jogador_nickname') || 'Anônimo';
 
-// 2. Atualiza a sua própria tela localmente
 document.addEventListener("DOMContentLoaded", () => {
     const tituloJogador = document.querySelector('.info-local h2');
     if (tituloJogador) {
@@ -46,11 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// 1. Pega o ID do jogador
 const urlParams = new URLSearchParams(window.location.search);
 const meuId = parseInt(urlParams.get('id')) || 0;
 
-// 2. Conecta ao servidor C++
 const socket = new WebSocket('ws://localhost:8080/ws');
 
 socket.onmessage = function(event) {
@@ -62,27 +48,19 @@ function atualizarInterface(dados) {
     const estadoAnterior = window.estadoMesaAtual; 
     let iniciarAnimacao = false; 
 
-    // DETECTOR DE RODADA CEGA (1 Carta)
     const isRodadaCega = (dados.cartas_na_rodada === 1);
 
     const eu = dados.jogadores.find(j => j.id === meuId);
     if (!eu) return;
 
-    // DETETIVE DE DISTRIBUIÇÃO
     const euAnterior = estadoAnterior ? estadoAnterior.jogadores.find(j => j.id === meuId) : null;
     
     if (!euAnterior && eu.mao.length > 0) {
-        // Primeira rodada de todas (quando entra na mesa)
         iniciarAnimacao = true;
     } else if (euAnterior && eu.mao.length > euAnterior.mao.length) {
-        // Nova rodada! Se o número de cartas AUMENTOU em relação à jogada anterior,
-        // é porque o carteador do C++ acabou de dar as cartas novas!
         iniciarAnimacao = true;
     }
 
-    // ==========================================
-    // DETETIVE DE VAZAS E RODADAS
-    // ==========================================
     if (estadoAnterior && estadoAnterior.cartas_na_mesa && estadoAnterior.cartas_na_mesa.length > 0 && (!dados.cartas_na_mesa || dados.cartas_na_mesa.length === 0)) {
         const perdedores = dados.jogadores.filter(j => {
             const oldJ = estadoAnterior.jogadores.find(o => o.id === j.id);
@@ -121,9 +99,6 @@ function atualizarInterface(dados) {
 
     const ehMinhaVez = (dados.jogador_da_vez_index === meuId);
     
-    // ==========================================
-    // ATUALIZA OPONENTES NAS CADEIRAS
-    // ==========================================
     document.getElementById('cadeira-direita').innerHTML = '';
     document.getElementById('cadeira-topo').innerHTML = '';
     document.getElementById('cadeira-esquerda').innerHTML = '';
@@ -149,7 +124,6 @@ function atualizarInterface(dados) {
                 
                 let htmlCartasVerso = '<div class="mao-oponente">';
                 for (let c = 0; c < j.mao.length; c++) {
-                    // LÓGICA DA RODADA CEGA AQUI
                     if (isRodadaCega && j.mao[c] && j.mao[c].valor) {
                         const textoValor = traduzirValorCarta(j.mao[c].valor);
                         const simboloNaipe = obterSimboloNaipe(j.mao[c].naipe);
@@ -172,7 +146,7 @@ function atualizarInterface(dados) {
     });
 
     // ==========================================
-    // 1. ATUALIZA A CARTA VIRA
+    // 1. ATUALIZA A CARTA VIRA (ALINHADA E LIMPA)
     // ==========================================
     const viraDiv = document.getElementById('carta-vira');
     if (dados.carta_vira && dados.carta_vira.valor) {
@@ -190,13 +164,13 @@ function atualizarInterface(dados) {
     }
 
     // ==========================================
-    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA
+    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA (LADO A LADO À DIREITA, SEM COBRIR)
     // ==========================================
     const mesaDiv = document.getElementById('cartas-na-mesa');
     if (mesaDiv) {
         mesaDiv.innerHTML = ''; 
         if (dados.cartas_na_mesa) {
-            dados.cartas_na_mesa.forEach(carta => {
+            dados.cartas_na_mesa.forEach((carta, indice) => {
                 const elementoCarta = document.createElement('div');
                 const textoValor = traduzirValorCarta(carta.valor);
                 const simboloNaipe = obterSimboloNaipe(carta.naipe);
@@ -205,21 +179,36 @@ function atualizarInterface(dados) {
                 elementoCarta.innerText = `${textoValor}`;
                 elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
                 
+                // Aplica rotações individuais orgânicas para o efeito dinâmico ("meio torta")
+                // sem sumir com as outras cartas da vaza
+                const rotacoes = [-4, 5, -2, 4];
+                const transY = (indice % 2 === 0) ? -3 : 3;
+                elementoCarta.style.setProperty('--rotacao-mesa', `${rotacoes[indice % 4]}deg`);
+                elementoCarta.style.setProperty('--transY-mesa', `${transY}px`);
+                
                 mesaDiv.appendChild(elementoCarta);
             });
         }
     }
 
     // ==========================================
-    // 3. RENDERIZA A SUA MÃO DE CARTAS
+    // 3. RENDERIZA A SUA MÃO DE CARTAS (EFEITO LEQUE)
     // ==========================================
     const minhaMaoDiv = document.getElementById('minha-mao');
     minhaMaoDiv.innerHTML = '';
     
+    const totalMinhasCartas = eu.mao.length;
+    const meioDaMao = (totalMinhasCartas - 1) / 2;
+    
     eu.mao.forEach((carta, indice) => {
         const elementoCarta = document.createElement('div');
         
-        // LÓGICA DA SUA CARTA NA RODADA CEGA
+        const angulo = (indice - meioDaMao) * 6;
+        const translateY = Math.abs(indice - meioDaMao) * 4;
+        
+        elementoCarta.style.setProperty('--rotacao', `${angulo}deg`);
+        elementoCarta.style.setProperty('--transY', `${translateY}px`);
+        
         if (isRodadaCega) {
             elementoCarta.className = 'minha-carta-cega';
         } else {
@@ -272,9 +261,6 @@ function atualizarInterface(dados) {
         painelApostas.classList.add('escondido');
     }
 
-    // ==========================================
-    // ALERTA DA RODADA CEGA E SOM NO INÍCIO
-    // ==========================================
     const eraRodadaCega = (estadoAnterior && estadoAnterior.cartas_na_rodada === 1);
 
     if (isRodadaCega && !eraRodadaCega) {
@@ -282,15 +268,11 @@ function atualizarInterface(dados) {
         tocarSom('funny_82hiegE.mp3');
     }
 
-    // Dispara o efeito visual das cartas voando
     if (iniciarAnimacao) {
         animarDistribuicao(dados);
     }
 }
 
-// ==========================================
-// FUNÇÕES AUXILIARES E ANIMAÇÃO
-// ==========================================
 function jogarCarta(indice) {
     tocarSom('jogar_carta.ogg');
     socket.send(JSON.stringify({
