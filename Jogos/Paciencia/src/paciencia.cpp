@@ -116,9 +116,25 @@ bool Paciencia::mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoT
     EventoPontuacao evento = EventoPontuacao::CavaParaColuna;
 
     if (destinoTipo == TipoPilha::Fundacao) {
+        // Cada fundação tem um naipe fixo
+        // 0 = Ouro, 1 = Copa, 2 = Espada, 3 = Paus
+        Naipe naipeFundacao;
+        switch (destinoIndice) {
+            case 0: naipeFundacao = Naipe::Ouro;   break;
+            case 1: naipeFundacao = Naipe::Copa;   break;
+            case 2: naipeFundacao = Naipe::Espada; break;
+            case 3: naipeFundacao = Naipe::Paus;   break;
+            default: return false;
+        }
+ 
+        // Carta deve ser do naipe correto da fundação
+        if (cartaParaMover->mostraNaipe() != naipeFundacao) return false;
+ 
         if (Regras::podeMoverParaFundacao(*cartaParaMover, fundacoes[destinoIndice])) {
             movimentoValido = true;
-            evento = (origemTipo == TipoPilha::Descarte) ? EventoPontuacao::CavaParaFundacao : EventoPontuacao::ColunaParaFundacao;
+            evento = (origemTipo == TipoPilha::Descarte) ? 
+                      EventoPontuacao::CavaParaFundacao : 
+                      EventoPontuacao::ColunaParaFundacao;
         }
     } else if (destinoTipo == TipoPilha::Coluna) {
         if (colunas[destinoIndice].empty()) {
@@ -126,7 +142,7 @@ bool Paciencia::mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoT
         } else {
             if (Regras::podeMoverParaColuna(*cartaParaMover, colunas[destinoIndice].back())) movimentoValido = true;
         }
-        evento = EventoPontuacao::CavaParaColuna; 
+        evento = EventoPontuacao::CavaParaColuna;
     }
 
     if (movimentoValido) {

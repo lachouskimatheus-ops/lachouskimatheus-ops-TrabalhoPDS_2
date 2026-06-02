@@ -138,7 +138,14 @@ function renderizarColunas(colunas, cartasEscondidas) {
                         cartaSelecionada.tipo === 'coluna' &&
                         cartaSelecionada.indice === i;
                     if (selecionado) el.classList.add('selecionada');
-                    el.onclick = (e) => { e.stopPropagation(); selecionarColuna(i, j); };
+                    el.onclick = (e) => { 
+    e.stopPropagation(); 
+    if (cartaSelecionada && !(cartaSelecionada.tipo === 'coluna' && cartaSelecionada.indice === i)) {
+        moverParaDestino('coluna', i);
+    } else {
+        selecionarColuna(i, j);
+    }
+};
                 } else {
                     el.style.cursor = 'default';
                 }
@@ -166,16 +173,23 @@ function selecionarDescarte() {
 }
 
 function selecionarColuna(colunaIdx, cartaIdx) {
+    // Se já tem uma carta selecionada de outro lugar, tenta mover
+    if (cartaSelecionada && !(cartaSelecionada.tipo === 'coluna' && cartaSelecionada.indice === colunaIdx)) {
+        moverParaDestino('coluna', colunaIdx);
+        return;
+    }
+
+    // Se clicou na mesma carta, deseleciona
     if (cartaSelecionada &&
         cartaSelecionada.tipo   === 'coluna' &&
         cartaSelecionada.indice === colunaIdx) {
         cartaSelecionada = null;
     } else {
+        // Seleciona a carta
         cartaSelecionada = { tipo: 'coluna', indice: colunaIdx, cartaIdx };
     }
     renderizarColunas(window.estadoAtual?.colunas, window.estadoAtual?.cartas_escondidas);
 }
-
 function moverParaDestino(tipoDestino, indiceDestino) {
     if (!cartaSelecionada) return;
 

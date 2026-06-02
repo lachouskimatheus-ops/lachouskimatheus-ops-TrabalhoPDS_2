@@ -23,6 +23,8 @@ public:
     // Métodos Originais do FDP (Classe Mãe)
     // ==========================================
     virtual void inicializar(); // Deixou de ser "= 0" para o Pife poder instanciar
+    Baralho(const Baralho& outro);
+    Baralho& operator=(const Baralho& outro);
     void embaralhar();
     Carta* puxarCarta();
     int getQtdCartas() const;

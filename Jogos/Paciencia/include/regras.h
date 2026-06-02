@@ -1,7 +1,7 @@
 #ifndef REGRAS_H
 #define REGRAS_H
 
-#include "../CoreBaralho1/baralho.h"
+#include "Baralho.hpp"
 #include <vector>
 
 class Regras {

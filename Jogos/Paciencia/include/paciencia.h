@@ -3,7 +3,7 @@
 
 #include <stack>
 #include <vector>
-#include "baralho.h"
+#include "Baralho.hpp"
 #include "pontuacao.h"
 #include <map>
 
