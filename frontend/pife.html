@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Coletânea de Jogos - Pife</title>
+    <link rel="stylesheet" href="pife_style.css">
+</head>
+<body>
+
+    <div class="mesa-de-pano-verde">
+
+        <div id="oponente-1" class="area-oponente">
+            <h2>Jogador 2</h2>
+            <div class="mao-oponente">
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+                <div class="carta-verso"></div>
+            </div>
+        </div>
+
+        <div class="centro-da-mesa">
+
+            <div class="monte-area">
+                <h3>Monte</h3>
+                <div id="monte-compra" class="baralho-visual">
+                    <div class="verso-grande empilhada" style="bottom: 8px; right: 8px;"></div>
+                    <div class="verso-grande empilhada" style="bottom: 4px; right: 4px;"></div>
+                    <div class="verso-grande empilhada" style="bottom: 0; right: 0;"></div>
+                </div>
+            </div>
+
+            <div class="descarte-area">
+                <h3>Mesa / Descarte</h3>
+                <div id="mesa-descarte" class="area-descarte">
+                    <div class="carta carta-vazia">Descarte</div>
+                </div>
+            </div>
+
+            <div class="acoes-jogo">
+                <button id="btn-comprar-monte">Comprar do Monte</button>
+                <button id="btn-comprar-mesa">Comprar da Mesa</button>
+                <button id="btn-bater">Bater</button>
+                <button id="btn-organizar">Organizar</button>
+            </div>
+
+        </div>
+
+        <div id="area-jogador-local" class="area-jogador-local">
+
+            <div id="minha-mao" class="mao-jogador">
+                <div class="carta">A♠</div>
+                <div class="carta">2♠</div>
+                <div class="carta">3♠</div>
+                <div class="carta">7♥</div>
+                <div class="carta">7♦</div>
+                <div class="carta">7♣</div>
+                <div class="carta">Q♠</div>
+                <div class="carta">K♣</div>
+                <div class="carta">5♥</div>
+            </div>
+
+            <div class="status-box">
+                <div class="info-local">
+                    <h2>Você</h2>
+                    <div class="dados-local">
+                        <p>Cartas na mão: <strong id="qtd-cartas">9</strong></p>
+                        <p>Turno: <strong id="jogador-atual">Jogador 1</strong></p>
+                    </div>
+                </div>
+
+                <div class="info-ajuda">
+                    <p>Selecione uma carta da mão para descartar.</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="modal-notificacao" class="modal-overlay modal-oculto">
+        <div class="modal-conteudo" id="modal-texto"></div>
+    </div>
+
+    <script src="pife_app.js"></script>
+</body>
+</html>
