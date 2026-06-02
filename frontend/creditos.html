@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Créditos - Equipe FDP</title>
+<style>
+  /* Importando fontes de cassino/medievais e modernas */
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Montserrat:wght@400;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 40px; /* Padding ajustado para o botão caber perfeitamente */
+    
+    /* Um fundo sutil para não ficar 100% preto */
+    background-image: radial-gradient(circle at top, #1a1a24 0%, #0a0a0a 70%);
+  }
+
+  /* --- Estilo do Botão Voltar --- */
+  .btn-voltar {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: transparent;
+    color: #f0c040;
+    border: 1px solid #f0c040;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-voltar:hover {
+    background: #f0c040;
+    color: #0a0a0a;
+    box-shadow: 0 0 15px rgba(240, 192, 64, 0.4);
+    transform: translateX(-3px); 
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 3rem;
+    color: #f0c040;
+    text-shadow: 0 0 20px rgba(240, 192, 64, 0.4);
+    margin-bottom: 50px;
+    animation: fadeInDown 0.8s ease forwards;
+    text-align: center;
+  }
+
+  /* O Grid para alinhar as 6 pessoas (3 em cima, 3 embaixo) */
+  .grid-equipe {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1000px;
+    width: 100%;
+  }
+
+  /* O Cartão de cada Integrante */
+  .card {
+    background: rgba(20, 20, 25, 0.7);
+    border: 1px solid rgba(240, 192, 64, 0.2);
+    border-radius: 16px;
+    padding: 30px 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    
+    /* Animação inicial escondida */
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  /* Efeito ao passar o mouse por cima do cartão */
+  .card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(240, 192, 64, 0.8);
+    box-shadow: 0 10px 30px rgba(240, 192, 64, 0.15);
+  }
+
+  /* Delay Cascata: Cada cartão entra com 0.15s de diferença */
+  .card:nth-child(1) { animation-delay: 0.1s; }
+  .card:nth-child(2) { animation-delay: 0.25s; }
+  .card:nth-child(3) { animation-delay: 0.4s; }
+  .card:nth-child(4) { animation-delay: 0.55s; }
+  .card:nth-child(5) { animation-delay: 0.7s; }
+  .card:nth-child(6) { animation-delay: 0.85s; }
+
+  /* Foto */
+  .foto {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #f0c040;
+    margin-bottom: 20px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  }
+
+  /* Nome */
+  .nome {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #e2e8f0;
+    min-height: 50px; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Botão GitHub */
+  .btn-github {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #24292e; 
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    border: 1px solid #3b4249;
+  }
+
+  .btn-github:hover {
+    background: #f0c040;
+    color: #0a0a0a;
+    border-color: #f0c040;
+  }
+
+  /* SVG do Logo do GitHub */
+  .github-icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  /* Keyframes das Animações */
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+  <a href="menu_inicial.html" class="btn-voltar">❮ VOLTAR</a>
+
+  <h1>DESENVOLVEDORES</h1>
+
+  <div class="grid-equipe">
+    <div class="card">
+      <img src="assets/fotos/foto1.jpeg" alt="Foto do Integrante" class="foto">
+      <div class="nome">João Luís Fernandes Mendes Gomes</div>
+      <a href="https://github.com/Painzito" target="_blank" class="btn-github">
+        <svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GITHUB
+      </a>
+    </div>
+
+    <div class="card">
+      <img src="assets/fotos/foto2.jpeg" alt="Foto do Integrante" class="foto">
+      <div class="nome">Lucas de Almeida Pereira</div>
+      <a href="https://github.com/lucasap-07" target="_blank" class="btn-github">
+        <svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GITHUB
+      </a>
+    </div>
+
+    <div class="card">
+      <img src="assets/fotos/foto3.jpeg" alt="Foto do Integrante" class="foto">
+      <div class="nome">Matheus Lachouski</div>
+      <a href="https://github.com/lachouskimatheus-ops" target="_blank" class="btn-github">
+        <svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GITHUB
+      </a>
+    </div>
+
+    <div class="card">
+      <img src="assets/fotos/foto4.jpg" alt="Foto do Integrante" class="foto">
+      <div class="nome">Igor Santos Sassano</div>
+      <a href="https://github.com/Sassano23" target="_blank" class="btn-github">
+        <svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GITHUB
+      </a>
+    </div>
+
+    <div class="card">
+      <img src="assets/fotos/foto5.jpg" alt="Foto do Integrante" class="foto">
+      <div class="nome">Cassio Alexandre Rodrigues Leite Junior</div>
+      <a href="https://github.com/kss10-rgb" target="_blank" class="btn-github">
+        <svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GITHUB
+      </a>
+    </div>
+
+    <div class="card">
+      <img src="assets/fotos/foto6.jpeg" alt="Foto do Integrante" class="foto">
+      <div class="nome">Emanuel Freitas Guimarães Costa</div>
+      <a href="https://github.com/emanuelgfc" target="_blank" class="btn-github">
+        <svg class="github-icon" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        GITHUB
+      </a>
+    </div>
+
+  </div>
+
+</body>
+</html>

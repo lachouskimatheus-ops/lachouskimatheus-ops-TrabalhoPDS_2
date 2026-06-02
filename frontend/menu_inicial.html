@@ -117,6 +117,7 @@
 
   /* Botões Verticais */
   .btn-menu {
+    display: block; /* Adicionado para links se comportarem como botões */
     width: 100%;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
@@ -169,54 +170,7 @@
     color: #fff;
   }
 
-  /* Modal de Créditos */
-  .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(5px);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .modal-content {
-    background: #111;
-    border: 1px solid #f0c040;
-    border-radius: 12px;
-    padding: 40px;
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-    color: #ddd;
-    line-height: 1.6;
-  }
-
-  .modal-content h2 {
-    color: #f0c040;
-    margin-bottom: 20px;
-    font-family: 'Cinzel Decorative', serif;
-  }
-
-  .close-modal {
-    margin-top: 30px;
-    padding: 10px 30px;
-    background: transparent;
-    border: 1px solid #fff;
-    color: #fff;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Cinzel', serif;
-    transition: 0.3s;
-  }
-
-  .close-modal:hover {
-    background: #fff;
-    color: #000;
-  }
-
-  /* Animações de Entrada (Ajustadas para 6 elementos) */
+  /* Animações de Entrada */
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -236,7 +190,7 @@
 <div class="overlay"></div>
 
 <div class="container">
-  <h1>CASSINO <span>PDS2</span></h1>
+  <h1>Carta<span>ralho</span></h1>
   <div class="naipes">♠ ♥ ♦ ♣</div>
 
   <div class="input-group">
@@ -246,18 +200,10 @@
 
   <button class="btn-menu btn-jogar" onclick="entrarNoCassino()">▶ ENTRAR</button>
   
-  <button class="btn-menu" onclick="abrirModal('modal-creditos')">CRÉDITOS</button>
+  <!-- Aqui está a mudança principal! -->
+  <a href="creditos.html" class="btn-menu">CRÉDITOS</a>
+  
   <button class="btn-menu btn-sair" onclick="window.close()">✕ SAIR</button>
-</div>
-
-<div id="modal-creditos" class="modal">
-  <div class="modal-content">
-    <h2>Desenvolvedores</h2>
-    <p>Sistema desenvolvido para a disciplina de Programação e Desenvolvimento de Software 2.</p>
-    <br>
-    <p>Criado em trio, unindo lógicas em C++, WebSockets e muito café.</p>
-    <button class="close-modal" onclick="fecharModal('modal-creditos')">FECHAR</button>
-  </div>
 </div>
 
 <script>
@@ -272,16 +218,7 @@
     }
     
     // 2. SÓ DEPOIS de guardar, muda de ecrã para a seleção de jogos
-    // Mantive 'menu.html' porque era o que estava no seu código anterior
     window.location.href = "menu.html";
-  }
-
-  function abrirModal(id) {
-    document.getElementById(id).style.display = 'flex';
-  }
-
-  function fecharModal(id) {
-    document.getElementById(id).style.display = 'none';
   }
 </script>
 </body>
