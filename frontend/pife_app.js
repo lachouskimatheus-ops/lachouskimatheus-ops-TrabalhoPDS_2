@@ -16,11 +16,40 @@ cartas.forEach((carta) => {
 });
 
 document.getElementById("btn-comprar-monte").addEventListener("click", () => {
-    mostrarModal("Você comprou uma carta do monte.");
+
+    const novaCarta = document.createElement("div");
+
+    novaCarta.classList.add("carta");
+
+    novaCarta.textContent = "9♦";
+
+    novaCarta.addEventListener("click", () => {
+
+        if (cartaSelecionada) {
+            cartaSelecionada.classList.remove("selecionada");
+        }
+
+        cartaSelecionada = novaCarta;
+        cartaSelecionada.classList.add("selecionada");
+    });
+
+    document.getElementById("minha-mao").appendChild(novaCarta);
+
+    atualizarQuantidadeCartas();
 });
 
 document.getElementById("btn-comprar-mesa").addEventListener("click", () => {
-    mostrarModal("Você comprou a carta da mesa.");
+
+    const cartaMesa = mesaDescarte.querySelector(".carta");
+
+    if (!cartaMesa || cartaMesa.classList.contains("carta-vazia")) {
+        mostrarModal("Não há carta na mesa.");
+        return;
+    }
+
+    document.getElementById("minha-mao").appendChild(cartaMesa);
+
+    atualizarQuantidadeCartas();
 });
 
 document.getElementById("btn-bater").addEventListener("click", () => {
