@@ -1,39 +1,36 @@
 #ifndef PIFE_H
 #define PIFE_H
 
-#include "baralho.h"
+#include "Baralho.hpp"
 #include "jogadorPife.h"
 #include "regrasPife.h"
 #include <vector>
-
-//é a implementação do fluxo do jogo, como distribuição das cartas, sequência de jogada de cada jogador...
 
 class Pife {
 private:
     Baralho baralho_;
     std::vector<JogadorPife> jogadores_;
     std::vector<Carta> mesa_;
-    
+
     int jogadorAtual_;
     bool jogoFinalizado_;
 
-    void distribuirCartas(); //é chamada pelo construtor
+    void distribuirCartas();
 
 public:
-    Pife(int quantidadeJogadores); //construtor, ja districui as cartas
+    Pife(int quantidadeJogadores);
 
-    void comprarBaralho(); //pega a carta do baralho e entraga ao jogadorPife.h
-    void comprarMesa(); //pega a carta da mesa e entraga ao jogadorPife.h
-    void colocarNaMesa(int indice); //pega carta que o jogador descartou e coloca na mesa
-    void proximoJogador(); 
+    void comprarBaralho();
+    void comprarMesa();
+    void colocarNaMesa(int indice);
+    void proximoJogador();
 
     bool bati();
     bool jogoFinalizado() const;
 
-    JogadorPife& consultarJogador(); //retorna o jogador
-    const std::vector<Carta>& consultarMesa() const; //retorna a mesa
+    JogadorPife& consultarJogador();
+    const std::vector<Carta>& consultarMesa() const;
 
-    //funções para a parte gráfica
     int consultarIndiceJogadorAtual() const;
     int numeroDejogadores() const;
 };
