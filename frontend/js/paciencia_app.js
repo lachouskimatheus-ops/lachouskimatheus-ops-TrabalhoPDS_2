@@ -9,6 +9,7 @@ socket.onopen = () => {
 
 socket.onmessage = (event) => {
     const estado = JSON.parse(event.data);
+    window.estadoAtual = estado;
     atualizarInterface(estado);
 };
 
@@ -19,7 +20,8 @@ socket.onerror = () => {
 // ==========================================
 // ESTADO LOCAL DE SELEÇÃO
 // ==========================================
-let cartaSelecionada = null; // { tipo: "coluna"|"descarte", indice: int, cartaIndice: int }
+// cartaSelecionada agora pode guardar 'cartaIdx' para identificar onde o bloco começa
+let cartaSelecionada = null; // { tipo: "coluna"|"descarte"|"fundacao", indice: int, cartaIdx: int }
 
 // ==========================================
 // ATUALIZAR INTERFACE COM BASE NO ESTADO
@@ -34,7 +36,7 @@ function atualizarInterface(estado) {
     document.getElementById('cava-count').innerText = cavaCount;
     const cavaVisual = document.getElementById('cava-visual');
     if (cavaCount === 0) {
-        cavaVisual.outerHTML = '<div class="cava-vazia" id="cava-visual" onclick="comprarCarta()">↺</div>';
+        if (cavaVisual) cavaVisual.outerHTML = '<div class="cava-vazia" id="cava-visual" onclick="comprarCarta()">↺</div>';
     } else {
         const el = document.getElementById('cava-visual');
         if (el) el.className = 'verso-grande';
@@ -74,7 +76,10 @@ function renderizarDescarte(descarte) {
     const selecionado = cartaSelecionada && cartaSelecionada.tipo === 'descarte';
     if (selecionado) el.classList.add('selecionada');
 
-    el.onclick = () => selecionarDescarte();
+    el.onclick = (e) => {
+        e.stopPropagation();
+        selecionarDescarte();
+    };
     div.appendChild(el);
 }
 
@@ -86,7 +91,7 @@ function renderizarFundacoes(fundacoes) {
         const div = document.getElementById(`fundacao-${i}`);
         div.innerHTML = '';
 
-        const simbolos = ['♠', '♥', '♦', '♣'];
+        const simbolos = ['♣', '♥', '♠', '♦'];
         if (!fundacoes || !fundacoes[i] || fundacoes[i].length === 0) {
             div.innerHTML = `<span class="placeholder">${simbolos[i]}</span>`;
         } else {
@@ -94,11 +99,27 @@ function renderizarFundacoes(fundacoes) {
             const el    = criarElementoCarta(carta, 'fundacao');
             el.classList.add('carta-coluna', 'frente');
             el.style.position = 'relative';
-            el.style.cursor   = 'default';
+            
+            // Nova lógica: destacar se a fundação for selecionada como origem
+            const selecionado = cartaSelecionada && 
+                                cartaSelecionada.tipo === 'fundacao' && 
+                                cartaSelecionada.indice === i;
+            if (selecionado) el.classList.add('selecionada');
+
             div.appendChild(el);
         }
 
-        div.onclick = () => moverParaDestino('fundacao', i);
+        // Modificado para alternar entre selecionar a fundação ou receber uma carta
+        div.onclick = (e) => {
+            e.stopPropagation();
+            if (cartaSelecionada) {
+                // Se já temos algo selecionado, tenta mover para cá
+                moverParaDestino('fundacao', i);
+            } else if (fundacoes && fundacoes[i] && fundacoes[i].length > 0) {
+                // Se não tem seleção e a pilha tem cartas, seleciona o topo da fundação
+                selecionarFundacao(i);
+            }
+        };
     }
 }
 
@@ -112,18 +133,17 @@ function renderizarColunas(colunas, cartasEscondidas) {
 
         const coluna    = colunas ? colunas[i] : [];
         const escondidas = cartasEscondidas ? cartasEscondidas[i] : 0;
-        const offsetY   = 25; // pixels de deslocamento entre cartas
+        const offsetY   = 25; 
 
         coluna.forEach((carta, j) => {
             const el = document.createElement('div');
             el.classList.add('carta-coluna');
             el.style.top = `${j * offsetY}px`;
-
+            el.style.zIndex = j + 1;
+            
             if (j < escondidas) {
-                // Carta virada para baixo
                 el.classList.add('verso');
             } else {
-                // Carta virada para cima
                 const naipe   = obterNomeNaipe(carta.naipe);
                 const simbolo = obterSimboloNaipe(carta.naipe);
                 const valor   = traduzirValor(carta.valor);
@@ -132,31 +152,41 @@ function renderizarColunas(colunas, cartasEscondidas) {
                 el.setAttribute('data-naipe-simbolo', simbolo);
                 el.innerText = valor;
 
-                const ehUltima = (j === coluna.length - 1);
-                if (ehUltima) {
-                    const selecionado = cartaSelecionada &&
-                        cartaSelecionada.tipo === 'coluna' &&
-                        cartaSelecionada.indice === i;
-                    if (selecionado) el.classList.add('selecionada');
-                    el.onclick = (e) => { 
-    e.stopPropagation(); 
-    if (cartaSelecionada && !(cartaSelecionada.tipo === 'coluna' && cartaSelecionada.indice === i)) {
-        moverParaDestino('coluna', i);
-    } else {
-        selecionarColuna(i, j);
-    }
-};
-                } else {
-                    el.style.cursor = 'default';
+                // Nova lógica de seleção visual de blocos:
+                // Se a coluna atual está selecionada e o clique foi nesta carta ou em alguma acima dela (bloco)
+                const colunaSelecionada = cartaSelecionada && 
+                                          cartaSelecionada.tipo === 'coluna' && 
+                                          cartaSelecionada.indice === i;
+                
+                if (colunaSelecionada && j >= cartaSelecionada.cartaIdx) {
+                    el.classList.add('selecionada');
                 }
+
+                // Qualquer carta aberta agora é clicável para iniciar um bloco!
+                el.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    if (cartaSelecionada && !(cartaSelecionada.tipo === 'coluna' && cartaSelecionada.indice === i)) {
+                        // Se já tem seleção vinda de OUTRA coluna/lugar, tenta mover para esta coluna
+                        moverParaDestino('coluna', i);
+                    } else {
+                        // Caso contrário, seleciona a partir desta carta específica para mover o bloco
+                        selecionarColuna(i, j);
+                    }
+                };
             }
 
             div.appendChild(el);
         });
 
-        // Altura mínima da coluna
         div.style.minHeight = `${Math.max(110, coluna.length * offsetY + 105)}px`;
-        div.onclick = () => moverParaDestino('coluna', i);
+        
+        // Clique no fundo vazio da coluna
+        div.onclick = (e) => {
+            e.stopPropagation();
+            if (cartaSelecionada) {
+                moverParaDestino('coluna', i);
+            }
+        };
     }
 }
 
@@ -170,37 +200,87 @@ function selecionarDescarte() {
         cartaSelecionada = { tipo: 'descarte', indice: 0 };
     }
     renderizarDescarte(window.estadoAtual?.descarte);
+    renderizarColunas(window.estadoAtual?.colunas, window.estadoAtual?.cartas_escondidas);
+    renderizarFundacoes(window.estadoAtual?.fundacoes);
 }
 
 function selecionarColuna(colunaIdx, cartaIdx) {
-    // Se já tem uma carta selecionada de outro lugar, tenta mover
-    if (cartaSelecionada && !(cartaSelecionada.tipo === 'coluna' && cartaSelecionada.indice === colunaIdx)) {
-        moverParaDestino('coluna', colunaIdx);
-        return;
-    }
-
-    // Se clicou na mesma carta, deseleciona
-    if (cartaSelecionada &&
-        cartaSelecionada.tipo   === 'coluna' &&
-        cartaSelecionada.indice === colunaIdx) {
+    if (cartaSelecionada && 
+        cartaSelecionada.tipo   === 'coluna' && 
+        cartaSelecionada.indice === colunaIdx && 
+        cartaSelecionada.cartaIdx === cartaIdx) {
+        // Se clicar exatamente na mesma carta que já estava selecionada, cancela
         cartaSelecionada = null;
     } else {
-        // Seleciona a carta
-        cartaSelecionada = { tipo: 'coluna', indice: colunaIdx, cartaIdx };
+        // Seleciona o bloco a partir do índice clicado (cartaIdx)
+        cartaSelecionada = { tipo: 'coluna', indice: colunaIdx, cartaIdx: cartaIdx };
     }
+    renderizarDescarte(window.estadoAtual?.descarte);
     renderizarColunas(window.estadoAtual?.colunas, window.estadoAtual?.cartas_escondidas);
+    renderizarFundacoes(window.estadoAtual?.fundacoes);
 }
+
+function selecionarFundacao(fundacaoIdx) {
+    if (cartaSelecionada && cartaSelecionada.tipo === 'fundacao' && cartaSelecionada.indice === fundacaoIdx) {
+        cartaSelecionada = null;
+    } else {
+        cartaSelecionada = { tipo: 'fundacao', indice: fundacaoIdx };
+    }
+    renderizarDescarte(window.estadoAtual?.descarte);
+    renderizarColunas(window.estadoAtual?.colunas, window.estadoAtual?.cartas_escondidas);
+    renderizarFundacoes(window.estadoAtual?.fundacoes);
+}
+
 function moverParaDestino(tipoDestino, indiceDestino) {
     if (!cartaSelecionada) return;
 
-    socket.send(JSON.stringify({
-        acao:           'MOVER',
-        origem_tipo:    cartaSelecionada.tipo,
-        origem_indice:  cartaSelecionada.indice,
-        destino_tipo:   tipoDestino,
-        destino_indice: indiceDestino
-    }));
+    let payload = {};
 
+    // 1. Se a origem for a FUNDAÇÃO
+    if (cartaSelecionada.tipo === 'fundacao') {
+        payload = {
+            acao: 'MOVER_DA_FUNDACAO',
+            fundacao_indice: cartaSelecionada.indice,
+            destino_tipo: tipoDestino,
+            destino_indice: indiceDestino
+        };
+    }
+    // 2. Se a origem for uma COLUNA e clicamos no meio do bloco (ou seja, mover mais de uma carta ou uma específica)
+    else if (cartaSelecionada.tipo === 'coluna') {
+        const totalCartasColuna = window.estadoAtual?.colunas[cartaSelecionada.indice]?.length || 0;
+        
+        // Se a carta selecionada não for a última da coluna, é um movimento de Bloco obrigatório.
+        // Se for a última, o backend pode tratar tanto como MOVER normal ou MOVER_BLOCO com tamanho 1.
+        if (cartaSelecionada.cartaIdx < totalCartasColuna - 1 || tipoDestino === 'coluna') {
+            payload = {
+                acao: 'MOVER_BLOCO',
+                origem_coluna: cartaSelecionada.indice,
+                carta_idx: cartaSelecionada.cartaIdx,
+                destino_coluna: indiceDestino
+            };
+        } else {
+            // Movimento simples (ex: última carta da coluna indo para a Fundação)
+            payload = {
+                acao: 'MOVER',
+                origem_tipo: cartaSelecionada.tipo,
+                origem_indice: cartaSelecionada.indice,
+                destino_tipo: tipoDestino,
+                destino_indice: indiceDestino
+            };
+        }
+    } 
+    // 3. Movimentos vindos do descarte
+    else {
+        payload = {
+            acao: 'MOVER',
+            origem_tipo: cartaSelecionada.tipo,
+            origem_indice: cartaSelecionada.indice,
+            destino_tipo: tipoDestino,
+            destino_indice: indiceDestino
+        };
+    }
+
+    socket.send(JSON.stringify(payload));
     cartaSelecionada = null;
 }
 
@@ -242,12 +322,12 @@ function traduzirValor(valor) {
 }
 
 function obterNomeNaipe(naipe) {
-    const mapa = { 0: 'ouros', 1: 'copas', 2: 'espadas', 3: 'paus' };
+    const mapa = { 0: 'paus', 1: 'copas', 2: 'espadas', 3: 'ouros' };
     return mapa[naipe] || naipe;
 }
 
 function obterSimboloNaipe(naipe) {
-    const mapa = { 0: '♦', 1: '♥', 2: '♠', 3: '♣' };
+    const mapa = { 0: '♣', 1: '♥', 2: '♠', 3: '♦' };
     return mapa[naipe] || '';
 }
 
@@ -265,10 +345,3 @@ function mostrarModal(htmlContent, tempoMs) {
         }, tempoMs);
     }
 }
-
-// Guarda estado atual para re-renderização parcial
-socket.onmessage = (event) => {
-    const estado = JSON.parse(event.data);
-    window.estadoAtual = estado;
-    atualizarInterface(estado);
-};

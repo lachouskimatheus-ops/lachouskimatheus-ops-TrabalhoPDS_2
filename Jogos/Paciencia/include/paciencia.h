@@ -43,6 +43,8 @@ public:
     bool verificarVitoria();
     bool cartaVisivel(int colunaIdx, int cartaIdx) const;
     bool mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoTipo, int destinoIndice);
+    bool moverBloco(int origemColuna, int cartaIdx, int destinoColuna);
+    bool moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int destinoIndice);
     bool desfazer();
     void salvarJogada();
     void iniciarJogo();
