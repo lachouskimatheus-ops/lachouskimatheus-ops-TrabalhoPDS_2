@@ -1,7 +1,7 @@
 #ifndef JOGADORPIFE_H
 #define JOGADORPIFE_H
 
-#include "../../Core/Carta.hpp"
+#include "Carta.hpp"
 #include <vector>
 #include <string>
 

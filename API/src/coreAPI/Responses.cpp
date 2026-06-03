@@ -1,4 +1,4 @@
-#include "../../include/coreAPI/Responses.hpp"
+#include "coreAPI/Responses.hpp"
 
 crow::response sucesso(const std::string& mensagem, const json& dados = {}){
     json resposta;
