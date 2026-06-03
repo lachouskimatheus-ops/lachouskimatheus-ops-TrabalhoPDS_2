@@ -76,7 +76,7 @@ public:
 std::vector<JogadaSimulada> listarJogadasPossiveis();
 bool simularSolucao(std::set<std::string>& estadosVisitados);
 bool garantirJogoVencivel();   
-
+void gerarJogoReversivel();
     // Getters para o servidor web
 const std::vector<std::vector<Carta>>& getColunas() const { return colunas; }
 const std::vector<std::vector<Carta>>& getFundacoes() const { return fundacoes; }

@@ -59,7 +59,7 @@ int main() {
         Paciencia jogo;
         
         // ALTERAÇÃO 1: Garante que o jogo inicial já comece com um tabuleiro vencível
-        jogo.garantirJogoVencivel(); 
+        jogo.gerarJogoReversivel();
         std::cout << "Jogo vencível iniciado com sucesso!" << std::endl;
 
         std::mutex mtx;
@@ -102,7 +102,7 @@ int main() {
                     } 
                     else if (acao == "NOVO_JOGO") {
                         // ALTERAÇÃO 2: Filtra o reembaralhamento para achar um novo cenário ganhavel
-                        jogo.garantirJogoVencivel(); 
+                        jogo.gerarJogoReversivel();
                     } 
                     else if (acao == "MOVER") {
                         std::string origemTipoStr  = msg["origem_tipo"];

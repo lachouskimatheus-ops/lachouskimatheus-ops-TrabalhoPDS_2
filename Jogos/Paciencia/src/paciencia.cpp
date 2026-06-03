@@ -2,6 +2,7 @@
 #include "paciencia.h"
 #include <iostream>
 #include <algorithm>
+#include <random>
 using std::cout;
 using std::vector; // Garantindo o escopo do vector se não estiver no header
 
@@ -457,7 +458,7 @@ bool Paciencia::simularSolucao(std::set<std::string>& estadosVisitados) {
     estadosVisitados.insert(estadoAtualStr);
 
     // Se o robô ultrapassar um limite muito alto de jogadas, assumimos como travado
-    if (estadosVisitados.size() > 20000) return false;
+    if (estadosVisitados.size() > 5000) return false;
 
     std::vector<JogadaSimulada> jogadas = listarJogadasPossiveis();
 
@@ -490,25 +491,130 @@ bool Paciencia::simularSolucao(std::set<std::string>& estadosVisitados) {
 // 3. O FILTRO DO NOVO JOGO: GERA BARALHOS ATÉ ACHAR UM VENCÍVEL
 bool Paciencia::garantirJogoVencivel() {
     int tentativas = 0;
-    const int MAX_TENTATIVAS = 50; 
+    const int MAX_TENTATIVAS = 100;
 
     while (tentativas < MAX_TENTATIVAS) {
-        iniciarJogo(); 
-        
-        std::set<std::string> visitados;
-        Paciencia copiaTeste = *this; 
+        iniciarJogo();
 
-        if (copiaTeste.simularSolucao(visitados)) {
-            std::cout << "[SOLVER] Jogo vencível gerado com sucesso após " << tentativas + 1 << " tentativa(s)!" << std::endl;
+        // Heurística simples: conta quantas cartas estão acessíveis
+        // Um jogo com pelo menos 4 jogadas imediatas possíveis é aceitável
+        std::vector<JogadaSimulada> jogadas = listarJogadasPossiveis();
+        
+        // Filtra jogadas que não sejam apenas comprar carta
+        int jogadasReais = 0;
+        for (const auto& j : jogadas) {
+            if (j.tipoAcao != "COMPRAR") jogadasReais++;
+        }
+
+        if (jogadasReais >= 3) {
+            std::cout << "[SOLVER] Jogo com " << jogadasReais << " jogadas iniciais gerado após " << tentativas + 1 << " tentativa(s)!" << std::endl;
             return true;
         }
         tentativas++;
     }
-    
+
     iniciarJogo();
-    std::cout << "[SOLVER] Aviso: Limite de tentativas atingido. Entregando jogo padrão." << std::endl;
+    std::cout << "[SOLVER] Entregando jogo padrão." << std::endl;
     return false;
 }
+void Paciencia::gerarJogoReversivel() {
+    std::mt19937 rng(std::random_device{}());
+    
+    const int MAX_TENTATIVAS = 1000;
+    
+    for (int tentativa = 0; tentativa < MAX_TENTATIVAS; tentativa++) {
+
+        // 1. Cria e embaralha todas as cartas
+        std::vector<Carta> todasCartas;
+        std::vector<Naipe> naipes = { Naipe::Paus, Naipe::Copa, Naipe::Espada, Naipe::Ouro };
+        for (auto& n : naipes)
+            for (int v = 1; v <= 13; v++)
+                todasCartas.push_back(Carta(static_cast<Valor>(v), n));
+        std::shuffle(todasCartas.begin(), todasCartas.end(), rng);
+
+        // 2. Limpa estado
+        colunas.assign(7, vector<Carta>());
+        fundacoes.assign(4, vector<Carta>());
+        descarte.clear();
+        while (!historico.empty()) historico.pop();
+        cava = Baralho(0);
+        for (int i = 0; i < 7; i++) cartasEscondidas[i] = 0;
+
+        // 3. Distribui 28 cartas nas colunas
+        int idx = 0;
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j <= i; j++) {
+                colunas[i].push_back(todasCartas[idx++]);
+            }
+            cartasEscondidas[i] = i;
+        }
+
+        // 4. Restante vai para a cava
+        while (idx < (int)todasCartas.size()) {
+            cava.inserirCarta(todasCartas[idx++]);
+        }
+
+        pontuacao.resetar();
+        vitoria = false;
+
+        // ==========================================
+        // HEURÍSTICAS DE QUALIDADE
+        // ==========================================
+
+        // H1: Pelo menos 1 Ás visível nas colunas
+        bool temAsVisivel = false;
+        for (int i = 0; i < 7; i++) {
+            if (!colunas[i].empty() && colunas[i].back().mostraValor() == Valor::As) {
+                temAsVisivel = true;
+                break;
+            }
+        }
+        if (!temAsVisivel) {
+            if (tentativa < 3) std::cout << "[DEBUG] Falhou H1" << std::endl;
+            continue;
+        }
+
+        // H2: Pelo menos 2 jogadas imediatas possíveis (excluindo comprar)
+        std::vector<JogadaSimulada> jogadas = listarJogadasPossiveis();
+        int jogadasReais = 0;
+        for (const auto& j : jogadas)
+            if (j.tipoAcao != "COMPRAR") jogadasReais++;
+        if (jogadasReais < 2) {
+            if (tentativa < 3) std::cout << "[DEBUG] Falhou H2: " << jogadasReais << " jogadas" << std::endl;
+            continue;
+        }
+
+        // H4: Pelo menos 1 sequência válida já formada
+        int sequenciasValidas = 0;
+        for (int i = 0; i < 7; i++) {
+            int inicio = cartasEscondidas[i];
+            if ((int)colunas[i].size() - inicio < 2) continue;
+            bool sequenciaOk = true;
+            for (int j = (int)colunas[i].size() - 1; j > inicio; j--) {
+                if (!Regras::podeMoverParaColuna(colunas[i][j], colunas[i][j-1])) {
+                    sequenciaOk = false;
+                    break;
+                }
+            }
+            if (sequenciaOk) sequenciasValidas++;
+        }
+        if (sequenciasValidas < 1) {
+            if (tentativa < 3) std::cout << "[DEBUG] Falhou H4: " << sequenciasValidas << " sequencias" << std::endl;
+            continue;
+        }
+
+        // Passou em todas as heurísticas!
+        std::cout << "[GERADOR] Jogo gerado após " << tentativa + 1 << " tentativa(s)! "
+                  << "Jogadas: " << jogadasReais 
+                  << " | Sequências: " << sequenciasValidas << std::endl;
+        return;
+    }
+
+    // Fallback
+    iniciarJogo();
+    std::cout << "[GERADOR] Usando jogo padrão após " << MAX_TENTATIVAS << " tentativas." << std::endl;
+}
+
 
 int Paciencia::getPontuacao() const {
     return pontuacao.getPontos();
