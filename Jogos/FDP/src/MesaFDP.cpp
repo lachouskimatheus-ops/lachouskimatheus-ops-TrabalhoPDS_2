@@ -125,6 +125,11 @@ void MesaFDP::iniciarFaseDeCartas() {
 }
 
 bool MesaFDP::jogarCarta(int indiceCartaNaMao) {
+    if (vazaFinalizada()) {
+        std::cout << "[AVISO] Jogada ignorada. A vaza já acabou e a mesa está em apuração." << std::endl;
+        return false;
+    };
+    
     JogadorFDP* jogador = getJogadorDaVez();
 
     // Na rodada cega (1 carta), o índice só pode ser 0

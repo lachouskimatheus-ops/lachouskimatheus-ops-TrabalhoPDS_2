@@ -69,43 +69,49 @@ void Servidor::iniciar(int porta) {
               // BLOCO: JOGAR CARTA
               // ==========================================
               if (acao == "JOGAR_CARTA") {
-                  int indiceCarta = comando["indice"];
-                  std::cout << "[DEBUG] Jogador " << idRemetente << " tentou jogar o indice: " << indiceCarta << std::endl;
-                  
+                int indiceCarta = comando["indice"];
+                std::cout << "[DEBUG] Jogador " << idRemetente << " tentou jogar o indice: " << indiceCarta << std::endl;
+                
+    // 1. TRAVA DE IDENTIDADE/TURNO: Comprova que quem enviou o comando é realmente o dono da vez
+                if (mesa_->getJogadorDaVez() == nullptr || idRemetente != mesa_->getJogadorDaVez()->getId()) {
+                  std::cout << "[ERRO] Jogador " << idRemetente << " tentou jogar fora do turno!" << std::endl;
+                } else {
+        // Se passou pela trava, é o jogador certo. Tenta jogar a carta na mesa.
                   if (mesa_->jogarCarta(indiceCarta)) {
-                      std::cout << "[DEBUG] Carta aceita e colocada na mesa." << std::endl;
+                    std::cout << "[DEBUG] Carta aceita e colocada na mesa." << std::endl;
+                    
+            // Atualiza os navegadores imediatamente para a carta aparecer na mesa
+                    notificarTodos();
+                    
+            // Verifica se a vaza acabou para iniciar a pausa dramática
+                    if (mesa_->vazaFinalizada()) {
+                      std::cout << "[DEBUG] Vaza finalizada! Iniciando a pausa para visualizacao..." << std::endl;
                       
-                      // 1. Atualiza os navegadores imediatamente para a carta aparecer na mesa
-                      notificarTodos();
-                      
-                      // 2. Verifica se a vaza acabou para iniciar a pausa dramática
-                      if (mesa_->vazaFinalizada()) {
-                          std::cout << "[DEBUG] Vaza finalizada! Iniciando a pausa para visualizacao..." << std::endl;
-                          
-                          // Cria uma thread paralela para não congelar o servidor
-                          std::thread([this]() {
-                              // Pausa de 2.5 segundos
-                              std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-                              
-                              // Apura a vaza e limpa a mesa
-                              mesa_->apurarVencedorDaVaza();
-                              std::cout << "[DEBUG THREAD] Vencedor apurado e mesa limpa." << std::endl;
-                              
-                              // Verifica se as mãos esvaziaram (a rodada INTEIRA acabou)
-                              if (mesa_->rodadaFinalizada()) {
-                                  std::cout << "[DEBUG THREAD] Maos vazias! Fim da Rodada. Chamando finalizarRodada()..." << std::endl;
-                                  mesa_->finalizarRodada();
-                              } else {
-                                  std::cout << "[DEBUG THREAD] A vaza acabou, mas a rodada de cartas continua." << std::endl;
-                              };
-                              
-                              // Atualiza os navegadores novamente com a mesa limpa ou cartas novas
-                              notificarTodos();
-                          }).detach();
-                      };
+                // Cria uma thread paralela para não congelar o servidor
+                      std::thread([this]() {
+                    // Pausa de 2.5 segundos
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+                        
+                    // Apura a vaza e limpa a mesa
+                        mesa_->apurarVencedorDaVaza();
+                        std::cout << "[DEBUG THREAD] Vencedor apurado e mesa limpa." << std::endl;
+                        
+                    // Verifica se as mãos esvaziaram (a rodada INTEIRA acabou)
+                        if (mesa_->rodadaFinalizada()) {
+                          std::cout << "[DEBUG THREAD] Maos vazias! Fim da Rodada. Chamando finalizarRodada()..." << std::endl;
+                          mesa_->finalizarRodada();
+                        } else {
+                          std::cout << "[DEBUG THREAD] A vaza acabou, mas a rodada de cartas continua." << std::endl;
+                        };
+                        
+                    // Atualiza os navegadores novamente com a mesa limpa ou cartas novas
+                        notificarTodos();
+                      }).detach();
+                    };
                   } else {
-                      std::cout << "[DEBUG] ERRO: Jogada foi rejeitada pela classe MesaFDP." << std::endl;
+                    std::cout << "[DEBUG] ERRO: Jogada foi rejeitada pela classe MesaFDP." << std::endl;
                   };
+                };
               }
               // ==========================================
               // BLOCO: APOSTAR

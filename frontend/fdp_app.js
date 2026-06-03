@@ -127,7 +127,10 @@ function atualizarInterface(dados) {
                     if (isRodadaCega && j.mao[c] && j.mao[c].valor) {
                         const textoValor = traduzirValorCarta(j.mao[c].valor);
                         const simboloNaipe = obterSimboloNaipe(j.mao[c].naipe);
-                        htmlCartasVerso += `<div class="carta mini-carta ${j.mao[c].naipe}" data-naipe-simbolo="${simboloNaipe}">${textoValor}</div>`;
+                        htmlCartasVerso += `<div class="carta mini-carta ${j.mao[c].naipe}" data-naipe-simbolo="${simboloNaipe}">
+                                                <span>${textoValor}</span>
+                                                ${gerarConteudoMeioCarta(textoValor, j.mao[c].naipe)}
+                                            </div>`;
                     } else {
                         htmlCartasVerso += '<div class="carta-verso"></div>';
                     }
@@ -146,14 +149,14 @@ function atualizarInterface(dados) {
     });
 
     // ==========================================
-    // 1. ATUALIZA A CARTA VIRA (ALINHADA E LIMPA)
+    // 1. ATUALIZA A CARTA VIRA
     // ==========================================
     const viraDiv = document.getElementById('carta-vira');
     if (dados.carta_vira && dados.carta_vira.valor) {
         const textoValor = traduzirValorCarta(dados.carta_vira.valor);
         const simboloNaipe = obterSimboloNaipe(dados.carta_vira.naipe);
         
-        viraDiv.innerText = `${textoValor}`;
+        viraDiv.innerHTML = `<span>${textoValor}</span> ${gerarConteudoMeioCarta(textoValor, dados.carta_vira.naipe)}`;
         viraDiv.className = `carta ${dados.carta_vira.naipe}`;
         viraDiv.setAttribute('data-naipe-simbolo', simboloNaipe);
         viraDiv.style.display = "flex";
@@ -164,7 +167,7 @@ function atualizarInterface(dados) {
     }
 
     // ==========================================
-    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA (LADO A LADO À DIREITA, SEM COBRIR)
+    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA
     // ==========================================
     const mesaDiv = document.getElementById('cartas-na-mesa');
     if (mesaDiv) {
@@ -176,11 +179,9 @@ function atualizarInterface(dados) {
                 const simboloNaipe = obterSimboloNaipe(carta.naipe);
                 
                 elementoCarta.className = `carta ${carta.naipe}`;
-                elementoCarta.innerText = `${textoValor}`;
+                elementoCarta.innerHTML = `<span>${textoValor}</span> ${gerarConteudoMeioCarta(textoValor, carta.naipe)}`;
                 elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
                 
-                // Aplica rotações individuais orgânicas para o efeito dinâmico ("meio torta")
-                // sem sumir com as outras cartas da vaza
                 const rotacoes = [-4, 5, -2, 4];
                 const transY = (indice % 2 === 0) ? -3 : 3;
                 elementoCarta.style.setProperty('--rotacao-mesa', `${rotacoes[indice % 4]}deg`);
@@ -192,7 +193,7 @@ function atualizarInterface(dados) {
     }
 
     // ==========================================
-    // 3. RENDERIZA A SUA MÃO DE CARTAS (EFEITO LEQUE)
+    // 3. RENDERIZA A SUA MÃO DE CARTAS
     // ==========================================
     const minhaMaoDiv = document.getElementById('minha-mao');
     minhaMaoDiv.innerHTML = '';
@@ -216,7 +217,7 @@ function atualizarInterface(dados) {
             const simboloNaipe = obterSimboloNaipe(carta.naipe);
 
             elementoCarta.className = `carta ${carta.naipe}`;
-            elementoCarta.innerText = `${textoValor}`;
+            elementoCarta.innerHTML = `<span>${textoValor}</span> ${gerarConteudoMeioCarta(textoValor, carta.naipe)}`;
             elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
         }
         
@@ -271,6 +272,31 @@ function atualizarInterface(dados) {
     if (iniciarAnimacao) {
         animarDistribuicao(dados);
     }
+}
+
+// ==========================================
+// FUNÇÕES AUXILIARES
+// ==========================================
+
+function gerarConteudoMeioCarta(textoValor, naipe) {
+    // Se for copas ou ouros, adiciona o sufixo _r
+    const ehVermelha = (naipe === 'copas' || naipe === 'ouros');
+    const sufixo = ehVermelha ? '_r' : '';
+    
+    // Mapeia o nome do arquivo conforme o valor da carta
+    let nomeArquivo = "";
+    if (textoValor === 'K') {
+        nomeArquivo = `rei${sufixo}.png`;
+    } else if (textoValor === 'Q') {
+        nomeArquivo = `rainha${sufixo}.png`;
+    } else if (textoValor === 'J') {
+        nomeArquivo = `valete${sufixo}.png`;
+    } else {
+        return ``; // Cartas numéricas sem imagem no meio
+    }
+    
+    // Retorna a tag img com o caminho correto
+    return `<img src="assets/cartas/${nomeArquivo}" class="figura-centro">`;
 }
 
 function jogarCarta(indice) {
