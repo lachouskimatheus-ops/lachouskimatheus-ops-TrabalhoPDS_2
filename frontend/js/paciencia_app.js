@@ -544,6 +544,33 @@ function mostrarRegras() {
     document.getElementById('modal-notificacao').classList.remove('modal-oculto');
 }
 
+
+function mostrarPontuacao() {
+    tocarSom('click.mp3');
+    pararCronometro();
+    
+    // Você pode ajustar as regras abaixo de acordo com o sistema de pontos que seu C++ calcula
+    const textoPontuacao = `
+        <div class="regras-box">
+            <h3>SISTEMA DE PONTUAÇÃO</h3>
+            <ul class="regras-lista" style="text-align: left; margin: 15px 0;">
+                <li><strong>Mover para Fundação:</strong> +10 pontos</li>
+                <li><strong>Empilhar do Cava para Coluna:</strong> +15 pontos</li>
+                <li><strong>Empilhar de Coluna para Coluna:</strong> +5 pontos</li>
+                <li><strong>Voltar carta da Fundação:</strong> +5 pontos</li>
+                <li><strong>Virar carta na Coluna:</strong> +5 pontos</li>
+                <li><strong>Desfazer movimento:</strong> -15 pontos</li>
+                <li><strong>Resetar Cava:</strong> -100 pontos</li>
+                <li><strong>Tempo:</strong> Você ganha bônus por rapidez ao finalizar.</li>
+            </ul>
+        </div>
+        <button onclick="fecharModal()" style="margin-top:15px; padding:10px 20px; background:#4ade80; border:none; cursor:pointer;">Entendido</button>
+    `;
+    
+    document.getElementById('modal-texto').innerHTML = textoPontuacao;
+    document.getElementById('modal-notificacao').classList.remove('modal-oculto');
+}
+
 function fecharModal() {
     document.getElementById('modal-notificacao').classList.add('modal-oculto');
     if (!jogoPausado) iniciarCronometro();

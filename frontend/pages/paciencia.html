@@ -8,87 +8,72 @@
 </head>
 <body>
 
-    <div class="mesa-de-pano-verde">
-    <button class="btn-exclamacao" onclick="mostrarRegras()">!</button> 
-<!-- TOPO: Pontuação, Tempo e controles -->
-        <div class="painel-topo">
-            <div class="info-box">
-                <span>PONTOS</span>
-                <strong id="pontos">0</strong>
-            </div>
-            <div class="info-box">
-                <span>TEMPO</span>
-                <strong id="cronometro-visor">00:00</strong>
-            </div>
-            <div class="info-box">
-                <span>RECORDE</span>
-                <strong id="recorde">0</strong>
-            </div>
-            <button class="btn-acao" id="btn-desfazer">↩ Desfazer</button>
-            <button class="btn-acao btn-novo" id="btn-novo-jogo">+ Novo Jogo</button>
-        </div>
-
-        <!-- FUNDAÇÕES (4 pilhas de ás a rei) -->
-        <div class="area-fundacoes">
-            <h3 class="label-area">Fundações</h3>
-            <div class="fundacoes-container">
-                <div class="pilha-fundacao drop-zone" id="fundacao-0" data-tipo="fundacao" data-indice="0">
-                 <span class="placeholder">♣</span>  <!-- Paus -->
-            </div>
-            <div class="pilha-fundacao drop-zone" id="fundacao-1" data-tipo="fundacao" data-indice="1">
-                <span class="placeholder">♥</span>  <!-- Copa -->
-         </div>
-            <div class="pilha-fundacao drop-zone" id="fundacao-2" data-tipo="fundacao" data-indice="2">
-                <span class="placeholder">♠</span>  <!-- Espada -->
-        </div>
-            <div class="pilha-fundacao drop-zone" id="fundacao-3" data-tipo="fundacao" data-indice="3">
-             <span class="placeholder">♦</span>  <!-- Ouro -->
-        </div>
-            </div>
-        </div>
-
-        <!-- CAVA E DESCARTE -->
-        <div class="area-cava">
-            <h3 class="label-area">Cava</h3>
-            <div class="cava-container">
-                <div class="pilha-cava" id="cava" onclick="comprarCarta()">
-                    <div class="verso-grande" id="cava-visual"></div>
-                    <span id="cava-count" class="cava-count">0</span>
-                </div>
-                <div class="pilha-descarte" id="descarte">
-                    <span class="placeholder">↩</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- COLUNAS (7 colunas do tableau) -->
-        <div class="area-colunas">
-            <div class="colunas-container" id="colunas-container">
-                <div class="coluna drop-zone" id="coluna-0" data-tipo="coluna" data-indice="0"></div>
-                <div class="coluna drop-zone" id="coluna-1" data-tipo="coluna" data-indice="1"></div>
-                <div class="coluna drop-zone" id="coluna-2" data-tipo="coluna" data-indice="2"></div>
-                <div class="coluna drop-zone" id="coluna-3" data-tipo="coluna" data-indice="3"></div>
-                <div class="coluna drop-zone" id="coluna-4" data-tipo="coluna" data-indice="4"></div>
-                <div class="coluna drop-zone" id="coluna-5" data-tipo="coluna" data-indice="5"></div>
-                <div class="coluna drop-zone" id="coluna-6" data-tipo="coluna" data-indice="6"></div>
-            </div>
-        </div>
-
+<div class="mesa-de-pano-verde">
+    
+    <div class="menu-botoes-topo">
+        <button class="btn-menu" onclick="mostrarRegras()" title="Regras">!</button> 
+        <button class="btn-menu" onclick="mostrarPontuacao()" title="Sistema de Pontuação">
+            <img src="../assets/icones/pontuacao.png" alt="Pontuação" style="width: 24px; height: 24px;">
+        </button>
     </div>
 
-    <!-- MODAL DE VITÓRIA -->
-    <div id="modal-notificacao" class="modal-overlay modal-oculto">
-        <div class="modal-conteudo" id="modal-texto"></div>
+    <div class="painel-topo">
+        <div class="info-box">
+            <span>PONTOS</span>
+            <strong id="pontos">0</strong>
+        </div>
+        <div class="info-box">
+            <span>TEMPO</span>
+            <strong id="cronometro-visor">00:00</strong>
+        </div>
+        <div class="info-box">
+            <span>RECORDE</span>
+            <strong id="recorde">0</strong>
+        </div>
+        <button class="btn-acao" id="btn-desfazer">↩ Desfazer</button>
+        <button class="btn-acao btn-novo" id="btn-novo-jogo">+ Novo Jogo</button>
     </div>
 
-    <script src="../js/paciencia_app.js"></script>
-    <button id="btn-ajuda" onclick="mostrarRegras()">!</button>
-
-
-<div id="modal-notificacao" class="modal-overlay modal-oculto">
-    <div class="modal-conteudo" id="modal-texto">
+    <div class="area-fundacoes">
+        <h3 class="label-area">Fundações</h3>
+        <div class="fundacoes-container">
+            <div class="pilha-fundacao drop-zone" id="fundacao-0" data-tipo="fundacao" data-indice="0"><span class="placeholder">♣</span></div>
+            <div class="pilha-fundacao drop-zone" id="fundacao-1" data-tipo="fundacao" data-indice="1"><span class="placeholder">♥</span></div>
+            <div class="pilha-fundacao drop-zone" id="fundacao-2" data-tipo="fundacao" data-indice="2"><span class="placeholder">♠</span></div>
+            <div class="pilha-fundacao drop-zone" id="fundacao-3" data-tipo="fundacao" data-indice="3"><span class="placeholder">♦</span></div>
         </div>
+    </div>
+
+    <div class="area-cava">
+        <h3 class="label-area">Cava</h3>
+        <div class="cava-container">
+            <div class="pilha-cava" id="cava" onclick="comprarCarta()">
+                <div class="verso-grande" id="cava-visual"></div>
+                <span id="cava-count" class="cava-count">0</span>
+            </div>
+            <div class="pilha-descarte" id="descarte">
+                <span class="placeholder">↩</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="area-colunas">
+        <div class="colunas-container" id="colunas-container">
+            <div class="coluna drop-zone" id="coluna-0" data-tipo="coluna" data-indice="0"></div>
+            <div class="coluna drop-zone" id="coluna-1" data-tipo="coluna" data-indice="1"></div>
+            <div class="coluna drop-zone" id="coluna-2" data-tipo="coluna" data-indice="2"></div>
+            <div class="coluna drop-zone" id="coluna-3" data-tipo="coluna" data-indice="3"></div>
+            <div class="coluna drop-zone" id="coluna-4" data-tipo="coluna" data-indice="4"></div>
+            <div class="coluna drop-zone" id="coluna-5" data-tipo="coluna" data-indice="5"></div>
+            <div class="coluna drop-zone" id="coluna-6" data-tipo="coluna" data-indice="6"></div>
+        </div>
+    </div>
 </div>
 
+<div id="modal-notificacao" class="modal-overlay modal-oculto">
+    <div class="modal-conteudo" id="modal-texto"></div>
+</div>
+
+<script src="../js/paciencia_app.js"></script>
 </body>
 </html>
