@@ -126,11 +126,46 @@ let jogoPausado = false;
 // ATUALIZAR INTERFACE COM BASE NO ESTADO
 // ==========================================
 function atualizarInterface(estado) {
-    // Pontuação
-    document.getElementById('pontos').innerText   = estado.pontuacao || 0;
-    document.getElementById('recorde').innerText  = estado.recorde   || 0;
+    // 1. Atualizar informações básicas
+    document.getElementById('pontos').innerText = estado.pontuacao || 0;
+    document.getElementById('recorde').innerText = estado.recorde || 0;
 
-    // Cava
+    // 2. Lógica de Vitória (Única e consolidada)
+    if (estado.vitoria) {
+        const modal = document.getElementById('modal-notificacao');
+        
+        // Verifica se já não está visível para não repetir o som/modal
+        if (modal.classList.contains('modal-oculto')) {
+            tocarSom('victory_6.ogg');
+            pararCronometro();
+            
+            const tempoFinal = document.getElementById('cronometro-visor')?.innerText || "00:00";
+            const pontos = estado.pontuacao || 0;
+            const recorde = estado.recorde || 0;
+            
+            const modalHtml = `
+                <div style="text-align: center; padding: 10px;">
+                    <h2 style="color:#4ade80; margin-bottom: 10px; font-size: 2em; font-family: 'Cinzel Decorative', serif;">🏆 PARABÉNS!</h2>
+                    <p style="margin-bottom: 15px; font-size: 1.2em; color: #fff;">Você completou o Paciência!</p>
+                    
+                    <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 200, 50, 0.2); border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #fff;">
+                        <p style="margin: 5px 0;">Tempo: <strong style="color: #f0c040;">${tempoFinal}</strong></p>
+                        <p style="margin: 5px 0;">Pontuação Final: <strong style="color: #f0c040;">${pontos}</strong></p>
+                        <p style="margin: 5px 0;">Recorde Atual: <strong style="color: #f0c040;">${recorde}</strong></p>
+                    </div>
+
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button onclick="window.location.href='menu.html'" style="padding: 12px 20px; cursor: pointer; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; font-family: 'Cinzel', serif;">VOLTAR AO MENU</button>
+                        <button onclick="jogarNovamenteModal()" style="padding: 12px 20px; cursor: pointer; background: rgba(240,192,64,0.2); color: #f0c040; border: 1px solid rgba(240,192,64,0.5); border-radius: 5px; font-weight: bold; font-family: 'Cinzel', serif;">JOGAR NOVAMENTE</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-texto').innerHTML = modalHtml;
+            modal.classList.remove('modal-oculto');
+        }
+    }
+
+    // 3. Atualizar Cava
     const cavaCount = estado.cava_tamanho || 0;
     document.getElementById('cava-count').innerText = cavaCount;
     const cavaVisual = document.getElementById('cava-visual');
@@ -141,50 +176,10 @@ function atualizarInterface(estado) {
         if (el) el.className = 'verso-grande';
     }
 
-        // Dentro da sua função atualizarInterface(estado)
-    if (estado.vitoria) {
-        tocarSom('victory_6.ogg');
-        pararCronometro();
-        const tempoFinal = document.getElementById('cronometro-visor')?.innerText || "00:00";
-        const pontos = estado.pontuacao || 0;
-        const recorde = estado.recorde || 0;
-        
-        const modalHtml = `
-            <div style="text-align: center; padding: 10px;">
-                <h2 style="color:#4ade80; margin-bottom: 10px; font-size: 2em; font-family: 'Cinzel Decorative', serif;">🏆 PARABÉNS!</h2>
-                <p style="margin-bottom: 15px; font-size: 1.2em; color: #fff;">Você completou o Paciência!</p>
-                
-                <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 200, 50, 0.2); border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #fff;">
-                    <p style="margin: 5px 0;">Tempo: <strong style="color: #f0c040;">${tempoFinal}</strong></p>
-                    <p style="margin: 5px 0;">Pontuação Final: <strong style="color: #f0c040;">${pontos}</strong></p>
-                    <p style="margin: 5px 0;">Recorde Atual: <strong style="color: #f0c040;">${recorde}</strong></p>
-                </div>
-
-                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="window.location.href='menu.html'" style="padding: 12px 20px; cursor: pointer; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; font-family: 'Cinzel', serif;">VOLTAR AO MENU</button>
-                    <button onclick="jogarNovamenteModal()" style="padding: 12px 20px; cursor: pointer; background: rgba(240,192,64,0.2); color: #f0c040; border: 1px solid rgba(240,192,64,0.5); border-radius: 5px; font-weight: bold; font-family: 'Cinzel', serif;">JOGAR NOVAMENTE</button>
-                </div>
-            </div>
-        `;
-        
-        // Insere o HTML dentro da div modal-texto que você já tem no paciencia.html
-        document.getElementById('modal-texto').innerHTML = modalHtml;
-        document.getElementById('modal-notificacao').classList.remove('modal-oculto');
-    }
-
-    // Descarte
+    // 4. Renderizar o resto do tabuleiro
     renderizarDescarte(estado.descarte);
-
-    // Fundações
     renderizarFundacoes(estado.fundacoes);
-
-    // Colunas
     renderizarColunas(estado.colunas, estado.cartas_escondidas);
-
-    // Vitória
-    if (estado.vitoria) {
-        mostrarModal('<h2 style="color:#4ade80">🏆 PARABÉNS!</h2><p>Você completou o Paciência!</p>', 0);
-    }
 }
 
 // ==========================================
