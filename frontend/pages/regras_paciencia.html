@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Lobby Paciência</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+  }
+  .container {
+    background: rgba(15, 15, 20, 0.75);
+    border: 1px solid rgba(255, 200, 50, 0.3);
+    padding: 40px;
+    width: 100%;
+    max-width: 600px;
+    border-radius: 12px;
+    text-align: center;
+  }
+  h1 { font-family: 'Cinzel Decorative', serif; color: #fff; margin-bottom: 5px; }
+  h1 span { color: #f0c040; }
+  .saudacao { color: #aaa; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; }
+  
+  /* Caixa de Regras Estilo FDP */
+  .regras-box {
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 4px solid #f0c040;
+    padding: 20px 25px;
+    margin-bottom: 30px;
+    text-align: left;
+  }
+  .regras-box h3 { color: #f0c040; margin-bottom: 15px; letter-spacing: 2px; }
+  .regras-lista { list-style: none; color: #ddd; line-height: 1.8; }
+  .regras-lista li { margin-bottom: 12px; position: relative; padding-left: 20px; }
+  .regras-lista li::before { content: "♦"; position: absolute; left: 0; color: #f0c040; }
+  
+  /* Botões */
+  .acoes { display: flex; gap: 15px; }
+  .btn { flex: 1; padding: 15px; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 600; text-align: center; }
+  .btn-voltar { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; }
+  .btn-jogar { background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%); border: 1px solid rgba(240,192,64,0.6); color: #f0c040; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>LOBBY <span>PACIÊNCIA</span></h1>
+  <div class="saudacao" id="texto-saudacao">Bem-vindo, Jogador!</div>
+
+  <div class="regras-box">
+    <h3>COMO JOGAR</h3>
+    <ul class="regras-lista">
+      <li><strong>Objetivo:</strong> Mover todas as cartas para as fundações (topo) organizadas por naipe.</li>
+      <li><strong>Colunas:</strong> Organize as cartas em ordem decrescente e cores alternadas.</li>
+      <li><strong>Cava:</strong> Clique para comprar novas cartas quando precisar.</li>
+      <li><strong>Controle:</strong> Use ESC para pausar o tempo e Ctrl+Z para desfazer movimentos.</li>
+    </ul>
+  </div>
+
+  <div class="acoes">
+    <a href="menu.html" class="btn btn-voltar">VOLTAR</a>
+    <a href="paciencia.html" class="btn btn-jogar">JOGAR</a>
+  </div>
+</div>
+
+<script>
+  // Puxa o nome para personalizar a saudação, igual ao modelo do colega
+  document.addEventListener("DOMContentLoaded", () => {
+    const meuNome = localStorage.getItem('jogador_nickname');
+    if (meuNome) {
+      document.getElementById('texto-saudacao').innerText = `Bem-vindo à mesa, ${meuNome}!`;
+    }
+  });
+</script>
+</body>
+</html>

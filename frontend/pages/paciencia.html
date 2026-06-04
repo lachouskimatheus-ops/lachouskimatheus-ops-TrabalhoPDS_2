@@ -9,12 +9,16 @@
 <body>
 
     <div class="mesa-de-pano-verde">
-
-        <!-- TOPO: Pontuação e controles -->
+    <button class="btn-exclamacao" onclick="mostrarRegras()">!</button> 
+<!-- TOPO: Pontuação, Tempo e controles -->
         <div class="painel-topo">
             <div class="info-box">
                 <span>PONTOS</span>
                 <strong id="pontos">0</strong>
+            </div>
+            <div class="info-box">
+                <span>TEMPO</span>
+                <strong id="cronometro-visor">00:00</strong>
             </div>
             <div class="info-box">
                 <span>RECORDE</span>
@@ -78,5 +82,13 @@
     </div>
 
     <script src="../js/paciencia_app.js"></script>
+    <button id="btn-ajuda" onclick="mostrarRegras()">!</button>
+
+
+<div id="modal-notificacao" class="modal-overlay modal-oculto">
+    <div class="modal-conteudo" id="modal-texto">
+        </div>
+</div>
+
 </body>
 </html>
