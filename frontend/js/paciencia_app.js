@@ -541,6 +541,7 @@ function mostrarRegras() {
                 <li><strong>Colunas:</strong> Ordene as cartas de forma decrescente com cores alternadas.</li>
                 <li><strong>Atalhos:</strong> <b>ESC</b> para pausar e <b>Ctrl+Z</b> para desfazer.</li>
                 <li><strong>Arrastar:</strong> Clique nas cartas para selecionar e mover.</li>
+                <li style="margin-top: 10px; color: #f0c040;"><strong>Dica:</strong> Recomendado jogar com 80% de zoom no navegador.</li>
             </ul>
         </div>
         <button onclick="fecharModal()" style="margin-top:15px; padding:10px 20px; background:#4ade80; border:none; cursor:pointer;">Entendido</button>
