@@ -61,6 +61,61 @@ window.jogarNovamenteModal = function() {
     iniciarCronometro();
 };
 
+// Função para checar regras básicas antes de mover
+function ehMovimentoValido(origem, tipoDestino, indiceDestino) {
+    const estado = window.estadoAtual;
+    
+    // 1. Identificar qual carta está sendo movida
+    let cartaSendoMovida;
+    if (origem.tipo === 'coluna') {
+        cartaSendoMovida = estado.colunas[origem.indice][origem.cartaIdx];
+    } else if (origem.tipo === 'descarte') {
+        cartaSendoMovida = estado.descarte[estado.descarte.length - 1];
+    } else {
+        return true; // Se for movimento de fundação para fundação, o C++ já deve cuidar
+    }
+
+    // 2. Validação para FUNDAÇÃO
+    if (tipoDestino === 'fundacao') {
+        const fundacaoDestino = estado.fundacoes[indiceDestino];
+        
+        // Se a fundação está vazia, só aceita Ás (valor 1)
+        if (!fundacaoDestino || fundacaoDestino.length === 0) {
+            return cartaSendoMovida.valor === 1; 
+        }
+        
+        // Se já tem carta, precisa ser o mesmo naipe e valor superior (n+1)
+        const topoFundacao = fundacaoDestino[fundacaoDestino.length - 1];
+        const mesmoNaipe = (cartaSendoMovida.naipe === topoFundacao.naipe);
+        const sequenciaCerta = (cartaSendoMovida.valor === topoFundacao.valor + 1);
+        
+        return mesmoNaipe && sequenciaCerta;
+    }
+
+    // 3. Validação para COLUNA (o que você já tinha)
+    if (tipoDestino === 'coluna') {
+        const colunaDestino = estado.colunas[indiceDestino];
+        if (!colunaDestino || colunaDestino.length === 0) return true;
+
+        const cartaNoTopo = colunaDestino[colunaDestino.length - 1];
+        
+        // Regra de cores alternadas
+        const ehVermelho = (c) => c.naipe === 1 || c.naipe === 3;
+        if (ehVermelho(cartaSendoMovida) === ehVermelho(cartaNoTopo)) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+function tocarSom(nomeArquivo) {
+    const audio = new Audio(`/assets/sons/${nomeArquivo}`); 
+    
+    audio.play().catch(e => {
+        console.error("Erro ao carregar o som:", e);
+    });
+}
 // ==========================================
 // ESTADO LOCAL DE SELEÇÃO
 // ==========================================
@@ -88,6 +143,7 @@ function atualizarInterface(estado) {
 
         // Dentro da sua função atualizarInterface(estado)
     if (estado.vitoria) {
+        tocarSom('victory_6.ogg');
         pararCronometro();
         const tempoFinal = document.getElementById('cronometro-visor')?.innerText || "00:00";
         const pontos = estado.pontuacao || 0;
@@ -316,6 +372,9 @@ function selecionarFundacao(fundacaoIdx) {
 function moverParaDestino(tipoDestino, indiceDestino) {
     if (!cartaSelecionada) return;
 
+    if (tipoDestino === 'fundacao') tocarSom('card-slide-1.ogg');
+    else if (tipoDestino === 'coluna') tocarSom('card-place-3.ogg');
+
     let payload = {};
 
     // 1. Se a origem for a FUNDAÇÃO
@@ -367,6 +426,7 @@ function moverParaDestino(tipoDestino, indiceDestino) {
 }
 
 function comprarCarta() {
+    tocarSom('card-slide-5.ogg');
     socket.send(JSON.stringify({ acao: 'COMPRAR_CARTA' }));
 }
 
@@ -374,11 +434,13 @@ function comprarCarta() {
 // BOTÕES
 // ==========================================
 document.getElementById('btn-desfazer').onclick = () => {
+    tocarSom('click.mp3');
     socket.send(JSON.stringify({ acao: 'DESFAZER' }));
     cartaSelecionada = null;
 };
 
 document.getElementById('btn-novo-jogo').onclick = () => {
+    tocarSom('click.mp3');
     socket.send(JSON.stringify({ acao: 'NOVO_JOGO' }));
     cartaSelecionada = null;
     zerarCronometro();
@@ -469,6 +531,7 @@ function alternarPausa() {
 }
 
 function mostrarRegras() {
+    tocarSom('click.mp3');
     pararCronometro();
     document.getElementById('modal-texto').innerHTML = `
         <div class="regras-box">
@@ -497,12 +560,21 @@ window.jogarNovamenteModal = function() {
     iniciarCronometro();
 };
 
+
 function processarDrop(event, tipoDestino, indiceDestino) {
     event.preventDefault();
     const origemRaw = event.dataTransfer.getData('app/jogo');
     if (!origemRaw) return;
-    
     const origem = JSON.parse(origemRaw);
+
+    if (!ehMovimentoValido(origem, tipoDestino, indiceDestino)) {
+        console.log("Jogada inválida, sem som!");
+        return; // Sai da função, não toca som, não envia para o socket
+    }
+
+    if (tipoDestino === 'fundacao') tocarSom('card-slide-1.ogg');
+    else if (tipoDestino === 'coluna') tocarSom('card-place-3.ogg');
+
     let payload = {};
 
     if (origem.tipo === 'fundacao') {
