@@ -1,17 +1,16 @@
-#include "Routes.hpp"
-#include "coreAPI/Responses.hpp"
+#include "routes/Routes.hpp"
+#include "routes/FrontendRoutes.hpp"
+#include "routes/PacienciaRoutes.hpp"
 
-void Routes::registrarRotas(crow::SimpleApp& app){
+void Routes::registrarRotas(crow::SimpleApp& app) {
 
-    CROW_ROUTE(app, "/") //rotas de testes para validar API
+    CROW_ROUTE(app, "/")
     ([]() {
-        return Responses::sucesso("API funcionando");
+        crow::response res;
+        res.set_static_file_info("frontend/pages/menu.html");
+        return res;
     });
 
-
-    CROW_ROUTE(app, "/ping")
-    ([]() {
-        return Responses::sucesso("pong");
-
-    });
+    FrontendRoutes::registrar(app);
+    PacienciaRoutes::registrar(app);
 }

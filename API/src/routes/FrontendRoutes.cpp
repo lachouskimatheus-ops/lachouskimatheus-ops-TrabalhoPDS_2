@@ -1,6 +1,6 @@
 #include "routes/FrontendRoutes.hpp"
 
-void FrontendRoutes::registrar(crow::SimpleApp& app){
+void FrontendRoutes::registrar(crow::SimpleApp& app) {
 
     CROW_ROUTE(app, "/pages/<path>")
     ([](const std::string& path){

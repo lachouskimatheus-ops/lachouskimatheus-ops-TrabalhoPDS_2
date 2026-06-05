@@ -3,13 +3,23 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
            -DASIO_STANDALONE \
            -I./include \
-           -I./dependencias
+           -I./dependencias \
+           -I../Jogos/Core \
+           -I../Jogos/Paciencia/include \
+           -I..
 
 SRC_DIR = src
 OBJ_DIR = obj
 
-SOURCES = $(wildcard $(SRC_DIR)/*.cpp) \
-          $(wildcard $(SRC_DIR)/coreAPI/*.cpp)
+SOURCES = $(SRC_DIR)/testeAPI.cpp \
+          $(SRC_DIR)/coreAPI/Server.cpp \
+          $(SRC_DIR)/coreAPI/JsonConversor.cpp \
+          $(wildcard $(SRC_DIR)/routes/*.cpp) \
+          ../Jogos/Core/Carta.cpp \
+          ../Jogos/Core/Baralho.cpp \
+          ../Jogos/Paciencia/src/paciencia.cpp \
+          ../Jogos/Paciencia/src/regras.cpp \
+          ../Jogos/Paciencia/src/pontuacao.cpp
 
 OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 
