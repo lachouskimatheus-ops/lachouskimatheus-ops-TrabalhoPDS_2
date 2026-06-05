@@ -1,19 +1,18 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -I../Core
 
 SRC = \
-Core/CoreBaralho1/baralho.cpp \
-Core/CoreBaralho1/cartas.cpp \
-Menu/Menu.cpp \
-Poker/poker.cpp \
+src/poker.cpp \
+test/teste_poker.cpp \
+../Core/Baralho.cpp \
+../Core/Carta.cpp
 
-
-EXEC = main
+EXEC = teste_poker
 
 all:
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC)
 
-run:
+run: all
 	./$(EXEC)
 
 clean:
