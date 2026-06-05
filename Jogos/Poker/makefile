@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -I../Core
+CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -I../Core -I../../API/dependencias
 
 SRC = \
 src/poker.cpp \
