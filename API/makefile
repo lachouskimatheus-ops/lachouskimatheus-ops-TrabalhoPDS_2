@@ -2,24 +2,30 @@ CXX = g++
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
            -DASIO_STANDALONE \
+           -I. \
            -I./include \
            -I./dependencias \
            -I../Jogos/Core \
            -I../Jogos/Paciencia/include \
+           -I../Jogos/Pife/include \
            -I..
 
 SRC_DIR = src
 OBJ_DIR = obj
 
-SOURCES = $(SRC_DIR)/testeAPI.cpp \
-          $(SRC_DIR)/coreAPI/Server.cpp \
-          $(SRC_DIR)/coreAPI/JsonConversor.cpp \
-          $(wildcard $(SRC_DIR)/routes/*.cpp) \
-          ../Jogos/Core/Carta.cpp \
-          ../Jogos/Core/Baralho.cpp \
-          ../Jogos/Paciencia/src/paciencia.cpp \
-          ../Jogos/Paciencia/src/regras.cpp \
-          ../Jogos/Paciencia/src/pontuacao.cpp
+SOURCES = \
+$(SRC_DIR)/testeAPI.cpp \
+$(SRC_DIR)/coreAPI/Server.cpp \
+$(SRC_DIR)/coreAPI/JsonConversor.cpp \
+$(wildcard $(SRC_DIR)/routes/*.cpp) \
+../Jogos/Core/Carta.cpp \
+../Jogos/Core/Baralho.cpp \
+../Jogos/Paciencia/src/paciencia.cpp \
+../Jogos/Paciencia/src/regras.cpp \
+../Jogos/Paciencia/src/pontuacao.cpp \
+../Jogos/Pife/src/pife.cpp \
+../Jogos/Pife/src/jogadorPife.cpp \
+../Jogos/Pife/src/regrasPife.cpp
 
 OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 

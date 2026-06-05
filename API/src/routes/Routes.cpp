@@ -1,6 +1,7 @@
 #include "routes/Routes.hpp"
 #include "routes/FrontendRoutes.hpp"
 #include "routes/PacienciaRoutes.hpp"
+#include "routes/PifeRoutes.hpp"
 
 void Routes::registrarRotas(crow::SimpleApp& app) {
 
@@ -13,4 +14,5 @@ void Routes::registrarRotas(crow::SimpleApp& app) {
 
     FrontendRoutes::registrar(app);
     PacienciaRoutes::registrar(app);
+    PifeRoutes::registrar(app);
 }
