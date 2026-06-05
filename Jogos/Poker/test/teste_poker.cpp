@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../Core/CoreBaralho1/baralho.h"
+#include "Baralho.hpp"
 #include "poker.h"
 
 int main() {

@@ -1,8 +1,7 @@
 #ifndef POKER_H
 #define POKER_H
 
-#include "../Core/CoreBaralho1/cartas.h"
-// Aqui precisa verificar o Core pra não duplicar, possivelmente
+#include "Carta.hpp"
 #include <vector>
 #include <string>
 

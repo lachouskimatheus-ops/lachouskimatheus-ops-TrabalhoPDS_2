@@ -115,7 +115,29 @@ int main() {
                         jogo.moverDaFundacao((int)msg["fundacao_indice"], TipoPilha::Coluna, (int)msg["destino_indice"]);
                     }
 
-                    broadcast(estadoParaJson(jogo).dump());
+
+                    else if (acao == "MOVER_UMA_PARA_FUNDACAO") {
+                        // 1. Tenta mover. Assumindo que seu método retorna bool.
+                        // Se seu método for void, você precisará adaptá-lo para retornar se algo foi movido.
+                        bool moveu = jogo.moverUmaParaFundacao(); 
+                        
+                        // 2. Prepara o JSON do estado atual
+                        json resposta = estadoParaJson(jogo);
+                        
+                        // 3. Adiciona o campo que o JavaScript vai checar
+                        resposta["movimento_realizado"] = moveu;
+                        
+                        // 4. Envia a resposta específica para quem pediu (ou broadcast)
+                        broadcast(resposta.dump());
+                        
+                        std::cout << "Movimento automatico: " << (moveu ? "Sucesso" : "Falhou") << std::endl;
+                    }
+
+
+
+                        json respostaFinal = estadoParaJson(jogo);
+                        respostaFinal["movimento_realizado"] = true; // Para movimentos manuais, sempre é true
+                        broadcast(respostaFinal.dump());
 
                 } catch (const std::exception& e) {
                     std::cerr << "Erro no processamento: " << e.what() << std::endl;
