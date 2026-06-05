@@ -3,14 +3,39 @@
 // ==========================================
 const socket = new WebSocket('ws://localhost:8080/ws');
 
+let estaProcessando = false; //Necessario para Travar os cliques
+
+socket.onclose = () => {
+    console.warn('Conexão perdida. Tentando reconectar em 3 segundos...');
+    setTimeout(() => {
+        // Tenta recarregar a conexão ou mostrar um aviso ao jogador
+        location.reload(); 
+    }, 3000);
+};
+
+// Adicione isso logo após abrir o socket
 socket.onopen = () => {
     console.log('Conectado ao servidor C++');
     socket.send(JSON.stringify({ acao: 'OBTER_ESTADO_ATUAL' }));
     iniciarCronometro();
+
+    // MANTÉM A CONEXÃO VIVA
+    setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ acao: 'PING' }));
+        }
+    }, 30000); 
 };
 
 socket.onmessage = (event) => {
     const estado = JSON.parse(event.data);
+    
+    // Se o C++ enviar uma mensagem de que não houve movimento possível
+    if (estado.movimento_realizado === false) {
+        pararAutoCompletar();
+        return;
+    }
+
     window.estadoAtual = estado;
     atualizarInterface(estado);
 };
@@ -122,6 +147,7 @@ function tocarSom(nomeArquivo) {
 // cartaSelecionada agora pode guardar 'cartaIdx' para identificar onde o bloco começa
 let cartaSelecionada = null; // { tipo: "coluna"|"descarte"|"fundacao", indice: int, cartaIdx: int }
 let jogoPausado = false;
+let autoCompletarDisponivel = false;
 // ==========================================
 // ATUALIZAR INTERFACE COM BASE NO ESTADO
 // ==========================================
@@ -130,6 +156,18 @@ function atualizarInterface(estado) {
     document.getElementById('pontos').innerText = estado.pontuacao || 0;
     document.getElementById('recorde').innerText = estado.recorde || 0;
 
+
+    const containerAuto = document.getElementById('container-auto');
+if (containerAuto) {
+    // Verifica se todas as cartas ocultas foram reveladas (total = 0)
+    const totalEscondidas = estado.cartas_escondidas.reduce((a, b) => a + b, 0);
+    
+    if (totalEscondidas === 0 && !estado.vitoria) {
+        containerAuto.style.display = 'block'; // Mostra o botão
+    } else {
+        containerAuto.style.display = 'none';  // Esconde o botão
+    }
+}
     // 2. Lógica de Vitória (Única e consolidada)
     if (estado.vitoria) {
         const modal = document.getElementById('modal-notificacao');
@@ -337,6 +375,9 @@ function selecionarDescarte() {
     renderizarFundacoes(window.estadoAtual?.fundacoes);
 }
 
+
+
+
 function selecionarColuna(colunaIdx, cartaIdx) {
     if (cartaSelecionada && 
         cartaSelecionada.tipo   === 'coluna' && 
@@ -365,14 +406,22 @@ function selecionarFundacao(fundacaoIdx) {
 }
 
 function moverParaDestino(tipoDestino, indiceDestino) {
-    if (!cartaSelecionada) return;
+    // 1. Bloqueio: se já estiver processando, ignora novos cliques
+    if (estaProcessando) {
+        console.warn("Bloqueado: já processando movimento...");
+        return;
+    }
 
+    // 2. Trava o sistema
+    estaProcessando = true;
+
+    // 3. Efeitos sonoros
     if (tipoDestino === 'fundacao') tocarSom('card-slide-1.ogg');
     else if (tipoDestino === 'coluna') tocarSom('card-place-3.ogg');
 
     let payload = {};
 
-    // 1. Se a origem for a FUNDAÇÃO
+    // 4. Montagem do objeto de ação (Payload)
     if (cartaSelecionada.tipo === 'fundacao') {
         payload = {
             acao: 'MOVER_DA_FUNDACAO',
@@ -380,13 +429,9 @@ function moverParaDestino(tipoDestino, indiceDestino) {
             destino_tipo: tipoDestino,
             destino_indice: indiceDestino
         };
-    }
-    // 2. Se a origem for uma COLUNA e clicamos no meio do bloco (ou seja, mover mais de uma carta ou uma específica)
-    else if (cartaSelecionada.tipo === 'coluna') {
+    } else if (cartaSelecionada.tipo === 'coluna') {
         const totalCartasColuna = window.estadoAtual?.colunas[cartaSelecionada.indice]?.length || 0;
         
-        // Se a carta selecionada não for a última da coluna, é um movimento de Bloco obrigatório.
-        // Se for a última, o backend pode tratar tanto como MOVER normal ou MOVER_BLOCO com tamanho 1.
         if (cartaSelecionada.cartaIdx < totalCartasColuna - 1 || tipoDestino === 'coluna') {
             payload = {
                 acao: 'MOVER_BLOCO',
@@ -395,7 +440,6 @@ function moverParaDestino(tipoDestino, indiceDestino) {
                 destino_coluna: indiceDestino
             };
         } else {
-            // Movimento simples (ex: última carta da coluna indo para a Fundação)
             payload = {
                 acao: 'MOVER',
                 origem_tipo: cartaSelecionada.tipo,
@@ -404,9 +448,7 @@ function moverParaDestino(tipoDestino, indiceDestino) {
                 destino_indice: indiceDestino
             };
         }
-    } 
-    // 3. Movimentos vindos do descarte
-    else {
+    } else {
         payload = {
             acao: 'MOVER',
             origem_tipo: cartaSelecionada.tipo,
@@ -416,13 +458,33 @@ function moverParaDestino(tipoDestino, indiceDestino) {
         };
     }
 
-    socket.send(JSON.stringify(payload));
+    // 5. Envio e Segurança
+    try {
+        socket.send(JSON.stringify(payload));
+    } catch (e) {
+        console.error("Erro ao enviar WebSocket:", e);
+        estaProcessando = false;
+    }
+
+    // 6. Limpeza da seleção
     cartaSelecionada = null;
+
+    // 7. MECANISMO DE RECUPERAÇÃO:
+    // Independentemente de o servidor responder ou não, após 600ms
+    // forçamos o servidor a reenviar o estado atual para garantir que
+    // o JS e o C++ estejam sincronizados. Isso evita o travamento.
+    setTimeout(() => {
+        socket.send(JSON.stringify({ acao: 'OBTER_ESTADO_ATUAL' }));
+        estaProcessando = false;
+    }, 600);
 }
 
 function comprarCarta() {
+    if (estaProcessando) return; // BLOQUEIO
+    estaProcessando = true;
     tocarSom('card-slide-5.ogg');
     socket.send(JSON.stringify({ acao: 'COMPRAR_CARTA' }));
+    setTimeout(() => { estaProcessando = false; }, 200); //Trava 
 }
 
 // ==========================================
@@ -583,23 +645,69 @@ window.jogarNovamenteModal = function() {
     iniciarCronometro();
 };
 
+let intervaloAnimacao = null; // Mova para fora para ser acessível globalmente
+
+function solicitarAutoCompletar() {
+    if (estaProcessando) return;
+    document.getElementById('container-auto').style.display = 'none';
+    estaProcessando = true;
+
+    intervaloAnimacao = setInterval(() => {
+        // Se o jogo acabou, limpa e para
+        if (window.estadoAtual && window.estadoAtual.vitoria) {
+            pararAutoCompletar();
+            return;
+        }
+
+        socket.send(JSON.stringify({ acao: 'MOVER_UMA_PARA_FUNDACAO' }));
+    }, 500); 
+}
+
+function pararAutoCompletar() {
+    if (intervaloAnimacao) {
+        clearInterval(intervaloAnimacao);
+        intervaloAnimacao = null;
+    }
+    estaProcessando = false;
+    console.log("Auto-completar finalizado ou pausado.");
+}
 
 function processarDrop(event, tipoDestino, indiceDestino) {
     event.preventDefault();
-    const origemRaw = event.dataTransfer.getData('app/jogo');
-    if (!origemRaw) return;
-    const origem = JSON.parse(origemRaw);
-
-    if (!ehMovimentoValido(origem, tipoDestino, indiceDestino)) {
-        console.log("Jogada inválida, sem som!");
-        return; // Sai da função, não toca som, não envia para o socket
+    
+    // 1. Verificação de segurança: se já estiver processando, não faz nada
+    if (estaProcessando) {
+        console.warn("Bloqueado: processamento de drop já está em curso.");
+        return;
     }
 
+    // 2. Bloqueia a interface
+    estaProcessando = true;
+
+    const origemRaw = event.dataTransfer.getData('app/jogo');
+    
+    // 3. Se por acaso não houver dados, libera a trava antes de sair
+    if (!origemRaw) {
+        estaProcessando = false;
+        return;
+    }
+
+    const origem = JSON.parse(origemRaw);
+
+    // 4. Validação: se o movimento for contra as regras, libera a trava e sai
+    if (!ehMovimentoValido(origem, tipoDestino, indiceDestino)) {
+        console.log("Drop inválido, liberando trava.");
+        estaProcessando = false; 
+        return;
+    }
+
+    // 5. Execução do movimento
     if (tipoDestino === 'fundacao') tocarSom('card-slide-1.ogg');
     else if (tipoDestino === 'coluna') tocarSom('card-place-3.ogg');
 
     let payload = {};
 
+    // Estrutura do payload conforme sua lógica atual
     if (origem.tipo === 'fundacao') {
         payload = {
             acao: 'MOVER_DA_FUNDACAO',
@@ -636,6 +744,20 @@ function processarDrop(event, tipoDestino, indiceDestino) {
         };
     }
 
-    socket.send(JSON.stringify(payload));
-    cartaSelecionada = null; // Limpa a seleção visual (clique) se o jogador usou drag & drop
+    // 6. Envio para o servidor
+    try {
+        socket.send(JSON.stringify(payload));
+    } catch (e) {
+        console.error("Erro ao enviar WebSocket via Drag&Drop:", e);
+        estaProcessando = false;
+        return;
+    }
+
+    // 7. MECANISMO DE RECUPERAÇÃO:
+    // Garante que a trava caia em 600ms, forçando sincronização com o estado do C++
+    setTimeout(() => {
+        socket.send(JSON.stringify({ acao: 'OBTER_ESTADO_ATUAL' }));
+        cartaSelecionada = null;
+        estaProcessando = false;
+    }, 600);
 }

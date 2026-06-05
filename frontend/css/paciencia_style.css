@@ -212,6 +212,16 @@
     z-index: 10;
 }
 
+
+#container-auto {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000; /* Garante que fique acima de outros elementos */
+    display: none; /* Inicie oculto */
+}
+
 .colunas-container {
     display: flex;
     justify-content: center;

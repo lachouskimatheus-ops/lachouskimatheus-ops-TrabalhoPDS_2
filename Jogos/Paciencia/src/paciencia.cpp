@@ -607,6 +607,64 @@ void Paciencia::gerarJogoReversivel() {
 int Paciencia::getPontuacao() const {
     return pontuacao.getPontos();
 }
+void Paciencia::completarAutomaticamente() {
+    bool movimentoPossivel = true;
+
+    while (movimentoPossivel) {
+        movimentoPossivel = false;
+
+        // 1. Tenta mover do descarte
+        if (!descarte.empty()) {
+            Carta& carta = descarte.back();
+            // ADICIONADO static_cast<int>
+            int naipeIdx = static_cast<int>(carta.mostraNaipe()); 
+            if (Regras::podeMoverParaFundacao(carta, fundacoes[naipeIdx])) {
+                mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, naipeIdx);
+                movimentoPossivel = true;
+            }
+        }
+
+        // 2. Tenta mover das colunas
+        if (!movimentoPossivel) {
+            for (int i = 0; i < 7; i++) {
+                if (!colunas[i].empty()) {
+                    Carta& c = colunas[i].back();
+                    // ADICIONADO static_cast<int>
+                    int naipeIdx = static_cast<int>(c.mostraNaipe());
+                    if (Regras::podeMoverParaFundacao(c, fundacoes[naipeIdx])) {
+                        mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, naipeIdx);
+                        movimentoPossivel = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Esta função move apenas UMA carta por vez
+bool Paciencia::moverUmaParaFundacao() {
+    // 1. Tenta descarte
+    for (auto& carta : descarte) {
+        int nIdx = static_cast<int>(carta.mostraNaipe());
+        if (Regras::podeMoverParaFundacao(carta, fundacoes[nIdx])) {
+            mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, nIdx);
+            return true; // Moveu uma, para por aqui
+        }
+    }
+    // 2. Tenta colunas
+    for (int i = 0; i < 7; i++) {
+        if (!colunas[i].empty()) {
+            Carta& c = colunas[i].back();
+            int nIdx = static_cast<int>(c.mostraNaipe());
+            if (Regras::podeMoverParaFundacao(c, fundacoes[nIdx])) {
+                mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, nIdx);
+                return true;
+            }
+        }
+    }
+    return false; // Não há mais movimentos
+}
 
 void Paciencia::imprimirJogo() {
     std::cout << "\n========================================\n";

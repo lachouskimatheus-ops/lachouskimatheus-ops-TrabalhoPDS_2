@@ -74,6 +74,8 @@ public:
     std::string converterParaString();   
     // Dentro de paciencia.h, na seção public:
 std::vector<JogadaSimulada> listarJogadasPossiveis();
+void completarAutomaticamente();
+bool moverUmaParaFundacao();
 bool simularSolucao(std::set<std::string>& estadosVisitados);
 bool garantirJogoVencivel();   
 void gerarJogoReversivel();

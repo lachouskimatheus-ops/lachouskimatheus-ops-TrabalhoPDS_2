@@ -57,17 +57,41 @@
         </div>
     </div>
 
-    <div class="area-colunas">
-        <div class="colunas-container" id="colunas-container">
-            <div class="coluna drop-zone" id="coluna-0" data-tipo="coluna" data-indice="0"></div>
-            <div class="coluna drop-zone" id="coluna-1" data-tipo="coluna" data-indice="1"></div>
-            <div class="coluna drop-zone" id="coluna-2" data-tipo="coluna" data-indice="2"></div>
-            <div class="coluna drop-zone" id="coluna-3" data-tipo="coluna" data-indice="3"></div>
-            <div class="coluna drop-zone" id="coluna-4" data-tipo="coluna" data-indice="4"></div>
-            <div class="coluna drop-zone" id="coluna-5" data-tipo="coluna" data-indice="5"></div>
-            <div class="coluna drop-zone" id="coluna-6" data-tipo="coluna" data-indice="6"></div>
-        </div>
+<div class="area-colunas">
+    <div class="colunas-container" id="colunas-container">
+        <div class="coluna drop-zone" id="coluna-0" data-tipo="coluna" data-indice="0"></div>
+        <div class="coluna drop-zone" id="coluna-1" data-tipo="coluna" data-indice="1"></div>
+        <div class="coluna drop-zone" id="coluna-2" data-tipo="coluna" data-indice="2"></div>
+        <div class="coluna drop-zone" id="coluna-3" data-tipo="coluna" data-indice="3"></div>
+        <div class="coluna drop-zone" id="coluna-4" data-tipo="coluna" data-indice="4"></div>
+        <div class="coluna drop-zone" id="coluna-5" data-tipo="coluna" data-indice="5"></div>
+        <div class="coluna drop-zone" id="coluna-6" data-tipo="coluna" data-indice="6"></div>
     </div>
+</div>
+
+    <div id="container-auto" style="
+    display: none; 
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    z-index: 1000; 
+    text-align: center;
+">
+    <button onclick="solicitarAutoCompletar()" style="
+        padding: 20px 40px; 
+        font-size: 18px; 
+        cursor: pointer; 
+        background: #f0c040; 
+        border: 2px solid #d4a017; 
+        border-radius: 10px; 
+        font-weight: bold; 
+        font-family: 'Cinzel', serif;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    ">
+        Completar Automaticamente?
+    </button>
+</div>
 </div>
 
 <div id="modal-notificacao" class="modal-overlay modal-oculto">
