@@ -1,4 +1,5 @@
 #include "Carta.hpp"
+#include "json.hpp"
 
 Carta::Carta(int valor, Naipe naipe){
 	this->valor_ = valor;
