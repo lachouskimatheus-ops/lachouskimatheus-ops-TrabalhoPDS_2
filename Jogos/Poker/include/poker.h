@@ -2,8 +2,11 @@
 #define POKER_H
 
 #include "Carta.hpp"
+
 #include <vector>
 #include <string>
+
+class Baralho;
 
 class Poker {
 private:
@@ -29,6 +32,8 @@ public:
 
     int compararCom(const Poker& outro) const;
     std::vector<int> gerarPontuacaoDesempate() const;
+
+    bool trocarCartas(const std::vector<int>& indices, Baralho& baralho);
 };
 
 #endif
