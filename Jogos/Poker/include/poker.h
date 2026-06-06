@@ -29,5 +29,6 @@ public:
 
     int compararCom(const Poker& outro) const;
     std::vector<int> gerarPontuacaoDesempate() const;
+};
 
 #endif
