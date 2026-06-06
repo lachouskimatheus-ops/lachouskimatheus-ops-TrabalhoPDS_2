@@ -51,8 +51,10 @@ $(SRC_DIR)/routes/Routes.cpp \
 $(SRC_DIR)/routes/FrontendRoutes.cpp \
 $(SRC_DIR)/routes/PifeRoutes.cpp \
 $(SRC_DIR)/routes/PacienciaRoutes.cpp \
+$(SRC_DIR)/routes/FDPRoutes.cpp \
 $(SRC_DIR)/multiplayer/Pife/SalaPife.cpp \
-$(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp
+$(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp \
+$(SRC_DIR)/multiplayer/FDP/SalaFDP.cpp
 
 OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 

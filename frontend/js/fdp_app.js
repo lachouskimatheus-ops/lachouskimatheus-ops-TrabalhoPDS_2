@@ -37,7 +37,16 @@ document.addEventListener("DOMContentLoaded", () => {
 const urlParams = new URLSearchParams(window.location.search);
 const meuId = parseInt(urlParams.get('id')) || 0;
 
-const socket = new WebSocket('ws://localhost:8080/ws/fdp');
+const socket = new WebSocket(`ws://${window.location.host}/ws/fdp`);
+
+socket.onopen = function() {
+    console.log("WebSocket FDP conectado");
+
+    socket.send(JSON.stringify({
+        acao: "ENTRAR",
+        jogador_id: meuId
+    }));
+};
 
 socket.onmessage = function(event) {
     const estadoMesa = JSON.parse(event.data);
