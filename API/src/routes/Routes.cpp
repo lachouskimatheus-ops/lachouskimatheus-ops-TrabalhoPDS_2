@@ -2,7 +2,7 @@
 #include "routes/FrontendRoutes.hpp"
 #include "routes/PacienciaRoutes.hpp"
 #include "routes/PifeRoutes.hpp"
-#include "routes/FDPRoutes.hpp"
+//#include "routes/FDPRoutes.hpp"
 
 void Routes::registrarRotas(crow::SimpleApp& app) {
 
@@ -16,5 +16,6 @@ void Routes::registrarRotas(crow::SimpleApp& app) {
     FrontendRoutes::registrar(app);
     PacienciaRoutes::registrar(app);
     PifeRoutes::registrar(app);
-    FDPRoutes::registrar(app);
+
+    //FDPRoutes::registrar(app);
 }

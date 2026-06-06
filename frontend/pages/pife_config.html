@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pife - Lobby e Regras</title>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    overflow: hidden;
+  }
+
+  .bg {
+    position: fixed;
+    inset: 0;
+    background-image: url('../assets/fundo.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.25);
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 650px;
+    padding: 40px;
+    background: rgba(15, 15, 20, 0.75);
+    border: 1px solid rgba(255, 200, 50, 0.3);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+    animation: fadeIn 0.6s ease;
+  }
+
+  h1 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 34px;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(255,200,50,0.5);
+    margin-bottom: 5px;
+    text-align: center;
+  }
+
+  h1 span {
+    color: #f0c040;
+  }
+
+  .saudacao {
+    color: #aaa;
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .config-box,
+  .regras-box {
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 4px solid #f0c040;
+    padding: 20px 25px;
+    width: 100%;
+    border-radius: 4px;
+    margin-bottom: 25px;
+  }
+
+  .config-box h3,
+  .regras-box h3 {
+    color: #f0c040;
+    margin-bottom: 15px;
+    letter-spacing: 2px;
+  }
+
+  .botoes-jogadores {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .btn-jogador {
+    flex: 1;
+    padding: 13px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.3s;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .btn-jogador:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-jogador.selecionado {
+    background: linear-gradient(135deg, rgba(240,192,64,0.4) 0%, rgba(240,192,64,0.15) 100%);
+    border: 1px solid rgba(240,192,64,0.8);
+    color: #f0c040;
+    box-shadow: 0 0 16px rgba(240,192,64,0.25);
+  }
+
+  .regras-lista {
+    list-style: none;
+    color: #ddd;
+    line-height: 1.8;
+    font-size: 15px;
+  }
+
+  .regras-lista li {
+    margin-bottom: 12px;
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .regras-lista li::before {
+    content: "♦";
+    position: absolute;
+    left: 0;
+    color: #f0c040;
+  }
+
+  .acoes {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+
+  .btn-voltar {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .btn-voltar:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .btn-jogar {
+    background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%);
+    border: 1px solid rgba(240,192,64,0.6);
+    color: #f0c040;
+  }
+
+  .btn-jogar:hover {
+    background: linear-gradient(135deg, rgba(240,192,64,0.5) 0%, rgba(240,192,64,0.2) 100%);
+    box-shadow: 0 0 20px rgba(240,192,64,0.4);
+    color: #fff;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+
+  <h1>LOBBY <span>PIFE</span></h1>
+
+  <div class="saudacao" id="texto-saudacao">
+    Configure sua partida
+  </div>
+
+  <div class="config-box">
+    <h3>QUANTIDADE DE JOGADORES</h3>
+
+    <div class="botoes-jogadores">
+      <button class="btn-jogador selecionado" data-jogadores="2">
+        2
+      </button>
+
+      <button class="btn-jogador" data-jogadores="3">
+        3
+      </button>
+
+      <button class="btn-jogador" data-jogadores="4">
+        4
+      </button>
+    </div>
+  </div>
+
+  <div class="regras-box">
+    <h3>COMO JOGAR</h3>
+
+    <ul class="regras-lista">
+      <li><strong>Cartas:</strong> Cada jogador recebe 9 cartas no início da partida.</li>
+      <li><strong>Compra:</strong> No seu turno, compre uma carta do monte ou da mesa.</li>
+      <li><strong>Descarte:</strong> Após comprar, descarte uma carta para encerrar sua jogada.</li>
+      <li><strong>Objetivo:</strong> Forme combinações válidas, como trincas ou sequências.</li>
+      <li><strong>Vitória:</strong> O jogador que conseguir organizar sua mão corretamente pode bater.</li>
+    </ul>
+  </div>
+
+  <div class="acoes">
+    <a href="/index.html" class="btn btn-voltar">
+      VOLTAR
+    </a>
+
+    <button id="btn-iniciar" class="btn btn-jogar">
+      CONECTAR À MESA
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let quantidadeJogadores = 2;
+
+  const botoesJogadores = document.querySelectorAll(".btn-jogador");
+  const btnIniciar = document.getElementById("btn-iniciar");
+
+  botoesJogadores.forEach((botao) => {
+    botao.addEventListener("click", () => {
+      botoesJogadores.forEach((b) => {
+        b.classList.remove("selecionado");
+      });
+
+      botao.classList.add("selecionado");
+
+      quantidadeJogadores = botao.dataset.jogadores;
+    });
+  });
+
+  btnIniciar.addEventListener("click", () => {
+
+    const sala = "teste";
+    const url = `/pages/pife.html?sala=${sala}&jogadores=${quantidadeJogadores}`;
+
+    for (let i = 0; i < quantidadeJogadores; i++) {
+        const janela = window.open(url, `_blank`);
+
+        if (!janela) {
+            alert("O navegador bloqueou as janelas. Permita pop-ups para localhost.");
+            break;
+        }
+    }
+
+});
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const meuNome = localStorage.getItem("jogador_nickname");
+
+    if (meuNome && meuNome !== "Anônimo") {
+      document.getElementById("texto-saudacao").innerText =
+        `Bem-vindo à mesa, ${meuNome}!`;
+    }
+  });
+</script>
+
+</body>
+</html>

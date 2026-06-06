@@ -8,11 +8,12 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
            -I../Jogos/Core/include \
            -I../Jogos/Paciencia/include \
            -I../Jogos/Pife/include \
-           -I../Jogos/FDP/include \
            -I..
 
 SRC_DIR = src
 OBJ_DIR = obj
+
+TARGET = servidor_api
 
 CORE_OBJECTS = \
 ../Jogos/Core/obj/Carta.o \
@@ -26,8 +27,15 @@ PIFE_OBJECTS = \
 SOURCES = \
 $(SRC_DIR)/testeAPI.cpp \
 $(SRC_DIR)/coreAPI/Server.cpp \
+$(SRC_DIR)/coreAPI/Responses.cpp \
 $(SRC_DIR)/coreAPI/JsonConversor.cpp \
-$(wildcard $(SRC_DIR)/routes/*.cpp) \
+$(SRC_DIR)/coreAPI/SalaBase.cpp \
+$(SRC_DIR)/routes/Routes.cpp \
+$(SRC_DIR)/routes/FrontendRoutes.cpp \
+$(SRC_DIR)/routes/PifeRoutes.cpp \
+$(SRC_DIR)/routes/PacienciaRoutes.cpp \
+$(SRC_DIR)/multiplayer/Pife/SalaPife.cpp \
+$(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp \
 ../Jogos/Paciencia/src/paciencia.cpp \
 ../Jogos/Paciencia/src/regras.cpp \
 ../Jogos/Paciencia/src/pontuacao.cpp \
@@ -40,10 +48,9 @@ $(wildcard $(SRC_DIR)/routes/*.cpp) \
 ../Jogos/FDP/src/Mesa.cpp \
 ../Jogos/FDP/src/MesaFDP.cpp \
 ../Jogos/FDP/src/Placar.cpp
+../Jogos/Paciencia/src/pontuacao.cpp
 
 OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
-
-TARGET = servidor_api
 
 all: $(TARGET)
 
@@ -58,3 +65,6 @@ clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 
 rebuild: clean all
+
+run: all
+	./$(TARGET)
