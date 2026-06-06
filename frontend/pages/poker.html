@@ -7,34 +7,39 @@
 </head>
 <body>
     <main class="mesa">
-        <header>
-            <h1>🃏 Poker</h1>
-            <p>Rodada automática entre dois jogadores</p>
+        <header class="cabecalho">
+            <h1>🃏 Poker Fechado</h1>
+            <p>Escolha até 3 cartas para trocar. Depois disso, o computador revela a mão.</p>
         </header>
 
-        <section class="placar">
-            <h2 id="vencedor">Aguardando servidor...</h2>
+        <section class="painel">
+            <h2 id="mensagem">Conectando ao servidor...</h2>
+            <p id="vencedor">Aguardando rodada.</p>
         </section>
 
         <section class="jogadores">
             <div class="jogador">
                 <h2>Jogador 1</h2>
+                <p class="subtitulo">Clique nas cartas que deseja trocar.</p>
                 <div id="mao-jogador1" class="mao"></div>
                 <p class="jogada">Jogada: <span id="jogada-jogador1">---</span></p>
             </div>
 
             <div class="jogador">
-                <h2>Jogador 2</h2>
-                <div id="mao-jogador2" class="mao"></div>
-                <p class="jogada">Jogada: <span id="jogada-jogador2">---</span></p>
+                <h2>Computador</h2>
+                <p class="subtitulo">A mão fica oculta até o resultado.</p>
+                <div id="mao-computador" class="mao"></div>
+                <p class="jogada">Jogada: <span id="jogada-computador">---</span></p>
             </div>
         </section>
 
         <section class="botoes">
+            <button id="btn-trocar">Trocar cartas selecionadas</button>
             <button id="btn-nova-rodada">Nova Rodada</button>
             <a href="/" class="voltar">Voltar ao Menu</a>
         </section>
 
+        <p id="selecionadas" class="status">Cartas selecionadas: 0/3</p>
         <p id="status" class="status">Conectando...</p>
     </main>
 

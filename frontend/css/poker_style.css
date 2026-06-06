@@ -1,79 +1,101 @@
 body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
-    background: radial-gradient(circle, #145c32, #062d19);
+    background: radial-gradient(circle, #16683a, #062d19);
     color: white;
 }
 
 .mesa {
     min-height: 100vh;
-    padding: 30px;
+    padding: 28px;
     box-sizing: border-box;
     text-align: center;
 }
 
-header h1 {
-    font-size: 48px;
-    margin-bottom: 5px;
+.cabecalho h1 {
+    font-size: 46px;
+    margin: 0 0 8px 0;
 }
 
-header p {
-    margin-top: 0;
-    color: #ddd;
+.cabecalho p {
+    margin: 0;
+    color: #dddddd;
 }
 
-.placar {
-    margin: 25px auto;
-    padding: 15px;
-    max-width: 600px;
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 12px;
+.painel {
+    margin: 24px auto;
+    padding: 14px 20px;
+    max-width: 760px;
+    background: rgba(0, 0, 0, 0.36);
+    border-radius: 14px;
     border: 2px solid #d4af37;
+}
+
+.painel h2 {
+    margin: 0 0 8px 0;
+}
+
+.painel p {
+    margin: 0;
+    font-size: 19px;
+    color: #ffd700;
+    font-weight: bold;
 }
 
 .jogadores {
     display: flex;
     justify-content: center;
-    gap: 40px;
+    gap: 34px;
     flex-wrap: wrap;
-    margin-top: 30px;
+    margin-top: 26px;
 }
 
 .jogador {
-    background: rgba(0, 0, 0, 0.35);
-    padding: 25px;
-    border-radius: 16px;
-    width: 420px;
-    min-height: 260px;
+    background: rgba(0, 0, 0, 0.38);
+    padding: 22px;
+    border-radius: 18px;
+    width: 520px;
+    min-height: 300px;
     border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .jogador h2 {
     margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.subtitulo {
+    margin-top: 0;
+    color: #cfcfcf;
+    font-size: 14px;
 }
 
 .mao {
     display: flex;
     justify-content: center;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     margin: 20px 0;
 }
 
 .carta {
-    width: 95px;
-    height: 135px;
+    width: 86px;
+    height: 122px;
     background: #f8f8f8;
-    color: #111;
+    color: #111111;
     border-radius: 10px;
-    border: 2px solid #222;
+    border: 2px solid #222222;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 8px;
     box-sizing: border-box;
     font-weight: bold;
+    font-size: 14px;
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.35);
+    user-select: none;
+    transition: transform 0.15s ease, border 0.15s ease, box-shadow 0.15s ease;
 }
 
 .carta.vermelha {
@@ -81,11 +103,32 @@ header p {
 }
 
 .carta.preta {
-    color: #111;
+    color: #111111;
+}
+
+.carta.oculta {
+    background: linear-gradient(135deg, #191970, #0b0b3b);
+    color: #ffffff;
+    font-size: 52px;
+    border-color: #d4af37;
+}
+
+.carta.clicavel {
+    cursor: pointer;
+}
+
+.carta.clicavel:hover {
+    transform: translateY(-8px);
+}
+
+.carta.selecionada {
+    transform: translateY(-14px);
+    border: 4px solid #ffd700;
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.85);
 }
 
 .jogada {
-    font-size: 20px;
+    font-size: 19px;
 }
 
 .jogada span {
@@ -94,10 +137,11 @@ header p {
 }
 
 .botoes {
-    margin-top: 35px;
+    margin-top: 32px;
 }
 
-button, .voltar {
+button,
+.voltar {
     padding: 12px 22px;
     border-radius: 8px;
     border: none;
@@ -109,26 +153,32 @@ button, .voltar {
 
 button {
     background: #d4af37;
-    color: #111;
+    color: #111111;
     font-weight: bold;
 }
 
-button:hover {
+button:hover:not(:disabled) {
     background: #f1cf58;
 }
 
+button:disabled {
+    background: #777777;
+    color: #dddddd;
+    cursor: not-allowed;
+}
+
 .voltar {
-    background: #222;
+    background: #222222;
     color: white;
     border: 1px solid white;
 }
 
 .voltar:hover {
-    background: #444;
+    background: #444444;
 }
 
 .status {
-    margin-top: 25px;
-    color: #ccc;
+    margin-top: 14px;
+    color: #d0d0d0;
     font-size: 14px;
 }
