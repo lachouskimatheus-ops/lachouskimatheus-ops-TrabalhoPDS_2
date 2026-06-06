@@ -26,6 +26,8 @@ public:
 
     int avaliarMao() const;
     std::string nomeJogada() const;
-};
+
+    int compararCom(const Poker& outro) const;
+    std::vector<int> gerarPontuacaoDesempate() const;
 
 #endif
