@@ -21,18 +21,20 @@
     position: relative;
   }
 
-  /* Fundo com padrão de cartas */
   .bg {
     position: fixed;
     inset: 0;
+<<<<<<< HEAD:frontend/menu.html
     background-image: url('assets/fundo.jpg');
+=======
+    background-image: url('../assets/fundo.jpg');
+>>>>>>> a9a553c01a1cf36edf254bee6a3688161bf404af:frontend/pages/menu.html
     background-size: cover;
     background-position: center;
     filter: brightness(0.35);
     z-index: 0;
   }
 
-  /* Overlay escuro para legibilidade */
   .overlay {
     position: fixed;
     inset: 0;
@@ -62,11 +64,8 @@
     margin-bottom: 10px;
   }
 
-  h1 span {
-    color: #f0c040;
-  }
+  h1 span { color: #f0c040; }
 
-  /* Grade de botões dos jogos */
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -99,9 +98,7 @@
     border-radius: inherit;
   }
 
-  .btn-jogo:hover::before {
-    background: rgba(255,255,255,0.07);
-  }
+  .btn-jogo:hover::before { background: rgba(255,255,255,0.07); }
 
   .btn-jogo:hover {
     border-color: #f0c040;
@@ -109,9 +106,7 @@
     box-shadow: 0 6px 20px rgba(240,192,64,0.2);
   }
 
-  .btn-jogo:active {
-    transform: translateY(0);
-  }
+  .btn-jogo:active { transform: translateY(0); }
 
   .btn-jogo img {
     width: 100%;
@@ -129,7 +124,6 @@
     text-transform: uppercase;
   }
 
-  /* Botão Sair */
   .btn-sair {
     width: 100%;
     background: rgba(180, 30, 30, 0.3);
@@ -153,11 +147,8 @@
     transform: translateY(-1px);
   }
 
-  .btn-sair:active {
-    transform: translateY(0);
-  }
+  .btn-sair:active { transform: translateY(0); }
 
-  /* Naipes decorativos no título */
   .naipes {
     font-size: 18px;
     color: #f0c040;
@@ -165,15 +156,12 @@
     opacity: 0.8;
   }
 
-  /* Animação de entrada */
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .container > * {
-    animation: fadeUp 0.5s ease both;
-  }
+  .container > * { animation: fadeUp 0.5s ease both; }
   .container > *:nth-child(1) { animation-delay: 0.0s; }
   .container > *:nth-child(2) { animation-delay: 0.1s; }
   .container > *:nth-child(3) { animation-delay: 0.2s; }
@@ -194,38 +182,38 @@
   <div class="grid">
 
     <a class="btn-jogo" href="paciencia.html">
-      <img src="/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/icones/btn_paciencia.png" alt="Paciência">
+      <img src="../assets/icones/btn_paciencia.png" alt="Paciência">
       <span>Paciência</span>
     </a>
 
     <a class="btn-jogo" href="pife.html">
-      <img src="/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/icones/btn_pife.png" alt="Pife">
+      <img src="../assets/icones/btn_pife.png" alt="Pife">
       <span>Pife</span>
     </a>
 
     <a class="btn-jogo" href="poker.html">
-      <img src="/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/icones/btn_poker.png" alt="Poker">
+      <img src="../assets/icones/btn_poker.png" alt="Poker">
       <span>Poker</span>
     </a>
 
     <a class="btn-jogo" href="truco.html">
-      <img src="/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/icones/btn_truco.png" alt="Truco">
+      <img src="../assets/icones/btn_truco.png" alt="Truco">
       <span>Truco</span>
     </a>
 
     <a class="btn-jogo" href="roubamonte.html">
-      <img src="/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/icones/btn_roubamonte.png" alt="Rouba Monte">
+      <img src="../assets/icones/btn_roubamonte.png" alt="Rouba Monte">
       <span>Rouba Monte</span>
     </a>
 
     <a class="btn-jogo" href="regras_fdp.html">
-      <img src="/home/painzito/lachouskimatheus-ops-TrabalhoPDS_2/frontend/assets/icones/btn_fdp.png" alt="FDP">
+      <img src="../assets/icones/btn_fdp.png" alt="FDP">
       <span>FDP</span>
     </a>
 
   </div>
 
- <button class="btn-sair" onclick="window.location.href='menu_inicial.html'">x &nbsp; VOLTAR</button>
+  <button class="btn-sair" onclick="window.location.href='menu_inicial.html'">x &nbsp; VOLTAR</button>
 
 </div>
 

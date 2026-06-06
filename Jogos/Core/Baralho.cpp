@@ -35,6 +35,22 @@ Baralho::~Baralho() {
     cartas_.clear();
 }
 
+Baralho::Baralho(const Baralho& outro) {
+    for (size_t i = 0; i < outro.cartas_.size(); i++) {
+        cartas_.push_back(new Carta(*outro.cartas_[i]));
+    }
+}
+
+Baralho& Baralho::operator=(const Baralho& outro) {
+    if (this == &outro) return *this;
+    for (size_t i = 0; i < cartas_.size(); i++) delete cartas_[i];
+    cartas_.clear();
+    for (size_t i = 0; i < outro.cartas_.size(); i++) {
+        cartas_.push_back(new Carta(*outro.cartas_[i]));
+    }
+    return *this;
+}
+
 void Baralho::inicializar() {
     // Fica vazio na classe mãe.
     // O construtor já fez o trabalho para o Baralho Padrão.

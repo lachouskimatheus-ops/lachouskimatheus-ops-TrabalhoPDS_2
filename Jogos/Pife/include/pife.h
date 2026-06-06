@@ -1,7 +1,7 @@
 #ifndef PIFE_H
 #define PIFE_H
 
-#include "../../Core/Baralho.hpp"
+#include "Baralho.hpp"
 #include "jogadorPife.h"
 #include "regrasPife.h"
 #include <vector>

@@ -1,7 +1,7 @@
 #ifndef REGRAS_PIFE_H
 #define REGRAS_PIFE_H
 
-#include "../../Core/Carta.hpp"
+#include "Carta.hpp"
 #include <vector>
 
 bool trinca(const std::vector<Carta>& cartas, int i1, int i2, int i3);
