@@ -1,17 +1,22 @@
 {
     "configurations": [
         {
-            "name": "WSL",
+            "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/API/include",
-                "${workspaceFolder}/API/dependencias",
-                "${workspaceFolder}/Jogos/Core",
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Jogos/Core/include",
                 "${workspaceFolder}/Jogos/Pife/include",
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/Jogos/Paciencia/include",
+                "${workspaceFolder}/Jogos/FDP/include",
+                "${workspaceFolder}/API/include",
+                "${workspaceFolder}/API/dependencias"
+            ],
+            "defines": [
+                "ASIO_STANDALONE"
             ],
             "compilerPath": "/usr/bin/g++",
-            "cppStandard": "c++17",
             "cStandard": "c17",
+            "cppStandard": "c++17",
             "intelliSenseMode": "linux-gcc-x64"
         }
     ],

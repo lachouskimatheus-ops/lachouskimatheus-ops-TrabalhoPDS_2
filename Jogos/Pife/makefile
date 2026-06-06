@@ -1,48 +1,19 @@
 CXX = g++
 
-CXXFLAGS = -Wall -Wextra -std=c++17 \
--Iinclude \
--I../Core \
--I../../include/dependencias
+CXXFLAGS = -std=c++17 -Wall -Wextra \
+           -I./include \
+           -I../Core/include
 
-OBJ = \
-obj/main.o \
-obj/pife.o \
-obj/jogadorPife.o \
-obj/regrasPife.o
+SRC = src/*.cpp
 
-CORE_OBJ = \
-obj/Carta.o \
-obj/Baralho.o
+OBJ = obj/*.o
 
-all: pife.exe
-
-pife.exe: $(OBJ) $(CORE_OBJ)
-	$(CXX) $(OBJ) $(CORE_OBJ) -o pife.exe
-
-obj/main.o: Testes/PifeMain.cpp
+all:
 	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c Testes/PifeMain.cpp -o obj/main.o
-
-obj/pife.o: src/pife.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c src/pife.cpp -o obj/pife.o
-
-obj/jogadorPife.o: src/jogadorPife.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c src/jogadorPife.cpp -o obj/jogadorPife.o
-
-obj/regrasPife.o: src/regrasPife.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c src/regrasPife.cpp -o obj/regrasPife.o
-
-obj/Carta.o: ../Core/Carta.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c ../Core/Carta.cpp -o obj/Carta.o
-
-obj/Baralho.o: ../Core/Baralho.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c ../Core/Baralho.cpp -o obj/Baralho.o
+	$(CXX) $(CXXFLAGS) -c $(SRC)
+	mv *.o obj/
 
 clean:
-	rm -rf obj pife.exe
+	rm -rf obj
+
+rebuild: clean all

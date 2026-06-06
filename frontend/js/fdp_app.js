@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const urlParams = new URLSearchParams(window.location.search);
 const meuId = parseInt(urlParams.get('id')) || 0;
 
-const socket = new WebSocket('ws://localhost:8080/ws');
+const socket = new WebSocket('ws://localhost:8080/ws/fdp');
 
 socket.onmessage = function(event) {
     const estadoMesa = JSON.parse(event.data);
