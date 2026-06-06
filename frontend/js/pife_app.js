@@ -14,14 +14,23 @@ const btnOrganizar = document.getElementById("btn-organizar");
 iniciarWebSocket();
 
 function iniciarWebSocket() {
+    const parametros = new URLSearchParams(window.location.search);
+
+    const idSala = parametros.get("sala") || "global";
+
+    const quantidadeJogadores = Number(
+        parametros.get("jogadores") || 2
+    );
+
     socket = new WebSocket("ws://localhost:8080/ws/pife");
 
     socket.onopen = () => {
         console.log("Conectado ao servidor do Pife.");
 
         socket.send(JSON.stringify({
-            acao: "ENTRAR_SALA",
-            sala_id: "global"
+            tipo: "entrar_sala",
+            sala: idSala,
+            jogadores: quantidadeJogadores
         }));
     };
 
@@ -32,6 +41,16 @@ function iniciarWebSocket() {
 
         if (msg.erro) {
             mostrarModal(msg.erro);
+            return;
+        }
+
+        if (msg.tipo === "entrada_confirmada") {
+            mostrarModal(`Você entrou como Jogador ${msg.idJogador + 1}`);
+            return;
+        }
+
+        if (msg.tipo === "estado_sala") {
+            console.log("Estado da sala:", msg);
             return;
         }
 
@@ -56,7 +75,8 @@ function enviarAcao(acao, dados = {}) {
     }
 
     socket.send(JSON.stringify({
-        acao,
+        tipo: "acao_jogo",
+        acao: acao,
         ...dados
     }));
 }
