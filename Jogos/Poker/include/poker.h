@@ -1,10 +1,12 @@
 #ifndef POKER_H
 #define POKER_H
 
-#include "../Core/CoreBaralho1/cartas.h"
-// Aqui precisa verificar o Core pra não duplicar, possivelmente
+#include "Carta.hpp"
+
 #include <vector>
 #include <string>
+
+class Baralho;
 
 class Poker {
 private:
@@ -27,6 +29,11 @@ public:
 
     int avaliarMao() const;
     std::string nomeJogada() const;
+
+    int compararCom(const Poker& outro) const;
+    std::vector<int> gerarPontuacaoDesempate() const;
+
+    bool trocarCartas(const std::vector<int>& indices, Baralho& baralho);
 };
 
 #endif

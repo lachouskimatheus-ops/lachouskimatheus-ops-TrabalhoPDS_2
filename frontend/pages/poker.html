@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Poker</title>
+    <link rel="stylesheet" href="/css/poker_style.css">
+</head>
+<body>
+    <main class="mesa">
+        <header>
+            <h1>🃏 Poker</h1>
+            <p>Rodada automática entre dois jogadores</p>
+        </header>
+
+        <section class="placar">
+            <h2 id="vencedor">Aguardando servidor...</h2>
+        </section>
+
+        <section class="jogadores">
+            <div class="jogador">
+                <h2>Jogador 1</h2>
+                <div id="mao-jogador1" class="mao"></div>
+                <p class="jogada">Jogada: <span id="jogada-jogador1">---</span></p>
+            </div>
+
+            <div class="jogador">
+                <h2>Jogador 2</h2>
+                <div id="mao-jogador2" class="mao"></div>
+                <p class="jogada">Jogada: <span id="jogada-jogador2">---</span></p>
+            </div>
+        </section>
+
+        <section class="botoes">
+            <button id="btn-nova-rodada">Nova Rodada</button>
+            <a href="/" class="voltar">Voltar ao Menu</a>
+        </section>
+
+        <p id="status" class="status">Conectando...</p>
+    </main>
+
+    <script src="/js/poker_app.js"></script>
+</body>
+</html>

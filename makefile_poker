@@ -1,0 +1,34 @@
+CXX = g++
+
+CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
+	-I./API \
+	-I./API/dependencias \
+	-I./Jogos/Poker/include \
+	-I./Jogos/Core/include
+
+UNAME_S := $(shell uname -s)
+
+LIBS =
+
+ifeq ($(OS),Windows_NT)
+	LIBS = -lws2_32 -lmswsock
+endif
+
+POKER_SRCS = servidor_poker.cpp \
+	Jogos/Poker/src/poker.cpp \
+	Jogos/Core/src/Baralho.cpp \
+	Jogos/Core/src/Carta.cpp
+
+TARGET = servidor_poker
+
+all: $(TARGET)
+
+$(TARGET):
+	$(CXX) $(CXXFLAGS) $(POKER_SRCS) -o $(TARGET) $(LIBS)
+	@echo "Servidor do Poker compilado! Rode com ./$(TARGET)"
+
+run: all
+	./$(TARGET)
+
+clean:
+	rm -f $(TARGET)

@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Jogos/Core/include",
+                "${workspaceFolder}/Jogos/Pife/include",
+                "${workspaceFolder}/Jogos/Paciencia/include",
+                "${workspaceFolder}/Jogos/FDP/include",
+                "${workspaceFolder}/API/include",
+                "${workspaceFolder}/API/dependencias"
+            ],
+            "defines": [
+                "ASIO_STANDALONE"
+            ],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}

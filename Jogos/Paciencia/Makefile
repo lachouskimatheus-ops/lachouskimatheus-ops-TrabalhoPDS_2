@@ -1,40 +1,60 @@
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -I../Core
 
-OBJ = obj/main.o obj/pife.o obj/jogadorPife.o obj/regrasPife.o
-CORE_OBJ = obj/Carta.o obj/Baralho.o
+CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
+           -DASIO_STANDALONE \
+           -I. \
+           -I./include \
+           -I./dependencias \
+           -I../Jogos/Core/include \
+           -I../Jogos/Paciencia/include \
+           -I../Jogos/Pife/include \
+           -I../Jogos/FDP/include \
+           -I..
 
-all: pife.exe
+SRC_DIR = src
+OBJ_DIR = obj
 
-pife.exe: $(OBJ) $(CORE_OBJ)
-	$(CXX) $(OBJ) $(CORE_OBJ) -o pife.exe
+CORE_OBJECTS = \
+../Jogos/Core/obj/Carta.o \
+../Jogos/Core/obj/Baralho.o
 
-obj/main.o: Testes/PifeMain.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c Testes/PifeMain.cpp -o obj/main.o
+PIFE_OBJECTS = \
+../Jogos/Pife/obj/pife.o \
+../Jogos/Pife/obj/jogadorPife.o \
+../Jogos/Pife/obj/regrasPife.o
 
-obj/pife.o: src/pife.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c src/pife.cpp -o obj/pife.o
+SOURCES = \
+$(SRC_DIR)/testeAPI.cpp \
+$(SRC_DIR)/coreAPI/Server.cpp \
+$(SRC_DIR)/coreAPI/JsonConversor.cpp \
+$(wildcard $(SRC_DIR)/routes/*.cpp) \
+../Jogos/Paciencia/src/paciencia.cpp \
+../Jogos/Paciencia/src/regras.cpp \
+../Jogos/Paciencia/src/pontuacao.cpp \
+../Jogos/FDP/src/Baralho.cpp \
+../Jogos/FDP/src/BaralhoSujo.cpp \
+../Jogos/FDP/src/Carta.cpp \
+../Jogos/FDP/src/Excecoes.cpp \
+../Jogos/FDP/src/Jogador.cpp \
+../Jogos/FDP/src/JogadorFDP.cpp \
+../Jogos/FDP/src/Juiz.cpp \
+../Jogos/FDP/src/JuizPaulista.cpp \
+../Jogos/FDP/src/Mesa.cpp \
+../Jogos/FDP/src/MesaFDP.cpp \
+../Jogos/FDP/src/Placar.cpp
 
-obj/jogadorPife.o: src/jogadorPife.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c src/jogadorPife.cpp -o obj/jogadorPife.o
+OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 
-obj/regrasPife.o: src/regrasPife.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c src/regrasPife.cpp -o obj/regrasPife.o
+TARGET = servidor_api
 
-# ==========================================
-# NOVAS REGRAS PARA COMPILAR O CORE
-# ==========================================
-obj/Carta.o: ../Core/Carta.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c ../Core/Carta.cpp -o obj/Carta.o
+all: $(TARGET)
 
-obj/Baralho.o: ../Core/Baralho.cpp
-	mkdir -p obj
-	$(CXX) $(CXXFLAGS) -c ../Core/Baralho.cpp -o obj/Baralho.o
+$(TARGET): $(CORE_OBJECTS) $(PIFE_OBJECTS) $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
+$(OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf obj pife.exe
+	rm -rf $(OBJ_DIR) $(TARGET)

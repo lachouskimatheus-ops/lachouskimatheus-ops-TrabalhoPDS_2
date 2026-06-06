@@ -63,6 +63,45 @@
 }
 
 /* ==========================================
+   MENU SUPERIOR (BOTÕES UNIFICADOS)
+   ========================================== */
+.menu-botoes-topo {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-menu {
+    width: 45px;
+    height: 45px;
+    background: #f0c040;
+    border: none;
+    border-radius: 50%;
+    color: #000;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-menu:hover {
+    transform: scale(1.1);
+    background: #d4ac0d;
+}
+
+.btn-menu img {
+    display: block;
+}
+
+/* ==========================================
    ÁREA DE FUNDAÇÕES
    ========================================== */
 .area-fundacoes {
@@ -171,6 +210,16 @@
     transform: translateX(-50%);
     width: 90%;
     z-index: 10;
+}
+
+
+#container-auto {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000; /* Garante que fique acima de outros elementos */
+    display: none; /* Inicie oculto */
 }
 
 .colunas-container {
@@ -314,3 +363,32 @@
 .cava-vazia:hover {
     opacity: 0.7;
 }
+
+/* ==========================================
+   MODAL ESTILO CASINO
+   ========================================== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-conteudo {
+    background: #1a1a1a;
+    padding: 30px;
+    border: 1px solid #4ade80;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    color: white;
+    font-family: 'Cinzel', serif;
+}
+
+.regras-box h3 { color: #4ade80; margin-bottom: 15px; }
+.regras-lista { text-align: left; margin: 15px 0; list-style: none; }
+.regras-lista li { margin-bottom: 10px; font-size: 0.9em; }

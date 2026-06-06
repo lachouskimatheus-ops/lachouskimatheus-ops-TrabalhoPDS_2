@@ -1,0 +1,134 @@
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: radial-gradient(circle, #145c32, #062d19);
+    color: white;
+}
+
+.mesa {
+    min-height: 100vh;
+    padding: 30px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 48px;
+    margin-bottom: 5px;
+}
+
+header p {
+    margin-top: 0;
+    color: #ddd;
+}
+
+.placar {
+    margin: 25px auto;
+    padding: 15px;
+    max-width: 600px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 12px;
+    border: 2px solid #d4af37;
+}
+
+.jogadores {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.jogador {
+    background: rgba(0, 0, 0, 0.35);
+    padding: 25px;
+    border-radius: 16px;
+    width: 420px;
+    min-height: 260px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.jogador h2 {
+    margin-top: 0;
+}
+
+.mao {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.carta {
+    width: 95px;
+    height: 135px;
+    background: #f8f8f8;
+    color: #111;
+    border-radius: 10px;
+    border: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    box-sizing: border-box;
+    font-weight: bold;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.35);
+}
+
+.carta.vermelha {
+    color: #b00020;
+}
+
+.carta.preta {
+    color: #111;
+}
+
+.jogada {
+    font-size: 20px;
+}
+
+.jogada span {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.botoes {
+    margin-top: 35px;
+}
+
+button, .voltar {
+    padding: 12px 22px;
+    border-radius: 8px;
+    border: none;
+    margin: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+button {
+    background: #d4af37;
+    color: #111;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #f1cf58;
+}
+
+.voltar {
+    background: #222;
+    color: white;
+    border: 1px solid white;
+}
+
+.voltar:hover {
+    background: #444;
+}
+
+.status {
+    margin-top: 25px;
+    color: #ccc;
+    font-size: 14px;
+}

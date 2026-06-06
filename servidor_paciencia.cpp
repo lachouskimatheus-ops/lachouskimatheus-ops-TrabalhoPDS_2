@@ -16,11 +16,10 @@ json cartaParaJson(const Carta& c) {
 
 json estadoParaJson(Paciencia& jogo) {
     json j;
-
-    j["pontuacao"]    = jogo.getPontuacao();
-    j["recorde"]      = 0;
-    j["cava_tamanho"] = jogo.getCavaTamanho();
-    j["vitoria"]      = jogo.getVitoria();
+    j["pontuacao"]      = jogo.getPontuacao();
+    j["recorde"]        = 0;
+    j["cava_tamanho"]   = jogo.getCavaTamanho();
+    j["vitoria"]        = jogo.getVitoria();
 
     json escondidas = json::array();
     for (int i = 0; i < 7; i++)
@@ -54,43 +53,34 @@ json estadoParaJson(Paciencia& jogo) {
 int main() {
     try {
         crow::SimpleApp app;
-
-        std::cout << "Iniciando jogo..." << std::endl;
         Paciencia jogo;
-        std::cout << "Jogo iniciado!" << std::endl;
+        jogo.gerarJogoReversivel();
 
         std::mutex mtx;
         std::set<crow::websocket::connection*> conexoes;
 
         auto broadcast = [&](const std::string& msg) {
             std::lock_guard<std::mutex> lock(mtx);
-            for (auto conn : conexoes)
-                conn->send_text(msg);
+            for (auto conn : conexoes) conn->send_text(msg);
         };
 
         CROW_WEBSOCKET_ROUTE(app, "/ws")
             .onopen([&](crow::websocket::connection& conn) {
-                {
-                    std::lock_guard<std::mutex> lock(mtx);
-                    conexoes.insert(&conn);
-                }
-                std::cout << "Cliente conectado!" << std::endl;
+                std::lock_guard<std::mutex> lock(mtx);
+                conexoes.insert(&conn);
                 conn.send_text(estadoParaJson(jogo).dump());
             })
             .onclose([&](crow::websocket::connection& conn, const std::string&, uint16_t) {
                 std::lock_guard<std::mutex> lock(mtx);
                 conexoes.erase(&conn);
-                std::cout << "Cliente desconectado!" << std::endl;
             })
-                        .onmessage([&](crow::websocket::connection& conn, const std::string& data, bool) {
+            .onmessage([&](crow::websocket::connection&, const std::string& data, bool) {
                 try {
                     auto msg = json::parse(data);
                     std::string acao = msg["acao"];
 
                     if (acao == "OBTER_ESTADO_ATUAL") {
-                        // Apenas envia o estado como está para quem pediu (persistência ao recarregar)
-                        conn.send_text(estadoParaJson(jogo).dump());
-                        return; // Não precisa de broadcast aqui
+                        broadcast(estadoParaJson(jogo).dump());
                     } 
                     else if (acao == "COMPRAR_CARTA") {
                         jogo.comprarCarta();
@@ -99,85 +89,71 @@ int main() {
                         jogo.desfazer();
                     } 
                     else if (acao == "NOVO_JOGO") {
-                        jogo.iniciarJogo();
-                    } 
+                        jogo.gerarJogoReversivel();
+                    }
+                    else if (acao == "COMPLETAR_AUTOMATICAMENTE") {
+                        // Certifique-se de que sua classe Paciencia tenha este método implementado
+                        jogo.completarAutomaticamente();
+                    }
                     else if (acao == "MOVER") {
-                        std::string origemTipoStr  = msg["origem_tipo"];
+                        std::string origemTipoStr = msg["origem_tipo"];
                         std::string destinoTipoStr = msg["destino_tipo"];
-                        int origemIndice           = msg["origem_indice"];
-                        int destinoIndice          = msg["destino_indice"];
+                        
+                        auto toTipo = [](std::string s) {
+                            if (s == "coluna") return TipoPilha::Coluna;
+                            if (s == "descarte") return TipoPilha::Descarte;
+                            return TipoPilha::Fundacao;
+                        };
 
-                        TipoPilha origemTipo  = (origemTipoStr  == "coluna")   ? TipoPilha::Coluna   :
-                                                (origemTipoStr  == "descarte") ? TipoPilha::Descarte :
-                                                                                TipoPilha::Fundacao;
-
-                        TipoPilha destinoTipo = (destinoTipoStr == "coluna")   ? TipoPilha::Coluna   :
-                                                (destinoTipoStr == "descarte") ? TipoPilha::Descarte :
-                                                                                TipoPilha::Fundacao;
-
-                        jogo.mover(origemTipo, origemIndice, destinoTipo, destinoIndice);
+                        jogo.mover(toTipo(origemTipoStr), (int)msg["origem_indice"], 
+                                   toTipo(destinoTipoStr), (int)msg["destino_indice"]);
                     }
                     else if (acao == "MOVER_BLOCO") {
-                        int origemCol = msg["origem_coluna"];
-                        int cartaIdx  = msg["carta_idx"];
-                        int destinoCol = msg["destino_coluna"];
-                        jogo.moverBloco(origemCol, cartaIdx, destinoCol);
+                        jogo.moverBloco((int)msg["origem_coluna"], (int)msg["carta_idx"], (int)msg["destino_coluna"]);
                     }
                     else if (acao == "MOVER_DA_FUNDACAO") {
-                        int fundIdx = msg["fundacao_indice"];
-                        int destIdx = msg["destino_indice"];
-                        // Na nossa implementação, destinoTipo de fundação é sempre Coluna
-                        jogo.moverDaFundacao(fundIdx, TipoPilha::Coluna, destIdx);
+                        jogo.moverDaFundacao((int)msg["fundacao_indice"], TipoPilha::Coluna, (int)msg["destino_indice"]);
                     }
 
-                    // Após qualquer ação, atualiza todos os clientes conectados
-                    broadcast(estadoParaJson(jogo).dump());
+
+                    else if (acao == "MOVER_UMA_PARA_FUNDACAO") {
+                        // 1. Tenta mover. Assumindo que seu método retorna bool.
+                        // Se seu método for void, você precisará adaptá-lo para retornar se algo foi movido.
+                        bool moveu = jogo.moverUmaParaFundacao(); 
+                        
+                        // 2. Prepara o JSON do estado atual
+                        json resposta = estadoParaJson(jogo);
+                        
+                        // 3. Adiciona o campo que o JavaScript vai checar
+                        resposta["movimento_realizado"] = moveu;
+                        
+                        // 4. Envia a resposta específica para quem pediu (ou broadcast)
+                        broadcast(resposta.dump());
+                        
+                        std::cout << "Movimento automatico: " << (moveu ? "Sucesso" : "Falhou") << std::endl;
+                    }
+
+
+
+                        json respostaFinal = estadoParaJson(jogo);
+                        respostaFinal["movimento_realizado"] = true; // Para movimentos manuais, sempre é true
+                        broadcast(respostaFinal.dump());
 
                 } catch (const std::exception& e) {
-                    std::cerr << "Erro ao processar mensagem: " << e.what() << std::endl;
+                    std::cerr << "Erro no processamento: " << e.what() << std::endl;
                 }
             });
 
-CROW_ROUTE(app, "/")([]{
-    crow::response res;
-    res.set_static_file_info("frontend/pages/menu.html");
-    return res;
-});
+        // Rotas estáticas
+        CROW_ROUTE(app, "/")( []{ crow::response res; res.set_static_file_info("frontend/pages/menu.html"); return res; });
+        CROW_ROUTE(app, "/pages/<path>")( [](std::string p){ crow::response res; res.set_static_file_info("frontend/pages/" + p); return res; });
+        CROW_ROUTE(app, "/assets/<path>")( [](std::string p){ crow::response res; res.set_static_file_info("frontend/assets/" + p); return res; });
+        CROW_ROUTE(app, "/css/<path>")( [](std::string p){ crow::response res; res.set_static_file_info("frontend/css/" + p); return res; });
+        CROW_ROUTE(app, "/js/<path>")( [](std::string p){ crow::response res; res.set_static_file_info("frontend/js/" + p); return res; });
 
-CROW_ROUTE(app, "/pages/<path>")([](const std::string& path){
-    crow::response res;
-    res.set_static_file_info("frontend/pages/" + path);
-    return res;
-});
-
-CROW_ROUTE(app, "/assets/<path>")([](const std::string& path){
-    crow::response res;
-    res.set_static_file_info("frontend/assets/" + path);
-    return res;
-});
-
-CROW_ROUTE(app, "/css/<path>")([](const std::string& path){
-    crow::response res;
-    res.set_static_file_info("frontend/css/" + path);
-    return res;
-});
-
-CROW_ROUTE(app, "/js/<path>")([](const std::string& path){
-    crow::response res;
-    res.set_static_file_info("frontend/js/" + path);
-    return res;
-});
-
-        std::cout << "Servidor rodando em http://localhost:8080" << std::endl;
         app.port(8080).multithreaded().run();
-
     } catch (const std::exception& e) {
         std::cerr << "ERRO FATAL: " << e.what() << std::endl;
-        return 1;
-    } catch (...) {
-        std::cerr << "ERRO FATAL DESCONHECIDO" << std::endl;
-        return 1;
     }
-
     return 0;
 }
