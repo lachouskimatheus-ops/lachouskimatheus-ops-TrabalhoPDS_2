@@ -31,9 +31,7 @@ $(wildcard $(SRC_DIR)/routes/*.cpp) \
 ../Jogos/Paciencia/src/paciencia.cpp \
 ../Jogos/Paciencia/src/regras.cpp \
 ../Jogos/Paciencia/src/pontuacao.cpp \
-../Jogos/FDP/src/Baralho.cpp \
 ../Jogos/FDP/src/BaralhoSujo.cpp \
-../Jogos/FDP/src/Carta.cpp \
 ../Jogos/FDP/src/Excecoes.cpp \
 ../Jogos/FDP/src/Jogador.cpp \
 ../Jogos/FDP/src/JogadorFDP.cpp \

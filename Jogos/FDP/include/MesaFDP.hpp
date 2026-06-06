@@ -2,7 +2,6 @@
 #include "Mesa.hpp"
 #include "Carta.hpp"
 #include "Placar.hpp"
-#include <json.hpp>
 
 class Carta;
 
@@ -40,8 +39,11 @@ public:
     void prepararNovaPartida(int qtdJogadores);
     int getCartasNaRodada() const;
     int getJogadorDaVezIndex() const;
-    nlohmann::json paraJson(int idJogadorSolicitante = -1) const;
     void iniciarRodada();
     bool rodadaFinalizada() const;
     void finalizarRodada();
+    int getTotalApostasRodada() const { return totalApostasRodada_; };
+	int getJogadoresQueJaApostaram() const { return jogadoresQueJaApostaram_; };
+	Carta getCartaVira() const { return cartaVira_; }; 
+	const std::vector<Carta*>& getCartasNaMesa() const { return cartasNaMesa_; };
 };

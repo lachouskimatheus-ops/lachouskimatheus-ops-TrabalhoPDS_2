@@ -1,178 +1,78 @@
 #include "routes/FDPRoutes.hpp"
-
-#include "dependencias/json.hpp"
-
-#include "Jogos/FDP/include/BaralhoSujo.hpp"
-#include "Jogos/FDP/include/Placar.hpp"
-#include "Jogos/FDP/include/MesaFDP.hpp"
-#include "Jogos/FDP/include/JogadorFDP.hpp"
-
-#include <chrono>
+#include "coreAPI/JsonConversor.hpp"
+#include "MesaFDP.hpp"
+#include "BaralhoSujo.hpp"
+#include "Placar.hpp"
 #include <iostream>
-#include <map>
-#include <mutex>
 #include <thread>
+#include <chrono>
+#include <unordered_map>
 
-using json = nlohmann::json;
+static std::unordered_map<crow::websocket::connection*, int> conexoes_fdp;
 
-namespace {
 
-BaralhoSujo baralho;
-Placar placar;
-MesaFDP mesa(&baralho, &placar);
+static BaralhoSujo baralho_fdp;
+static Placar placar_fdp;
 
-std::map<crow::websocket::connection*, int> conexoes;
-std::mutex mtx;
+static MesaFDP mesa_fdp(&baralho_fdp, &placar_fdp);
 
-bool jogoInicializado = false;
-
-void inicializarJogo() {
-    if (jogoInicializado) {
-        return;
-    }
-
-    mesa.adicionarJogador(new JogadorFDP(0, "Jogador 1"));
-    mesa.adicionarJogador(new JogadorFDP(1, "Jogador 2"));
-    mesa.adicionarJogador(new JogadorFDP(2, "Jogador 3"));
-    mesa.adicionarJogador(new JogadorFDP(3, "Jogador 4"));
-
-    mesa.iniciarPartida();
-
-    jogoInicializado = true;
-}
-
-void notificarTodos() {
-    std::lock_guard<std::mutex> lock(mtx);
-
-    for (const auto& par : conexoes) {
+void notificarTodosFDP() {
+    for (auto const& par : conexoes_fdp) {
         crow::websocket::connection* conn = par.first;
         int idJogador = par.second;
-
-        std::string estadoJson = mesa.paraJson(idJogador).dump();
-
-        conn->send_text(estadoJson);
+        
+        nlohmann::json jsonSeguro = JsonConversor::mesaFdpParaJson(mesa_fdp, idJogador);
+        conn->send_text(jsonSeguro.dump());
     }
-}
-
 }
 
 void FDPRoutes::registrar(crow::SimpleApp& app) {
-
-    inicializarJogo();
-
+    
     CROW_WEBSOCKET_ROUTE(app, "/ws/fdp")
+      .onopen([](crow::websocket::connection& conn) {
+          std::cout << "[FDP] Novo jogador conectado!" << std::endl;
+          conexoes_fdp[&conn] = -1;
+          notificarTodosFDP();
+      })
+      .onclose([](crow::websocket::connection& conn, const std::string&, uint16_t) {
+          std::cout << "[FDP] Jogador desconectado!" << std::endl;
+          conexoes_fdp.erase(&conn);
+      })
+      .onmessage([](crow::websocket::connection& conn, const std::string& data, bool /* is_binary */) {
+          try {
+              auto comando = nlohmann::json::parse(data);
+              if (!comando.contains("jogador_id") || !comando.contains("acao")) return;
 
-        .onopen([](crow::websocket::connection& conn) {
-            std::cout << "Novo jogador conectado ao FDP." << std::endl;
+              int idRemetente = comando["jogador_id"];
+              std::string acao = comando["acao"];
+              
+              conexoes_fdp[&conn] = idRemetente;
 
-            {
-                std::lock_guard<std::mutex> lock(mtx);
-                conexoes[&conn] = -1;
-            }
-
-            notificarTodos();
-        })
-
-        .onclose([](crow::websocket::connection& conn,
-                    const std::string&,
-                    uint16_t) {
-            std::cout << "Jogador desconectado do FDP." << std::endl;
-
-            std::lock_guard<std::mutex> lock(mtx);
-            conexoes.erase(&conn);
-        })
-
-        .onmessage([](crow::websocket::connection& conn,
-                      const std::string& data,
-                      bool) {
-            std::cout << "\n========================================" << std::endl;
-            std::cout << "[DEBUG FDP] Recebi: " << data << std::endl;
-
-            try {
-                auto comando = json::parse(data);
-
-                if (!comando.contains("jogador_id") ||
-                    !comando.contains("acao")) {
-                    std::cout << "[DEBUG FDP] Mensagem invalida." << std::endl;
-                    return;
-                }
-
-                int idRemetente = comando["jogador_id"];
-                std::string acao = comando["acao"];
-
-                {
-                    std::lock_guard<std::mutex> lock(mtx);
-                    conexoes[&conn] = idRemetente;
-                }
-
-                if (idRemetente != mesa.getJogadorDaVezIndex()) {
-                    std::cout << "[SEGURANCA FDP] Jogador "
-                              << idRemetente
-                              << " tentou jogar fora da vez."
-                              << std::endl;
-                    return;
-                }
-
-                if (acao == "JOGAR_CARTA") {
-                    int indiceCarta = comando["indice"];
-
-                    std::cout << "[DEBUG FDP] Jogador "
-                              << idRemetente
-                              << " tentou jogar carta indice "
-                              << indiceCarta
-                              << std::endl;
-
-                    if (mesa.jogarCarta(indiceCarta)) {
-                        notificarTodos();
-
-                        if (mesa.vazaFinalizada()) {
-                            std::cout << "[DEBUG FDP] Vaza finalizada." << std::endl;
-
-                            std::thread([]() {
-                                std::this_thread::sleep_for(
-                                    std::chrono::milliseconds(2500)
-                                );
-
-                                mesa.apurarVencedorDaVaza();
-
-                                if (mesa.rodadaFinalizada()) {
-                                    mesa.finalizarRodada();
-                                }
-
-                                notificarTodos();
-                            }).detach();
-                        }
-                    }
-                }
-
-                else if (acao == "APOSTAR") {
-                    int valorAposta = comando["valor"];
-
-                    std::cout << "[DEBUG FDP] Jogador "
-                              << idRemetente
-                              << " apostou "
-                              << valorAposta
-                              << std::endl;
-
-                    if (mesa.registrarAposta(valorAposta)) {
-                        if (mesa.faseApostasFinalizada()) {
-                            mesa.iniciarFaseDeCartas();
-                        }
-
-                        notificarTodos();
-                    }
-                }
-
-                else {
-                    std::cout << "[DEBUG FDP] Acao desconhecida: "
-                              << acao
-                              << std::endl;
-                }
-
-            } catch (const std::exception& e) {
-                std::cout << "[ERRO FDP] Falha ao processar JSON: "
-                          << e.what()
-                          << std::endl;
-            }
-        });
+              if (acao == "JOGAR_CARTA") {
+                  int indiceCarta = comando["indice"];
+                  if (mesa_fdp.getJogadorDaVez() != nullptr && idRemetente == mesa_fdp.getJogadorDaVez()->getId()) {
+                      if (mesa_fdp.jogarCarta(indiceCarta)) {
+                          notificarTodosFDP();
+                          
+                          if (mesa_fdp.vazaFinalizada()) {
+                              std::thread([]() {
+                                  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+                                  mesa_fdp.apurarVencedorDaVaza();
+                                  if (mesa_fdp.rodadaFinalizada()) mesa_fdp.finalizarRodada();
+                                  notificarTodosFDP();
+                              }).detach();
+                          }
+                      }
+                  }
+              } else if (acao == "APOSTAR") {
+                  int valorAposta = comando["valor"];
+                  if (mesa_fdp.registrarAposta(valorAposta)) {
+                      if (mesa_fdp.faseApostasFinalizada()) mesa_fdp.iniciarFaseDeCartas();
+                      notificarTodosFDP();
+                  }
+              }
+          } catch (const std::exception& e) {
+              std::cout << "[ERRO] " << e.what() << std::endl;
+          }
+      });
 }

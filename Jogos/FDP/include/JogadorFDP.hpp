@@ -1,6 +1,5 @@
 #pragma once
 #include "Jogador.hpp"
-#include <json.hpp>
 
 class JogadorFDP : public Jogador {
 private:
@@ -19,12 +18,15 @@ public:
 	int getVidas() const;
 	int getAposta() const;
 	int getVezesGanhas() const;
+
+	//Setters
 	void setAposta(int aposta) { 
         aposta_atual_ = aposta;
     }
+
     void adicionarVazaFeita() { 
         vezes_ganhas_++;
     }
-    nlohmann::json paraJson() const;
+
     void setVidas(int novasVidas);
 };
