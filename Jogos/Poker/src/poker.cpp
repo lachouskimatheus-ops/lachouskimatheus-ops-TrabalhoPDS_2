@@ -26,7 +26,9 @@ int Poker::valorNumerico(Valor valor) const {
 
 //adiciona uma carta na mão do jogador de poker
 void Poker::receberCarta(const Carta& carta) {
-    mao.push_back(carta);
+    if (mao.size() < 5) {
+        mao.push_back(carta);
+    }
 }
 
 //limpa a mão para iniciar outra rodada
@@ -160,4 +162,77 @@ std::string Poker::nomeJogada() const {
         case 0: return "Carta Alta";
         default: return "Mao invalida";
     }
+}
+std::vector<int> Poker::gerarPontuacaoDesempate() const {
+    std::vector<int> freq = contarValores(mao);
+    std::vector<int> resultado;
+
+    int categoria = avaliarMao();
+    resultado.push_back(categoria);
+
+    std::vector<int> quadras;
+    std::vector<int> trincas;
+    std::vector<int> pares;
+    std::vector<int> avulsas;
+
+    for (int valor = 14; valor >= 2; valor--) {
+        if (freq[valor] == 4) quadras.push_back(valor);
+        else if (freq[valor] == 3) trincas.push_back(valor);
+        else if (freq[valor] == 2) pares.push_back(valor);
+        else if (freq[valor] == 1) avulsas.push_back(valor);
+    }
+
+    if (categoria == 9 || categoria == 8 || categoria == 4 || categoria == 5 || categoria == 0) {
+        std::vector<int> valores;
+        for (int i = 0; i < mao.size(); i++) {
+            valores.push_back(valorNumerico(mao[i].mostraValor()));
+        }
+
+        std::sort(valores.begin(), valores.end(), std::greater<int>());
+
+        // caso especial A,2,3,4,5: sequência vale como 5 alto
+        if (valores.size() == 5 &&
+            valores[0] == 14 && valores[1] == 5 && valores[2] == 4 &&
+            valores[3] == 3 && valores[4] == 2) {
+            resultado.push_back(5);
+        } else {
+            for (int v : valores) resultado.push_back(v);
+        }
+    }
+    else if (categoria == 7) {
+        resultado.push_back(quadras[0]);
+        resultado.push_back(avulsas[0]);
+    }
+    else if (categoria == 6) {
+        resultado.push_back(trincas[0]);
+        resultado.push_back(pares[0]);
+    }
+    else if (categoria == 3) {
+        resultado.push_back(trincas[0]);
+        for (int v : avulsas) resultado.push_back(v);
+    }
+    else if (categoria == 2) {
+        for (int v : pares) resultado.push_back(v);
+        resultado.push_back(avulsas[0]);
+    }
+    else if (categoria == 1) {
+        resultado.push_back(pares[0]);
+        for (int v : avulsas) resultado.push_back(v);
+    }
+
+    return resultado;
+}
+
+int Poker::compararCom(const Poker& outro) const {
+    std::vector<int> p1 = gerarPontuacaoDesempate();
+    std::vector<int> p2 = outro.gerarPontuacaoDesempate();
+
+    int tamanho = std::min(p1.size(), p2.size());
+
+    for (int i = 0; i < tamanho; i++) {
+        if (p1[i] > p2[i]) return 1;
+        if (p1[i] < p2[i]) return -1;
+    }
+
+    return 0;
 }
