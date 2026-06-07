@@ -2,45 +2,105 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Poker</title>
+    <title>Poker Fechado</title>
     <link rel="stylesheet" href="/css/poker_style.css">
 </head>
 <body>
     <main class="mesa">
         <header class="cabecalho">
-            <h1>🃏 Poker Fechado</h1>
-            <p>Escolha até 3 cartas para trocar. Depois disso, o computador revela a mão.</p>
+            <div class="titulo">
+                <span class="icone-carta">♠</span>
+                <div>
+                    <h1>Poker Fechado</h1>
+                    <p>Escolha até 3 cartas para trocar e enfrente o computador.</p>
+                </div>
+                <span class="icone-carta vermelho">♥</span>
+            </div>
         </header>
 
-        <section class="painel">
-            <h2 id="mensagem">Conectando ao servidor...</h2>
-            <p id="vencedor">Aguardando rodada.</p>
-        </section>
+        <section class="topo-jogo">
+            <div class="placar">
+                <div class="placar-item">
+                    <span class="label">Rodada</span>
+                    <strong id="rodada">1</strong>
+                </div>
 
-        <section class="jogadores">
-            <div class="jogador">
-                <h2>Jogador 1</h2>
-                <p class="subtitulo">Clique nas cartas que deseja trocar.</p>
-                <div id="mao-jogador1" class="mao"></div>
-                <p class="jogada">Jogada: <span id="jogada-jogador1">---</span></p>
+                <div class="placar-item">
+                    <span class="label">Jogador</span>
+                    <strong id="placar-jogador">0</strong>
+                </div>
+
+                <div class="placar-item">
+                    <span class="label">Computador</span>
+                    <strong id="placar-computador">0</strong>
+                </div>
+
+                <div class="placar-item">
+                    <span class="label">Empates</span>
+                    <strong id="placar-empates">0</strong>
+                </div>
             </div>
 
-            <div class="jogador">
-                <h2>Computador</h2>
-                <p class="subtitulo">A mão fica oculta até o resultado.</p>
+            <div class="painel">
+                <h2 id="mensagem">Conectando ao servidor...</h2>
+                <p id="vencedor">Aguardando rodada.</p>
+            </div>
+        </section>
+
+        <section class="area-jogo">
+            <article class="jogador-card jogador-humano">
+                <div class="cabecalho-jogador">
+                    <div>
+                        <h2>Jogador</h2>
+                        <p>Clique nas cartas que deseja trocar.</p>
+                    </div>
+                    <span class="tag" id="tag-trocas-jogador">0 trocas</span>
+                </div>
+
+                <div id="mao-jogador" class="mao"></div>
+
+                <div class="resultado-mao">
+                    <span>Jogada</span>
+                    <strong id="jogada-jogador">---</strong>
+                </div>
+            </article>
+
+            <article class="jogador-card computador">
+                <div class="cabecalho-jogador">
+                    <div>
+                        <h2>Computador</h2>
+                        <p>A mão fica oculta até o resultado.</p>
+                    </div>
+                    <span class="tag" id="tag-trocas-computador">0 trocas</span>
+                </div>
+
                 <div id="mao-computador" class="mao"></div>
-                <p class="jogada">Jogada: <span id="jogada-computador">---</span></p>
-            </div>
+
+                <div class="resultado-mao">
+                    <span>Jogada</span>
+                    <strong id="jogada-computador">---</strong>
+                </div>
+            </article>
         </section>
 
-        <section class="botoes">
-            <button id="btn-trocar">Trocar cartas selecionadas</button>
-            <button id="btn-nova-rodada">Nova Rodada</button>
-            <a href="/" class="voltar">Voltar ao Menu</a>
+        <section class="controles">
+            <button id="btn-trocar" class="botao principal">
+                Confirmar troca
+            </button>
+
+            <button id="btn-nova-rodada" class="botao secundaria">
+                Próxima rodada
+            </button>
+
+            <a href="/" class="botao voltar">
+                Voltar ao menu
+            </a>
         </section>
 
-        <p id="selecionadas" class="status">Cartas selecionadas: 0/3</p>
-        <p id="status" class="status">Conectando...</p>
+        <section class="rodape-status">
+            <p id="selecionadas">Cartas selecionadas: 0/3</p>
+            <p id="status">Conectando...</p>
+        </section>
     </main>
 
     <script src="/js/poker_app.js"></script>
