@@ -40,30 +40,6 @@ int JogadorFDP::getVezesGanhas() const {
 	return vezes_ganhas_;
 }
 
-nlohmann::json JogadorFDP::paraJson() const {
-    nlohmann::json dadosJogador;
-    
-    // 1. Dados herdados da classe base (Jogador)
-    dadosJogador["id"] = getId();
-    dadosJogador["nome"] = getNome();
-    
-    // 2. Dados específicos do FDP
-    dadosJogador["vidas"] = vidas_;
-    dadosJogador["aposta_atual"] = aposta_atual_;
-    dadosJogador["vezes_ganhas"] = vezes_ganhas_;
-    
-    // 3. Montando o Array de cartas (A Mão do jogador)
-    nlohmann::json jsonMao = nlohmann::json::array();
-    
-    for (Carta* carta : getMao()) {
-        jsonMao.push_back(carta->paraJson());
-    };
-    
-    dadosJogador["mao"] = jsonMao;
-    
-    return dadosJogador;
-}
-
 void JogadorFDP::setVidas(int novasVidas) {
     vidas_ = novasVidas;
 }

@@ -6,7 +6,7 @@ BaralhoSujo::BaralhoSujo() {
 }
 
 void BaralhoSujo::inicializar(){
-    // NOVA ADIÇÃO: Limpa as cartas antigas da memória antes de recriar o baralho
+    //Limpa as cartas antigas da memória antes de recriar o baralho
     for(size_t i = 0; i < cartas_.size(); i++) {
         delete cartas_[i];
     }

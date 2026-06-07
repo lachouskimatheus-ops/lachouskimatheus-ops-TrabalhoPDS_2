@@ -208,6 +208,15 @@ body {
     position: relative;
     user-select: none;
     color: #000; 
+    will-change: transform;
+    transform-style: preserve-3d;
+    backface-visibility: hidden;
+}
+
+/* Garante que o valor da carta fique no topo e por cima da máscara da figura */
+.carta span {
+    position: relative;
+    z-index: 2;
 }
 
 .carta::after {
@@ -513,4 +522,38 @@ body {
     transform: scale(2.5) translateY(-5px) !important; 
     z-index: 100; 
     box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+}
+
+/* ==========================================
+   NOVO: FIGURAS DAS CARTAS E NAIPES GIGANTES
+   ========================================== */
+/* ==========================================
+   NOVO: FIGURAS DAS CARTAS COM IMG E FILTRO
+   ========================================== */
+.figura-centro {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 45%;
+    height: 45%;
+    opacity: 0.85;
+    pointer-events: none;
+    object-fit: contain;
+    
+    /* Mantém a aceleração de hardware apenas para garantir nitidez */
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* Tamanho adaptado para as cartas da testa */
+.mini-carta .figura-centro {
+    width: 50%;
+    height: 50%;
+}
+
+/* --- A MÁGICA DA COR --- */
+/* Esse filtro CSS pega qualquer imagem PRETA e a transforma no exato vermelho (#dc2626) das suas Copas! */
+.filtro-vermelho {
+    filter: invert(19%) sepia(85%) saturate(3023%) hue-rotate(348deg) brightness(93%) contrast(90%);
 }

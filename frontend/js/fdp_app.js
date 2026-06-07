@@ -2,28 +2,47 @@
 // SISTEMA DE ÁUDIO DE ALTA PERFORMANCE
 // ==========================================
 
-const bancoDeSons = {};
+const CAMINHO_SONS = "/assets/sons/";
 
-function preCarregarSom(nomeDoArquivo) {
-    bancoDeSons[nomeDoArquivo] = new Audio(`./assets/sons/${nomeDoArquivo}`);
-    bancoDeSons[nomeDoArquivo].preload = 'auto';
+const sonsPreCarregados = {};
+
+function preCarregarSom(nomeArquivo) {
+    const audio = new Audio(`${CAMINHO_SONS}${nomeArquivo}`);
+
+    audio.preload = "auto";
+    audio.load();
+
+    sonsPreCarregados[nomeArquivo] = audio;
 }
 
-preCarregarSom('click.ogg');
-preCarregarSom('jogar_carta.ogg');
+function tocarSom(nomeArquivo) {
+    const audioOriginal = sonsPreCarregados[nomeArquivo];
 
-function tocarSom(nomeDoArquivo) {
-    let audio;
-    if (bancoDeSons[nomeDoArquivo]) {
-        audio = bancoDeSons[nomeDoArquivo].cloneNode();
-    } else {
-        audio = new Audio(`./assets/sons/${nomeDoArquivo}`);
+    if (!audioOriginal) {
+        console.warn(`Som não foi pré-carregado: ${nomeArquivo}`);
+        return;
     }
-    audio.volume = 0.5; 
-    audio.play().catch(erro => {
-        console.log("O navegador bloqueou o som automático. O usuário precisa interagir com a tela antes.");
+
+    const audio = audioOriginal.cloneNode(true);
+
+    audio.currentTime = 0;
+
+    audio.play().catch((erro) => {
+        console.log(
+            `Não foi possível reproduzir o som ${nomeArquivo}.`,
+            erro
+        );
     });
-};
+}
+
+[
+    "jogar_carta.ogg",
+    "shuffle.mp3",
+    "funny_82hiegE.mp3",
+    "knife-cut.mp3",
+    "victory_6.mp3",
+    "click.mp3"
+].forEach(preCarregarSom);
 
 const meuNome = localStorage.getItem('jogador_nickname') || 'Anônimo';
 
@@ -37,7 +56,16 @@ document.addEventListener("DOMContentLoaded", () => {
 const urlParams = new URLSearchParams(window.location.search);
 const meuId = parseInt(urlParams.get('id')) || 0;
 
-const socket = new WebSocket('ws://localhost:8080/ws/fdp');
+const socket = new WebSocket(`ws://${window.location.host}/ws/fdp`);
+
+socket.onopen = function() {
+    console.log("WebSocket FDP conectado");
+
+    socket.send(JSON.stringify({
+        acao: "ENTRAR",
+        jogador_id: meuId
+    }));
+};
 
 socket.onmessage = function(event) {
     const estadoMesa = JSON.parse(event.data);
@@ -127,7 +155,10 @@ function atualizarInterface(dados) {
                     if (isRodadaCega && j.mao[c] && j.mao[c].valor) {
                         const textoValor = traduzirValorCarta(j.mao[c].valor);
                         const simboloNaipe = obterSimboloNaipe(j.mao[c].naipe);
-                        htmlCartasVerso += `<div class="carta mini-carta ${j.mao[c].naipe}" data-naipe-simbolo="${simboloNaipe}">${textoValor}</div>`;
+                        htmlCartasVerso += `<div class="carta mini-carta ${j.mao[c].naipe}" data-naipe-simbolo="${simboloNaipe}">
+                                                <span>${textoValor}</span>
+                                                ${gerarConteudoMeioCarta(textoValor, j.mao[c].naipe)}
+                                            </div>`;
                     } else {
                         htmlCartasVerso += '<div class="carta-verso"></div>';
                     }
@@ -146,14 +177,14 @@ function atualizarInterface(dados) {
     });
 
     // ==========================================
-    // 1. ATUALIZA A CARTA VIRA (ALINHADA E LIMPA)
+    // 1. ATUALIZA A CARTA VIRA
     // ==========================================
     const viraDiv = document.getElementById('carta-vira');
     if (dados.carta_vira && dados.carta_vira.valor) {
         const textoValor = traduzirValorCarta(dados.carta_vira.valor);
         const simboloNaipe = obterSimboloNaipe(dados.carta_vira.naipe);
         
-        viraDiv.innerText = `${textoValor}`;
+        viraDiv.innerHTML = `<span>${textoValor}</span> ${gerarConteudoMeioCarta(textoValor, dados.carta_vira.naipe)}`;
         viraDiv.className = `carta ${dados.carta_vira.naipe}`;
         viraDiv.setAttribute('data-naipe-simbolo', simboloNaipe);
         viraDiv.style.display = "flex";
@@ -164,7 +195,7 @@ function atualizarInterface(dados) {
     }
 
     // ==========================================
-    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA (LADO A LADO À DIREITA, SEM COBRIR)
+    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA
     // ==========================================
     const mesaDiv = document.getElementById('cartas-na-mesa');
     if (mesaDiv) {
@@ -176,11 +207,9 @@ function atualizarInterface(dados) {
                 const simboloNaipe = obterSimboloNaipe(carta.naipe);
                 
                 elementoCarta.className = `carta ${carta.naipe}`;
-                elementoCarta.innerText = `${textoValor}`;
+                elementoCarta.innerHTML = `<span>${textoValor}</span> ${gerarConteudoMeioCarta(textoValor, carta.naipe)}`;
                 elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
                 
-                // Aplica rotações individuais orgânicas para o efeito dinâmico ("meio torta")
-                // sem sumir com as outras cartas da vaza
                 const rotacoes = [-4, 5, -2, 4];
                 const transY = (indice % 2 === 0) ? -3 : 3;
                 elementoCarta.style.setProperty('--rotacao-mesa', `${rotacoes[indice % 4]}deg`);
@@ -192,7 +221,7 @@ function atualizarInterface(dados) {
     }
 
     // ==========================================
-    // 3. RENDERIZA A SUA MÃO DE CARTAS (EFEITO LEQUE)
+    // 3. RENDERIZA A SUA MÃO DE CARTAS
     // ==========================================
     const minhaMaoDiv = document.getElementById('minha-mao');
     minhaMaoDiv.innerHTML = '';
@@ -216,7 +245,7 @@ function atualizarInterface(dados) {
             const simboloNaipe = obterSimboloNaipe(carta.naipe);
 
             elementoCarta.className = `carta ${carta.naipe}`;
-            elementoCarta.innerText = `${textoValor}`;
+            elementoCarta.innerHTML = `<span>${textoValor}</span> ${gerarConteudoMeioCarta(textoValor, carta.naipe)}`;
             elementoCarta.setAttribute('data-naipe-simbolo', simboloNaipe);
         }
         
@@ -248,7 +277,7 @@ function atualizarInterface(dados) {
             if (dados.aposta_proibida === i) {
                 btn.classList.add('proibido');
                 btn.onmousedown = () => {
-                    tocarSom('click.ogg');
+                    tocarSom('click.mp3');
                     alert(`O número ${i} está bloqueado!`);
                 };
             } else {
@@ -271,6 +300,32 @@ function atualizarInterface(dados) {
     if (iniciarAnimacao) {
         animarDistribuicao(dados);
     }
+}
+
+// ==========================================
+// FUNÇÕES AUXILIARES
+// ==========================================
+
+function gerarConteudoMeioCarta(textoValor, naipe) {
+    const arquivosPorValor = {
+        K: "rei.png",
+        Q: "rainha.png",
+        J: "valete.png"
+    };
+
+    const nomeArquivo = arquivosPorValor[textoValor];
+
+    if (!nomeArquivo) {
+        return "";
+    }
+
+    return `
+        <img
+            src="/assets/cartas/${nomeArquivo}"
+            class="figura-centro"
+            alt="${textoValor}"
+        >
+    `;
 }
 
 function jogarCarta(indice) {
