@@ -14,15 +14,17 @@ void JogadorPife::receberCarta(const Carta& carta) {
     mao_.push_back(carta);
 }
 
-void JogadorPife::organizarMao() {std::sort(mao_.begin(), mao_.end(), [](const Carta& cartaA, const Carta& cartaB) {
-            int naipeA = static_cast<int>(cartaA.mostraNaipe());
-            int naipeB = static_cast<int>(cartaB.mostraNaipe());
+#include <algorithm>
 
-            if (naipeA != naipeB) {
-                return naipeA < naipeB;
+void JogadorPife::organizarMao() {
+    std::sort(mao_.begin(), mao_.end(),
+        [](const Carta& carta1, const Carta& carta2) {
+
+            if (carta1.getValor() == carta2.getValor()) {
+                return carta1.getNaipe() < carta2.getNaipe();
             }
-            return static_cast<int>(cartaA.mostraValor()) < static_cast<int>(cartaB.mostraValor()
-            );
+
+            return carta1.getValor() < carta2.getValor();
         }
     );
 }

@@ -21,9 +21,9 @@ CORE_OBJECTS = \
 ../Jogos/Core/obj/Baralho.o
 
 PIFE_OBJECTS = \
-../Jogos/Pife/obj/pife.o \
-../Jogos/Pife/obj/jogadorPife.o \
-../Jogos/Pife/obj/regrasPife.o
+../Jogos/Pife/obj/Pife.o \
+../Jogos/Pife/obj/JogadorPife.o \
+../Jogos/Pife/obj/RegrasPife.o
 
 PACIENCIA_OBJECTS = \
 ../Jogos/Paciencia/obj/paciencia.o \

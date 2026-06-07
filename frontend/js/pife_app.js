@@ -1,10 +1,15 @@
 let socket = null;
+let meuId = null;
 let cartaSelecionadaIndice = null;
-let estadoAtual = null;
+
+const CAMINHO_CARTAS = "/assets/cartas/";
 
 const minhaMao = document.getElementById("minha-mao");
 const mesaDescarte = document.getElementById("mesa-descarte");
+const cartaVira = document.getElementById("carta-vira");
+const textoCoringa = document.getElementById("carta-coringa");
 const qtdCartas = document.getElementById("qtd-cartas");
+const jogadorAtualTexto = document.getElementById("jogador-atual");
 
 const btnComprarMonte = document.getElementById("btn-comprar-monte");
 const btnComprarMesa = document.getElementById("btn-comprar-mesa");
@@ -15,29 +20,25 @@ iniciarWebSocket();
 
 function iniciarWebSocket() {
     const parametros = new URLSearchParams(window.location.search);
+    const sala = parametros.get("sala") || "global";
+    const jogadores = Number(parametros.get("jogadores") || 2);
 
-    const idSala = parametros.get("sala") || "global";
+    const protocolo = location.protocol === "https:" ? "wss" : "ws";
 
-    const quantidadeJogadores = Number(
-        parametros.get("jogadores") || 2
+    socket = new WebSocket(
+        `${protocolo}://${location.host}/ws/pife`
     );
 
-    socket = new WebSocket("ws://localhost:8080/ws/pife");
-
     socket.onopen = () => {
-        console.log("Conectado ao servidor do Pife.");
-
         socket.send(JSON.stringify({
             tipo: "entrar_sala",
-            sala: idSala,
-            jogadores: quantidadeJogadores
+            sala,
+            jogadores
         }));
     };
 
     socket.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-
-        console.log("Mensagem recebida:", msg);
 
         if (msg.erro) {
             mostrarModal(msg.erro);
@@ -45,56 +46,50 @@ function iniciarWebSocket() {
         }
 
         if (msg.tipo === "entrada_confirmada") {
-            mostrarModal(`Você entrou como Jogador ${msg.idJogador + 1}`);
+            meuId = msg.idJogador;
+            mostrarModal(`Jogador ${meuId + 1} conectado`);
             return;
         }
 
-        if (msg.tipo === "estado_sala") {
-            console.log("Estado da sala:", msg);
+        if (!msg.minha_mao) {
             return;
         }
 
-        estadoAtual = msg;
+        if (Number.isInteger(msg.meu_id)) {
+            meuId = msg.meu_id;
+        }
+
         renderizarEstado(msg);
     };
 
     socket.onclose = () => {
-        console.log("Conexão com o servidor do Pife encerrada.");
-        mostrarModal("Conexão encerrada.");
-    };
-
-    socket.onerror = () => {
-        mostrarModal("Erro na conexão com o servidor.");
+        mostrarModal("Conexão encerrada");
     };
 }
 
 function enviarAcao(acao, dados = {}) {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-        mostrarModal("Servidor não conectado.");
         return;
     }
 
     socket.send(JSON.stringify({
         tipo: "acao_jogo",
-        acao: acao,
+        acao,
         ...dados
     }));
 }
 
 function renderizarEstado(estado) {
-    if (!estado.minha_mao) {
-        console.warn("Estado sem minha_mao:", estado);
-        return;
-    }
-
     renderizarMao(estado.minha_mao);
     renderizarMesa(estado.mesa || []);
+    renderizarVira(estado.vira);
 
-    if (qtdCartas) {
-        qtdCartas.textContent = estado.minha_mao.length;
-    }
+    qtdCartas.textContent = estado.minha_mao.length;
 
-    atualizarInfoTurno(estado);
+    jogadorAtualTexto.textContent =
+        `Jogador ${estado.jogador_atual + 1}`;
+
+    atualizarBotoes(estado);
 
     cartaSelecionadaIndice = null;
 }
@@ -103,140 +98,160 @@ function renderizarMao(cartas) {
     minhaMao.innerHTML = "";
 
     cartas.forEach((carta, indice) => {
-        const divCarta = criarCartaHTML(carta);
+        const elemento = criarCarta(carta);
 
-        divCarta.addEventListener("click", () => {
-            selecionarCarta(divCarta, indice);
-        });
+        elemento.onclick = () => {
+            document
+                .querySelectorAll("#minha-mao .carta")
+                .forEach(c => c.classList.remove("selecionada"));
 
-        minhaMao.appendChild(divCarta);
+            elemento.classList.add("selecionada");
+            cartaSelecionadaIndice = indice;
+        };
+
+        minhaMao.appendChild(elemento);
     });
 }
 
 function renderizarMesa(cartas) {
     mesaDescarte.innerHTML = "";
 
-    if (!cartas || cartas.length === 0) {
-        const vazia = document.createElement("div");
-        vazia.classList.add("carta", "carta-vazia");
-        vazia.textContent = "Mesa";
-        mesaDescarte.appendChild(vazia);
+    if (cartas.length === 0) {
+        mesaDescarte.innerHTML =
+            '<div class="carta carta-vazia">Descarte</div>';
+
         return;
     }
 
-    const ultimaCarta = cartas[cartas.length - 1];
-    const divCarta = criarCartaHTML(ultimaCarta);
-
-    mesaDescarte.appendChild(divCarta);
+    mesaDescarte.appendChild(
+        criarCarta(cartas[cartas.length - 1])
+    );
 }
 
-function criarCartaHTML(carta) {
-    const div = document.createElement("div");
-    div.classList.add("carta");
+function renderizarVira(vira) {
+    cartaVira.innerHTML = "";
 
-    div.textContent = cartaParaTexto(carta);
+    if (!vira) {
+        return;
+    }
 
-    return div;
+    cartaVira.appendChild(criarCarta(vira));
+
+    const valorCoringa =
+        Number(vira.valor) === 13
+            ? 1
+            : Number(vira.valor) + 1;
+
+    textoCoringa.textContent = cartaParaTexto({
+        valor: valorCoringa,
+        naipe: vira.naipe
+    });
+}
+
+function criarCarta(carta) {
+    const imagem = document.createElement("img");
+
+    imagem.className = "carta";
+    imagem.src = caminhoImagemCarta(carta);
+    imagem.alt = cartaParaTexto(carta);
+    imagem.draggable = false;
+
+    return imagem;
+}
+
+function caminhoImagemCarta(carta) {
+    const naipes = {
+        0: "clubs",
+        1: "hearts",
+        2: "spades",
+        3: "diamonds"
+    };
+
+    const valores = {
+        1: "ace",
+        2: "02",
+        3: "03",
+        4: "04",
+        5: "05",
+        6: "06",
+        7: "07",
+        8: "08",
+        9: "09",
+        10: "10",
+        11: "jack",
+        12: "queen",
+        13: "king"
+    };
+
+    const nomeNaipe = naipes[Number(carta.naipe)];
+    const nomeValor = valores[Number(carta.valor)];
+
+    if (!nomeNaipe || !nomeValor) {
+        console.error("Carta inválida para imagem:", carta);
+        return "";
+    }
+
+    return `/assets/cartas/${nomeNaipe}_${nomeValor}.png`;
 }
 
 function cartaParaTexto(carta) {
     const valores = {
         1: "A",
-        2: "2",
-        3: "3",
-        4: "4",
-        5: "5",
-        6: "6",
-        7: "7",
-        8: "8",
-        9: "9",
-        10: "10",
         11: "J",
         12: "Q",
         13: "K"
     };
 
     const naipes = {
-        0: "♦",
+        0: "♣",
         1: "♥",
         2: "♠",
-        3: "♣"
+        3: "♦"
     };
 
-    const valor = valores[carta.valor] ?? "?";
-    const naipe = naipes[carta.naipe] ?? "?";
-
-    return `${valor}${naipe}`;
+    return `${valores[carta.valor] || carta.valor}${naipes[carta.naipe]}`;
 }
 
-function selecionarCarta(elemento, indice) {
-    document.querySelectorAll("#minha-mao .carta").forEach((carta) => {
-        carta.classList.remove("selecionada");
-    });
+function atualizarBotoes(estado) {
+    btnComprarMonte.disabled =
+        !estado.pode_comprar_baralho;
 
-    cartaSelecionadaIndice = indice;
-    elemento.classList.add("selecionada");
+    btnComprarMesa.disabled =
+        !estado.pode_comprar_mesa;
+
+    btnBater.disabled =
+        !estado.pode_bater;
+
+    btnOrganizar.disabled =
+        estado.jogo_finalizado;
 }
 
-function atualizarInfoTurno(estado) {
-    const infoTurno = document.getElementById("info-turno");
+btnComprarMonte.onclick = () =>
+    enviarAcao("COMPRAR_BARALHO");
 
-    if (!infoTurno) {
+btnComprarMesa.onclick = () =>
+    enviarAcao("COMPRAR_MESA");
+
+btnBater.onclick = () =>
+    enviarAcao("BATER");
+
+btnOrganizar.onclick = () =>
+    enviarAcao("ORGANIZAR");
+
+mesaDescarte.onclick = () => {
+    if (cartaSelecionadaIndice === null) {
+        mostrarModal("Selecione uma carta");
         return;
     }
 
-    if (estado.jogador_local === estado.jogador_atual) {
-        infoTurno.textContent = "Sua vez";
-    } else {
-        infoTurno.textContent = "Vez do outro jogador";
-    }
-}
-
-if (btnComprarMonte) {
-    btnComprarMonte.addEventListener("click", () => {
-        enviarAcao("COMPRAR_BARALHO");
+    enviarAcao("DESCARTAR", {
+        indice: cartaSelecionadaIndice
     });
-}
-
-if (btnComprarMesa) {
-    btnComprarMesa.addEventListener("click", () => {
-        enviarAcao("COMPRAR_MESA");
-    });
-}
-
-if (btnBater) {
-    btnBater.addEventListener("click", () => {
-        enviarAcao("BATER");
-    });
-}
-
-if (btnOrganizar) {
-    btnOrganizar.addEventListener("click", () => {
-        enviarAcao("ORGANIZAR");
-    });
-}
-
-if (mesaDescarte) {
-    mesaDescarte.addEventListener("click", () => {
-        if (cartaSelecionadaIndice === null) {
-            mostrarModal("Selecione uma carta antes de descartar.");
-            return;
-        }
-
-        enviarAcao("DESCARTAR", {
-            indice: cartaSelecionadaIndice
-        });
-    });
-}
+};
 
 function mostrarModal(texto) {
     const modal = document.getElementById("modal-notificacao");
     const modalTexto = document.getElementById("modal-texto");
-
-    if (!modal || !modalTexto) {
-        alert(texto);
-        return;
-    }
 
     modalTexto.textContent = texto;
     modal.classList.remove("modal-oculto");
