@@ -33,10 +33,30 @@ int valorNumericoServidor(Valor valor) {
     }
 }
 
+std::string simboloNaipe(Naipe naipe) {
+    if (naipe == Naipe::Copa) return "♥";
+    if (naipe == Naipe::Ouro) return "♦";
+    if (naipe == Naipe::Espada) return "♠";
+    if (naipe == Naipe::Paus) return "♣";
+    return "?";
+}
+
+std::string corNaipe(Naipe naipe) {
+    if (naipe == Naipe::Copa || naipe == Naipe::Ouro) {
+        return "vermelha";
+    }
+
+    return "preta";
+}
+
 json cartaParaJson(const Carta& c) {
     return json{
         {"valor", (int)c.mostraValor()},
         {"naipe", (int)c.mostraNaipe()},
+        {"valor_texto", c.valorString()},
+        {"naipe_texto", c.naipeString()},
+        {"simbolo", simboloNaipe(c.mostraNaipe())},
+        {"cor", corNaipe(c.mostraNaipe())},
         {"texto", c.cartaString()},
         {"oculta", false}
     };
@@ -46,6 +66,10 @@ json cartaOcultaParaJson() {
     return json{
         {"valor", 0},
         {"naipe", 0},
+        {"valor_texto", "?"},
+        {"naipe_texto", "?"},
+        {"simbolo", "🂠"},
+        {"cor", "oculta"},
         {"texto", "Carta virada"},
         {"oculta", true}
     };
@@ -53,6 +77,7 @@ json cartaOcultaParaJson() {
 
 json maoParaJson(const Poker& jogador, bool revelar) {
     json maoJson = json::array();
+
     const std::vector<Carta>& mao = jogador.verMao();
 
     for (const auto& carta : mao) {
@@ -67,7 +92,7 @@ json maoParaJson(const Poker& jogador, bool revelar) {
 }
 
 std::string vencedorParaTexto(int resultado) {
-    if (resultado == 1) return "Jogador 1";
+    if (resultado == 1) return "Jogador";
     if (resultado == -1) return "Computador";
     return "Empate";
 }
@@ -76,7 +101,7 @@ std::vector<int> escolherTrocasComputador(const Poker& computador) {
     std::vector<int> indices;
     int categoria = computador.avaliarMao();
 
-    // Se já possui uma mão forte, mantém todas as cartas.
+    // Mãos fortes: computador mantém tudo.
     if (categoria >= 4) {
         return indices;
     }
@@ -86,12 +111,13 @@ std::vector<int> escolherTrocasComputador(const Poker& computador) {
 
     for (const auto& carta : mao) {
         int valor = valorNumericoServidor(carta.mostraValor());
+
         if (valor >= 2 && valor <= 14) {
             frequencia[valor]++;
         }
     }
 
-    // Mantém pares, trincas e quadras. Troca cartas avulsas.
+    // Mantém pares/trincas/quadras e troca cartas avulsas.
     for (int i = 0; i < (int)mao.size(); i++) {
         int valor = valorNumericoServidor(mao[i].mostraValor());
 
@@ -100,7 +126,7 @@ std::vector<int> escolherTrocasComputador(const Poker& computador) {
         }
     }
 
-    // Se não há nenhum par/trinca, troca as 3 cartas mais baixas.
+    // Se não tem nada, troca as três cartas mais baixas.
     if ((int)indices.size() == 5) {
         std::vector<std::pair<int, int>> valoresComIndice;
 
@@ -127,60 +153,6 @@ std::vector<int> escolherTrocasComputador(const Poker& computador) {
     return indices;
 }
 
-json estadoParaJson(Poker& jogador1, Poker& computador, const std::string& fase) {
-    json estado;
-
-    bool revelarComputador = (fase == "RESULTADO");
-    int resultado = 0;
-
-    estado["fase"] = fase;
-    estado["pode_trocar"] = (fase == "ESCOLHENDO_TROCAS");
-
-    estado["jogador1"]["mao"] = maoParaJson(jogador1, true);
-    estado["jogador1"]["jogada"] = jogador1.nomeJogada();
-    estado["jogador1"]["forca"] = jogador1.avaliarMao();
-
-    estado["computador"]["mao"] = maoParaJson(computador, revelarComputador);
-
-    if (revelarComputador) {
-        estado["computador"]["jogada"] = computador.nomeJogada();
-        estado["computador"]["forca"] = computador.avaliarMao();
-
-        resultado = jogador1.compararCom(computador);
-
-        estado["resultado"] = resultado;
-        estado["vencedor"] = vencedorParaTexto(resultado);
-        estado["mensagem"] = "Resultado revelado.";
-    } else {
-        estado["computador"]["jogada"] = "Oculta";
-        estado["computador"]["forca"] = -1;
-
-        estado["resultado"] = 0;
-        estado["vencedor"] = "Aguardando troca";
-        estado["mensagem"] = "Selecione ate 3 cartas para trocar.";
-    }
-
-    return estado;
-}
-
-void novaRodada(Baralho& baralho, Poker& jogador1, Poker& computador, std::string& fase) {
-    baralho.limpar();
-
-    Baralho novoBaralho;
-    novoBaralho.embaralhar();
-    baralho = novoBaralho;
-
-    jogador1.limparMao();
-    computador.limparMao();
-
-    for (int i = 0; i < 5; i++) {
-        jogador1.receberCarta(baralho.retirarCarta());
-        computador.receberCarta(baralho.retirarCarta());
-    }
-
-    fase = "ESCOLHENDO_TROCAS";
-}
-
 std::vector<int> lerIndicesTroca(const json& msg) {
     std::vector<int> indices;
 
@@ -197,6 +169,93 @@ std::vector<int> lerIndicesTroca(const json& msg) {
     return indices;
 }
 
+json estadoParaJson(
+    Poker& jogador,
+    Poker& computador,
+    const std::string& fase,
+    int rodada,
+    int pontosJogador,
+    int pontosComputador,
+    int empates,
+    int ultimaTrocaJogador,
+    int ultimaTrocaComputador
+) {
+    json estado;
+
+    bool revelarComputador = (fase == "RESULTADO");
+    int resultado = 0;
+
+    estado["fase"] = fase;
+    estado["rodada"] = rodada;
+
+    estado["placar"]["jogador"] = pontosJogador;
+    estado["placar"]["computador"] = pontosComputador;
+    estado["placar"]["empates"] = empates;
+
+    estado["trocas"]["jogador"] = ultimaTrocaJogador;
+    estado["trocas"]["computador"] = ultimaTrocaComputador;
+
+    estado["jogador"]["mao"] = maoParaJson(jogador, true);
+    estado["jogador"]["jogada"] = jogador.nomeJogada();
+    estado["jogador"]["forca"] = jogador.avaliarMao();
+
+    estado["computador"]["mao"] = maoParaJson(computador, revelarComputador);
+
+    if (revelarComputador) {
+        resultado = jogador.compararCom(computador);
+
+        estado["computador"]["jogada"] = computador.nomeJogada();
+        estado["computador"]["forca"] = computador.avaliarMao();
+
+        estado["resultado"] = resultado;
+        estado["vencedor"] = vencedorParaTexto(resultado);
+
+        if (resultado == 1) {
+            estado["mensagem"] = "Você venceu a rodada!";
+        } else if (resultado == -1) {
+            estado["mensagem"] = "O computador venceu a rodada.";
+        } else {
+            estado["mensagem"] = "A rodada terminou empatada.";
+        }
+    } else {
+        estado["computador"]["jogada"] = "Oculta";
+        estado["computador"]["forca"] = -1;
+
+        estado["resultado"] = 0;
+        estado["vencedor"] = "Aguardando";
+        estado["mensagem"] = "Selecione até 3 cartas para trocar.";
+    }
+
+    return estado;
+}
+
+void novaRodada(
+    Baralho& baralho,
+    Poker& jogador,
+    Poker& computador,
+    std::string& fase,
+    int& ultimaTrocaJogador,
+    int& ultimaTrocaComputador
+) {
+    baralho.limpar();
+
+    Baralho novoBaralho;
+    novoBaralho.embaralhar();
+    baralho = novoBaralho;
+
+    jogador.limparMao();
+    computador.limparMao();
+
+    for (int i = 0; i < 5; i++) {
+        jogador.receberCarta(baralho.retirarCarta());
+        computador.receberCarta(baralho.retirarCarta());
+    }
+
+    ultimaTrocaJogador = 0;
+    ultimaTrocaComputador = 0;
+    fase = "ESCOLHENDO_TROCAS";
+}
+
 int main() {
     try {
         crow::SimpleApp app;
@@ -204,14 +263,44 @@ int main() {
         std::cout << "Iniciando servidor do Poker..." << std::endl;
 
         Baralho baralho;
-        Poker jogador1;
+        Poker jogador;
         Poker computador;
+
         std::string fase;
 
-        novaRodada(baralho, jogador1, computador, fase);
+        int rodada = 1;
+        int pontosJogador = 0;
+        int pontosComputador = 0;
+        int empates = 0;
+
+        int ultimaTrocaJogador = 0;
+        int ultimaTrocaComputador = 0;
+
+        novaRodada(
+            baralho,
+            jogador,
+            computador,
+            fase,
+            ultimaTrocaJogador,
+            ultimaTrocaComputador
+        );
 
         std::mutex mtx;
         std::set<crow::websocket::connection*> conexoes;
+
+        auto montarEstado = [&]() {
+            return estadoParaJson(
+                jogador,
+                computador,
+                fase,
+                rodada,
+                pontosJogador,
+                pontosComputador,
+                empates,
+                ultimaTrocaJogador,
+                ultimaTrocaComputador
+            ).dump();
+        };
 
         auto broadcast = [&](const std::string& msg) {
             std::lock_guard<std::mutex> lock(mtx);
@@ -229,7 +318,7 @@ int main() {
                 }
 
                 std::cout << "Cliente conectado ao Poker!" << std::endl;
-                conn.send_text(estadoParaJson(jogador1, computador, fase).dump());
+                conn.send_text(montarEstado());
             })
             .onclose([&](crow::websocket::connection& conn, const std::string&, uint16_t) {
                 std::lock_guard<std::mutex> lock(mtx);
@@ -242,39 +331,63 @@ int main() {
                     auto msg = json::parse(data);
 
                     if (!msg.contains("acao")) {
-                        conn.send_text(estadoParaJson(jogador1, computador, fase).dump());
+                        conn.send_text(montarEstado());
                         return;
                     }
 
                     std::string acao = msg["acao"];
 
                     if (acao == "OBTER_ESTADO_ATUAL") {
-                        conn.send_text(estadoParaJson(jogador1, computador, fase).dump());
+                        conn.send_text(montarEstado());
                         return;
                     }
 
                     if (acao == "NOVA_RODADA" || acao == "NOVO_JOGO") {
-                        novaRodada(baralho, jogador1, computador, fase);
-                        broadcast(estadoParaJson(jogador1, computador, fase).dump());
+                        rodada++;
+
+                        novaRodada(
+                            baralho,
+                            jogador,
+                            computador,
+                            fase,
+                            ultimaTrocaJogador,
+                            ultimaTrocaComputador
+                        );
+
+                        broadcast(montarEstado());
                         return;
                     }
 
                     if (acao == "TROCAR_CARTAS") {
                         if (fase == "ESCOLHENDO_TROCAS") {
                             std::vector<int> indicesJogador = lerIndicesTroca(msg);
-                            jogador1.trocarCartas(indicesJogador, baralho);
+
+                            jogador.trocarCartas(indicesJogador, baralho);
+                            ultimaTrocaJogador = (int)indicesJogador.size();
 
                             std::vector<int> indicesComputador = escolherTrocasComputador(computador);
+
                             computador.trocarCartas(indicesComputador, baralho);
+                            ultimaTrocaComputador = (int)indicesComputador.size();
 
                             fase = "RESULTADO";
+
+                            int resultado = jogador.compararCom(computador);
+
+                            if (resultado == 1) {
+                                pontosJogador++;
+                            } else if (resultado == -1) {
+                                pontosComputador++;
+                            } else {
+                                empates++;
+                            }
                         }
 
-                        broadcast(estadoParaJson(jogador1, computador, fase).dump());
+                        broadcast(montarEstado());
                         return;
                     }
 
-                    conn.send_text(estadoParaJson(jogador1, computador, fase).dump());
+                    conn.send_text(montarEstado());
 
                 } catch (const std::exception& e) {
                     std::cerr << "Erro ao processar mensagem do Poker: " << e.what() << std::endl;
