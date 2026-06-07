@@ -1,9 +1,17 @@
 #include "multiplayer/FDP/SalaFDP.hpp"
 
 #include "coreAPI/JsonConversor.hpp"
+#include "JogadorFDP.hpp"
 
 SalaFDP::SalaFDP()
     : mesa_(&baralho_, &placar_) {
+
+    mesa_.adicionarJogador(new JogadorFDP(0, "Jogador 1"));
+    mesa_.adicionarJogador(new JogadorFDP(1, "Jogador 2"));
+    mesa_.adicionarJogador(new JogadorFDP(2, "Jogador 3"));
+    mesa_.adicionarJogador(new JogadorFDP(3, "Jogador 4"));
+
+    mesa_.iniciarPartida();
 }
 
 void SalaFDP::conectarJogador(int idJogador) {
@@ -15,12 +23,13 @@ void SalaFDP::desconectarJogador(int idJogador) {
 }
 
 bool SalaFDP::jogarCarta(int idJogador, int indiceCarta) {
+    JogadorFDP* jogadorDaVez = mesa_.getJogadorDaVez();
 
-    if (mesa_.getJogadorDaVez() == nullptr) {
+    if (jogadorDaVez == nullptr) {
         return false;
     }
 
-    if (mesa_.getJogadorDaVez()->getId() != idJogador) {
+    if (jogadorDaVez->getId() != idJogador) {
         return false;
     }
 
@@ -28,33 +37,43 @@ bool SalaFDP::jogarCarta(int idJogador, int indiceCarta) {
 }
 
 bool SalaFDP::apostar(int idJogador, int valor) {
+    JogadorFDP* jogadorDaVez = mesa_.getJogadorDaVez();
 
-    (void) idJogador;
+    if (jogadorDaVez == nullptr) {
+        return false;
+    }
 
-    return mesa_.registrarAposta(valor);
+    if (jogadorDaVez->getId() != idJogador) {
+        return false;
+    }
+
+    if (!mesa_.registrarAposta(valor)) {
+        return false;
+    }
+
+    if (mesa_.faseApostasFinalizada()) {
+        mesa_.iniciarFaseDeCartas();
+    }
+
+    return true;
 }
 
-nlohmann::json SalaFDP::gerarJson(int idJogador) {
-
+json SalaFDP::gerarJson(int idJogador) {
     return JsonConversor::mesaFdpParaJson(mesa_, idJogador);
 }
 
 bool SalaFDP::vazaFinalizada() {
-
     return mesa_.vazaFinalizada();
 }
 
 bool SalaFDP::rodadaFinalizada() {
-
     return mesa_.rodadaFinalizada();
 }
 
 void SalaFDP::finalizarVaza() {
-
     mesa_.apurarVencedorDaVaza();
 }
 
 void SalaFDP::finalizarRodada() {
-
     mesa_.finalizarRodada();
 }

@@ -2,28 +2,47 @@
 // SISTEMA DE ÁUDIO DE ALTA PERFORMANCE
 // ==========================================
 
-const bancoDeSons = {};
+const CAMINHO_SONS = "/assets/sons/";
 
-function preCarregarSom(nomeDoArquivo) {
-    bancoDeSons[nomeDoArquivo] = new Audio(`./assets/sons/${nomeDoArquivo}`);
-    bancoDeSons[nomeDoArquivo].preload = 'auto';
+const sonsPreCarregados = {};
+
+function preCarregarSom(nomeArquivo) {
+    const audio = new Audio(`${CAMINHO_SONS}${nomeArquivo}`);
+
+    audio.preload = "auto";
+    audio.load();
+
+    sonsPreCarregados[nomeArquivo] = audio;
 }
 
-preCarregarSom('click.ogg');
-preCarregarSom('jogar_carta.ogg');
+function tocarSom(nomeArquivo) {
+    const audioOriginal = sonsPreCarregados[nomeArquivo];
 
-function tocarSom(nomeDoArquivo) {
-    let audio;
-    if (bancoDeSons[nomeDoArquivo]) {
-        audio = bancoDeSons[nomeDoArquivo].cloneNode();
-    } else {
-        audio = new Audio(`./assets/sons/${nomeDoArquivo}`);
+    if (!audioOriginal) {
+        console.warn(`Som não foi pré-carregado: ${nomeArquivo}`);
+        return;
     }
-    audio.volume = 0.5; 
-    audio.play().catch(erro => {
-        console.log("O navegador bloqueou o som automático. O usuário precisa interagir com a tela antes.");
+
+    const audio = audioOriginal.cloneNode(true);
+
+    audio.currentTime = 0;
+
+    audio.play().catch((erro) => {
+        console.log(
+            `Não foi possível reproduzir o som ${nomeArquivo}.`,
+            erro
+        );
     });
-};
+}
+
+[
+    "jogar_carta.ogg",
+    "shuffle.mp3",
+    "funny_82hiegE.mp3",
+    "knife-cut.mp3",
+    "victory_6.mp3",
+    "click.mp3"
+].forEach(preCarregarSom);
 
 const meuNome = localStorage.getItem('jogador_nickname') || 'Anônimo';
 
@@ -258,7 +277,7 @@ function atualizarInterface(dados) {
             if (dados.aposta_proibida === i) {
                 btn.classList.add('proibido');
                 btn.onmousedown = () => {
-                    tocarSom('click.ogg');
+                    tocarSom('click.mp3');
                     alert(`O número ${i} está bloqueado!`);
                 };
             } else {
@@ -288,24 +307,25 @@ function atualizarInterface(dados) {
 // ==========================================
 
 function gerarConteudoMeioCarta(textoValor, naipe) {
-    // Se for copas ou ouros, adiciona o sufixo _r
-    const ehVermelha = (naipe === 'copas' || naipe === 'ouros');
-    const sufixo = ehVermelha ? '_r' : '';
-    
-    // Mapeia o nome do arquivo conforme o valor da carta
-    let nomeArquivo = "";
-    if (textoValor === 'K') {
-        nomeArquivo = `rei${sufixo}.png`;
-    } else if (textoValor === 'Q') {
-        nomeArquivo = `rainha${sufixo}.png`;
-    } else if (textoValor === 'J') {
-        nomeArquivo = `valete${sufixo}.png`;
-    } else {
-        return ``; // Cartas numéricas sem imagem no meio
+    const arquivosPorValor = {
+        K: "rei.png",
+        Q: "rainha.png",
+        J: "valete.png"
+    };
+
+    const nomeArquivo = arquivosPorValor[textoValor];
+
+    if (!nomeArquivo) {
+        return "";
     }
-    
-    // Retorna a tag img com o caminho correto
-    return `<img src="assets/cartas/${nomeArquivo}" class="figura-centro">`;
+
+    return `
+        <img
+            src="/assets/cartas/${nomeArquivo}"
+            class="figura-centro"
+            alt="${textoValor}"
+        >
+    `;
 }
 
 function jogarCarta(indice) {

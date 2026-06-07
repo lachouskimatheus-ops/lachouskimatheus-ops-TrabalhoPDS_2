@@ -1,192 +1,322 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FDP - Lobby e Regras</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+  <meta charset="UTF-8">
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  body {
-    min-height: 100vh;
-    background: #0a0a0a;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Cinzel', serif;
-    overflow: hidden;
-  }
+  <title>FDP - Lobby e Regras</title>
 
-  /* Fundo Escuro */
-  .bg {
-    position: fixed;
-    inset: 0;
-    /* Lembre-se de ajustar este caminho depois para o relativo */
-    background-image: url('assets/fundo.jpg');
-    background-size: cover;
-    background-position: center;
-    filter: brightness(0.25);
-    z-index: 0;
-  }
+  <link rel="icon" href="data:,">
 
-  .container {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px;
-    width: 100%;
-    max-width: 600px;
-    background: rgba(15, 15, 20, 0.75);
-    border: 1px solid rgba(255, 200, 50, 0.3);
-    border-radius: 12px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-    animation: fadeIn 0.6s ease;
-  }
+  <style>
+    @import url(
+      "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap"
+    );
 
-  h1 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 32px;
-    color: #fff;
-    text-shadow: 0 0 15px rgba(255,200,50,0.5);
-    margin-bottom: 5px;
-    text-align: center;
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  h1 span { color: #f0c040; }
+    body {
+      min-height: 100vh;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: "Cinzel", serif;
+      overflow: hidden;
+    }
 
-  .saudacao {
-    color: #aaa;
-    font-size: 14px;
-    letter-spacing: 2px;
-    margin-bottom: 30px;
-    text-transform: uppercase;
-  }
+    .bg {
+      position: fixed;
+      inset: 0;
+      background-image: url("/assets/fundo.jpg");
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.25);
+      z-index: 0;
+    }
 
-  /* Caixa de Regras */
-  .regras-box {
-    background: rgba(0, 0, 0, 0.6);
-    border-left: 4px solid #f0c040;
-    padding: 20px 25px;
-    width: 100%;
-    border-radius: 4px;
-    margin-bottom: 30px;
-  }
+    .container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+      width: 100%;
+      max-width: 600px;
+      background: rgba(15, 15, 20, 0.75);
+      border: 1px solid rgba(255, 200, 50, 0.3);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+      animation: fadeIn 0.6s ease;
+    }
 
-  .regras-box h3 {
-    color: #f0c040;
-    margin-bottom: 15px;
-    letter-spacing: 2px;
-  }
+    h1 {
+      font-family: "Cinzel Decorative", serif;
+      font-size: 32px;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(255, 200, 50, 0.5);
+      margin-bottom: 5px;
+      text-align: center;
+    }
 
-  .regras-lista {
-    list-style: none;
-    color: #ddd;
-    line-height: 1.8;
-    font-size: 15px;
-  }
+    h1 span {
+      color: #f0c040;
+    }
 
-  .regras-lista li {
-    margin-bottom: 12px;
-    position: relative;
-    padding-left: 20px;
-  }
+    .saudacao {
+      color: #aaaaaa;
+      font-size: 14px;
+      letter-spacing: 2px;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      text-align: center;
+    }
 
-  .regras-lista li::before {
-    content: "♦";
-    position: absolute;
-    left: 0;
-    color: #f0c040;
-  }
+    .regras-box {
+      background: rgba(0, 0, 0, 0.6);
+      border-left: 4px solid #f0c040;
+      padding: 20px 25px;
+      width: 100%;
+      border-radius: 4px;
+      margin-bottom: 30px;
+    }
 
-  /* Botões */
-  .acoes {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-  }
+    .regras-box h3 {
+      color: #f0c040;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+    }
 
-  .btn {
-    flex: 1;
-    padding: 15px;
-    border-radius: 6px;
-    font-family: 'Cinzel', serif;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 3px;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    transition: 0.3s;
-  }
+    .regras-lista {
+      list-style: none;
+      color: #dddddd;
+      line-height: 1.8;
+      font-size: 15px;
+    }
 
-  .btn-voltar {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-  }
+    .regras-lista li {
+      margin-bottom: 12px;
+      position: relative;
+      padding-left: 20px;
+    }
 
-  .btn-voltar:hover {
-    background: rgba(255, 255, 255, 0.15);
-  }
+    .regras-lista li::before {
+      content: "♦";
+      position: absolute;
+      left: 0;
+      color: #f0c040;
+    }
 
-  .btn-jogar {
-    background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%);
-    border: 1px solid rgba(240,192,64,0.6);
-    color: #f0c040;
-  }
+    .acoes {
+      display: flex;
+      gap: 15px;
+      width: 100%;
+    }
 
-  .btn-jogar:hover {
-    background: linear-gradient(135deg, rgba(240,192,64,0.5) 0%, rgba(240,192,64,0.2) 100%);
-    box-shadow: 0 0 20px rgba(240,192,64,0.4);
-    color: #fff;
-  }
+    .btn {
+      flex: 1;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: "Cinzel", serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: 0.3s;
+    }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-</style>
+    .btn-voltar {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    .btn-voltar:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-jogar {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(240, 192, 64, 0.3) 0%,
+          rgba(240, 192, 64, 0.1) 100%
+        );
+      border: 1px solid rgba(240, 192, 64, 0.6);
+      color: #f0c040;
+    }
+
+    .btn-jogar:hover {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(240, 192, 64, 0.5) 0%,
+          rgba(240, 192, 64, 0.2) 100%
+        );
+      box-shadow: 0 0 20px rgba(240, 192, 64, 0.4);
+      color: #ffffff;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div class="bg"></div>
+  <div class="bg"></div>
 
-<div class="container">
-  <h1>LOBBY <span>FDP</span></h1>
-  <div class="saudacao" id="texto-saudacao">Bem-vindo, Jogador!</div>
+  <div class="container">
 
-  <div class="regras-box">
-    <h3>COMO JOGAR</h3>
-    <ul class="regras-lista">
-      <li><strong>Rodada Cega:</strong> A primeira rodada inicia com 1 carta para cada. Você vê as cartas dos oponentes, mas não a sua.</li>
-      <li><strong>Apostas:</strong> Acerte exatamente quantas vazas você fará. O último a falar está proibido de apostar o número que empate a conta com o total de cartas da rodada.</li>
-      <li><strong>Sistema de Vidas:</strong> Errar a aposta custa exatamente <strong>1 vida</strong> por rodada, independentemente da diferença.</li>
-      <li><strong>Vira:</strong> A carta na mesa define a manilha da rodada, seguindo a ordem de força tradicional.</li>
-    </ul>
+    <h1>
+      LOBBY <span>FDP</span>
+    </h1>
+
+    <div
+      class="saudacao"
+      id="texto-saudacao"
+    >
+      Bem-vindo, Jogador!
+    </div>
+
+    <div class="regras-box">
+
+      <h3>COMO JOGAR</h3>
+
+      <ul class="regras-lista">
+
+        <li>
+          <strong>Rodada Cega:</strong>
+          A primeira rodada inicia com uma carta para cada jogador.
+          Você vê as cartas dos oponentes, mas não vê a sua.
+        </li>
+
+        <li>
+          <strong>Apostas:</strong>
+          Acerte exatamente quantas vazas você fará.
+          O último jogador não pode apostar um número que faça a soma
+          das apostas ser igual ao número de cartas da rodada.
+        </li>
+
+        <li>
+          <strong>Sistema de Vidas:</strong>
+          Errar a aposta custa exatamente
+          <strong>uma vida</strong>
+          por rodada, independentemente da diferença.
+        </li>
+
+        <li>
+          <strong>Vira:</strong>
+          A carta virada na mesa define a manilha da rodada,
+          seguindo a ordem de força estabelecida pelo jogo.
+        </li>
+
+      </ul>
+
+    </div>
+
+    <div class="acoes">
+
+      <a
+        href="/pages/menu.html"
+        class="btn btn-voltar"
+      >
+        VOLTAR
+      </a>
+
+      <button
+        type="button"
+        id="btn-conectar"
+        class="btn btn-jogar"
+      >
+        CONECTAR À MESA
+      </button>
+
+    </div>
+
   </div>
 
-  <div class="acoes">
-    <a href="menu.html" class="btn btn-voltar">VOLTAR</a>
-    
-    <a href="fdp.html" class="btn btn-jogar">CONECTAR À MESA</a>
-  </div>
-</div>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const nomeSalvo =
+        localStorage.getItem("jogador_nickname");
 
-<script>
-  // Puxa o nome da memória para dar boas-vindas personalizadas!
-  document.addEventListener("DOMContentLoaded", () => {
-    const meuNome = localStorage.getItem('jogador_nickname');
-    if (meuNome && meuNome !== 'Anônimo') {
-      document.getElementById('texto-saudacao').innerText = `Bem-vindo à mesa, ${meuNome}!`;
+      if (nomeSalvo && nomeSalvo !== "Anônimo") {
+        const textoSaudacao =
+          document.getElementById("texto-saudacao");
+
+        textoSaudacao.innerText =
+          `Bem-vindo à mesa, ${nomeSalvo}!`;
+      }
+
+      const botaoConectar =
+        document.getElementById("btn-conectar");
+
+      botaoConectar.addEventListener("click", abrirMesasFDP);
+    });
+
+    function abrirMesasFDP() {
+      const quantidadeJogadores = 4;
+      const idSala = "teste-fdp";
+
+      let janelaBloqueada = false;
+
+      for (
+        let idJogador = 0;
+        idJogador < quantidadeJogadores;
+        idJogador++
+      ) {
+        const parametros = new URLSearchParams({
+          sala: idSala,
+          id: String(idJogador)
+        });
+
+        const url =
+          `/pages/fdp.html?${parametros.toString()}`;
+
+        const novaJanela = window.open(
+          url,
+          `_blank`
+        );
+
+        if (!novaJanela) {
+          janelaBloqueada = true;
+          break;
+        }
+      }
+
+      if (janelaBloqueada) {
+        alert(
+          "O navegador bloqueou uma ou mais janelas. " +
+          "Permita pop-ups para localhost e tente novamente."
+        );
+      }
     }
-  });
-</script>
+  </script>
 
 </body>
 </html>
+```
