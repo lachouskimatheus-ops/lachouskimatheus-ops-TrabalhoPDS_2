@@ -5,9 +5,8 @@
 }
 
 body {
-    background-color: #0b0f19; 
-    /* Fonte moderna, sem serifas, limpa de ler */
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #0b0f19;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     height: 100vh;
     color: #f3f4f6;
     overflow: hidden;
@@ -22,9 +21,17 @@ body {
     margin: 15px;
     position: relative;
     border-radius: 70px;
-    background: radial-gradient(circle at center, #115e3b 0%, #062417 70%, #020c08 100%);
-    border: 12px solid #0a3a22; 
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.6);
+    background:
+        radial-gradient(
+            circle at center,
+            #115e3b 0%,
+            #062417 70%,
+            #020c08 100%
+        );
+    border: 12px solid #0a3a22;
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.8),
+        inset 0 0 60px rgba(0, 0, 0, 0.6);
 }
 
 .area-oponente {
@@ -37,6 +44,7 @@ body {
 
 .area-oponente h2,
 .monte-area h3,
+.vira-area h3,
 .descarte-area h3,
 .titulo-mao {
     color: rgba(255, 255, 255, 1);
@@ -44,6 +52,7 @@ body {
     letter-spacing: 5px;
     text-transform: uppercase;
     margin-bottom: 12px;
+    text-align: center;
 }
 
 .mao-oponente {
@@ -55,7 +64,12 @@ body {
     width: 58px;
     height: 88px;
     border-radius: 7px;
-    background: repeating-conic-gradient(#005be0 0% 25%, #002f90 0% 50%) 50% / 16px 16px;
+    background:
+        repeating-conic-gradient(
+            #005be0 0% 25%,
+            #002f90 0% 50%
+        )
+        50% / 16px 16px;
     border: 3px solid #e8e8e8;
     box-shadow: 0 8px 12px rgba(0, 0, 0, 0.55);
 }
@@ -65,14 +79,24 @@ body {
     top: 39%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 700px;
-    height: 260px;
+    width: 850px;
+    height: 270px;
+    padding: 25px 45px;
     border-radius: 100px;
     background: rgba(0, 19, 13, 0.45);
     display: flex;
     justify-content: center;
+    align-items: flex-start;
+    gap: 70px;
+}
+
+.monte-area,
+.vira-area,
+.descarte-area {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 80px;
+    position: relative;
 }
 
 .baralho-visual {
@@ -86,26 +110,57 @@ body {
     height: 140px;
     position: absolute;
     border-radius: 9px;
-    background: repeating-conic-gradient(#005be0 0% 25%, #002f90 0% 50%) 50% / 18px 18px;
+    background:
+        repeating-conic-gradient(
+            #005be0 0% 25%,
+            #002f90 0% 50%
+        )
+        50% / 18px 18px;
     border: 4px solid #ededed;
     box-shadow: 0 10px 18px rgba(0, 0, 0, 0.6);
 }
 
+.area-vira,
 .area-descarte {
     width: 115px;
     height: 155px;
-    border: 2px solid #20a859;
     border-radius: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+.area-vira {
+    border: 2px solid #d4a72c;
+    background: rgba(212, 167, 44, 0.05);
+    box-shadow:
+        inset 0 0 18px rgba(212, 167, 44, 0.08),
+        0 0 12px rgba(212, 167, 44, 0.08);
+}
+
+.area-descarte {
+    border: 2px solid #20a859;
+    background: rgba(32, 168, 89, 0.04);
+}
+
+.texto-coringa {
+    margin-top: 8px;
+    max-width: 150px;
+    color: #d9e0ec;
+    font-size: 12px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+#carta-coringa {
+    color: #f0c040;
+}
+
 .carta {
     width: 88px;
     height: 128px;
     background: #fffdf7;
-    color: #111;
+    color: #111111;
     border-radius: 10px;
     border: 2px solid #eeeeee;
     display: flex;
@@ -115,11 +170,19 @@ body {
     font-weight: bold;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
     cursor: pointer;
-    transition: 0.15s;
+    transition:
+        transform 0.15s,
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .carta:hover {
     transform: translateY(-12px);
+}
+
+.area-vira .carta:hover,
+.area-descarte .carta:hover {
+    transform: none;
 }
 
 .carta-vazia {
@@ -127,15 +190,17 @@ body {
     border: none;
     color: transparent;
     box-shadow: none;
+    cursor: default;
 }
 
 .acoes-jogo {
     position: absolute;
-    top: calc(43% + 160px);
+    top: calc(39% + 165px);
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     gap: 25px;
+    z-index: 5;
 }
 
 .acoes-jogo button {
@@ -144,17 +209,29 @@ body {
     border-radius: 15px;
     background: rgba(4, 26, 20, 0.65);
     border: 1px solid rgba(40, 220, 120, 0.45);
-    color: white;
+    color: #ffffff;
     font-weight: bold;
     letter-spacing: 1px;
     cursor: pointer;
-    box-shadow: inset 0 0 18px rgba(0, 255, 120, 0.08);
+    box-shadow:
+        inset 0 0 18px rgba(0, 255, 120, 0.08);
+    transition:
+        transform 0.15s,
+        border-color 0.15s,
+        color 0.15s,
+        opacity 0.15s;
 }
 
-.acoes-jogo button:hover {
+.acoes-jogo button:hover:not(:disabled) {
     border-color: #32e97d;
     color: #43ff8d;
     transform: translateY(-2px);
+}
+
+.acoes-jogo button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .area-jogador-local {
@@ -179,13 +256,21 @@ body {
 .mao-jogador .carta {
     background: rgba(0, 20, 13, 0.25);
     border: 2px solid #20a859;
-    color: white;
+    color: #ffffff;
+}
+
+.mao-jogador .carta.selecionada {
+    transform: translateY(-18px);
+    border-color: #f0c040;
+    box-shadow:
+        0 0 18px rgba(240, 192, 64, 0.55),
+        0 8px 18px rgba(0, 0, 0, 0.45);
 }
 
 .status-box {
     min-width: 450px;
-    height: 58px;
-    padding: 0 35px;
+    min-height: 58px;
+    padding: 10px 35px;
     border-radius: 999px;
     background: #101827;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -213,7 +298,11 @@ body {
 }
 
 .info-ajuda {
-    display: none;
+    display: block;
+    color: #aab4c3;
+    font-size: 13px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+    padding-left: 25px;
 }
 
 .modal-overlay {
@@ -223,6 +312,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 100;
 }
 
 .modal-oculto {
@@ -231,8 +321,34 @@ body {
 
 .modal-conteudo {
     background: #101827;
-    color: white;
+    color: #ffffff;
     padding: 30px 45px;
     border-radius: 18px;
     border: 1px solid #20a859;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+    text-align: center;
+}
+
+@media (max-width: 1050px) {
+    .centro-da-mesa {
+        width: 760px;
+        gap: 45px;
+    }
+
+    .acoes-jogo {
+        gap: 12px;
+    }
+
+    .acoes-jogo button {
+        width: 145px;
+    }
+
+    .mao-oponente {
+        gap: 5px;
+    }
+
+    .carta-verso {
+        width: 48px;
+        height: 73px;
+    }
 }

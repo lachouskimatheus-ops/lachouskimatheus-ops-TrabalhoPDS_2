@@ -6,7 +6,7 @@
 #include <crow_all.h>
 
 #include "coreAPI/SalaBase.hpp"
-#include "pife.h"
+#include "Pife.hpp"
 
 struct ConexaoPife {
     int idJogador;
@@ -21,11 +21,13 @@ private:
 public:
     SalaPife(const std::string& idSala, int maxJogadores);
 
-    int adicionarJogador(crow::websocket::connection* conn);
+    int adicionarJogador(crow::websocket::connection* conexao);
 
     Pife& jogo();
+    const Pife& jogo() const;
 
     std::vector<ConexaoPife>& conexoes();
+    const std::vector<ConexaoPife>& conexoes() const;
 };
 
 #endif

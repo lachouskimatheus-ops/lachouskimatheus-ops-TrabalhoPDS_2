@@ -35,6 +35,7 @@ public:
     void inserirCarta(const Carta& c);
     Carta retirarCarta();
     int tamanho() const;
+    void adicionarCarta(const Carta& carta);
     bool estaVazio() const;
     void limpar();
 };

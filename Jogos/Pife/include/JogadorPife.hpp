@@ -1,29 +1,23 @@
-#ifndef JOGADORPIFE_H
-#define JOGADORPIFE_H
+#ifndef JOGADOR_PIFE_HPP
+#define JOGADOR_PIFE_HPP
 
 #include "Carta.hpp"
+
 #include <vector>
-#include <string>
+
 
 class JogadorPife {
 private:
     std::vector<Carta> mao_;
-    bool podeComprarMesa_;
+    bool indiceValido(int indice) const;
 
 public:
     JogadorPife();
-
     void receberCarta(const Carta& carta);
     void organizarMao();
-
-    void bloquearCompraMesa();
-    void liberarCompraMesa();
-
-    bool podeComprarMesa() const;
-
     int tmnhMao() const;
-    Carta descartarCarta(int indice);
 
+    Carta descartarCarta(int indice);
     const std::vector<Carta>& verMao() const;
 };
 
