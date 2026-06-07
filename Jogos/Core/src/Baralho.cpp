@@ -115,8 +115,19 @@ bool Baralho::estaVazio() const {
 }
 
 void Baralho::limpar() {
-    for (int i = 0; i < (int)cartas_.size(); i++) {
-        delete cartas_[i];
+    for (Carta* carta : cartas_) {
+        delete carta;
     }
+
     cartas_.clear();
+}
+
+void Baralho::adicionarCarta(const Carta& carta) {
+    if (!carta.validacaoCarta()) {
+        return;
+    }
+
+    cartas_.push_back(
+        new Carta(carta)
+    );
 }
