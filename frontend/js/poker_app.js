@@ -38,22 +38,50 @@ function atualizarTela(estado) {
     faseAtual = estado.fase;
     cartasSelecionadas = [];
 
-    document.getElementById("mensagem").textContent = estado.mensagem || "";
+    atualizarPlacar(estado);
+    atualizarMensagens(estado);
+    atualizarTrocas(estado);
 
-    document.getElementById("jogada-jogador1").textContent = estado.jogador1.jogada;
-    document.getElementById("jogada-computador").textContent = estado.computador.jogada;
-
-    if (estado.fase === "RESULTADO") {
-        document.getElementById("vencedor").textContent = `Vencedor: ${estado.vencedor}`;
-    } else {
-        document.getElementById("vencedor").textContent = "Escolha suas trocas antes de revelar o resultado.";
-    }
-
-    desenharMao("mao-jogador1", estado.jogador1.mao, true);
+    desenharMao("mao-jogador", estado.jogador.mao, true);
     desenharMao("mao-computador", estado.computador.mao, false);
+
+    document.getElementById("jogada-jogador").textContent = estado.jogador.jogada;
+    document.getElementById("jogada-computador").textContent = estado.computador.jogada;
 
     atualizarContadorSelecionadas();
     atualizarBotoes();
+}
+
+function atualizarPlacar(estado) {
+    document.getElementById("rodada").textContent = estado.rodada;
+    document.getElementById("placar-jogador").textContent = estado.placar.jogador;
+    document.getElementById("placar-computador").textContent = estado.placar.computador;
+    document.getElementById("placar-empates").textContent = estado.placar.empates;
+}
+
+function atualizarMensagens(estado) {
+    document.getElementById("mensagem").textContent = estado.mensagem || "";
+
+    if (estado.fase === "RESULTADO") {
+        if (estado.vencedor === "Jogador") {
+            document.getElementById("vencedor").textContent = "Você venceu esta rodada!";
+        } else if (estado.vencedor === "Computador") {
+            document.getElementById("vencedor").textContent = "O computador venceu esta rodada.";
+        } else {
+            document.getElementById("vencedor").textContent = "Empate na rodada.";
+        }
+    } else {
+        document.getElementById("vencedor").textContent =
+            "Escolha suas cartas e confirme a troca para revelar o resultado.";
+    }
+}
+
+function atualizarTrocas(estado) {
+    document.getElementById("tag-trocas-jogador").textContent =
+        `${estado.trocas.jogador} troca(s)`;
+
+    document.getElementById("tag-trocas-computador").textContent =
+        `${estado.trocas.computador} troca(s)`;
 }
 
 function desenharMao(idElemento, mao, clicavel) {
@@ -66,15 +94,30 @@ function desenharMao(idElemento, mao, clicavel) {
 
         if (carta.oculta) {
             div.classList.add("oculta");
-            div.textContent = "🂠";
+            div.innerHTML = `
+                <div class="verso-carta">
+                    <span>♠</span>
+                    <span>♦</span>
+                </div>
+            `;
         } else {
-            if (carta.texto.includes("Copa") || carta.texto.includes("Ouro")) {
-                div.classList.add("vermelha");
-            } else {
-                div.classList.add("preta");
-            }
+            div.classList.add(carta.cor);
 
-            div.textContent = carta.texto;
+            div.innerHTML = `
+                <div class="canto topo">
+                    <span>${carta.valor_texto}</span>
+                    <span>${carta.simbolo}</span>
+                </div>
+
+                <div class="centro">
+                    ${carta.simbolo}
+                </div>
+
+                <div class="canto base">
+                    <span>${carta.valor_texto}</span>
+                    <span>${carta.simbolo}</span>
+                </div>
+            `;
         }
 
         if (clicavel && faseAtual === "ESCOLHENDO_TROCAS") {
@@ -94,7 +137,8 @@ function alternarSelecao(indice, elemento) {
         elemento.classList.remove("selecionada");
     } else {
         if (cartasSelecionadas.length >= 3) {
-            document.getElementById("status").textContent = "Você pode trocar no máximo 3 cartas.";
+            document.getElementById("status").textContent =
+                "Você pode trocar no máximo 3 cartas.";
             return;
         }
 
@@ -112,8 +156,19 @@ function atualizarContadorSelecionadas() {
 
 function atualizarBotoes() {
     const podeTrocar = faseAtual === "ESCOLHENDO_TROCAS";
+    const resultadoRevelado = faseAtual === "RESULTADO";
 
     document.getElementById("btn-trocar").disabled = !podeTrocar;
+
+    if (podeTrocar) {
+        document.getElementById("btn-trocar").textContent = "Confirmar troca";
+        document.getElementById("btn-nova-rodada").textContent = "Reiniciar rodada";
+    }
+
+    if (resultadoRevelado) {
+        document.getElementById("btn-trocar").textContent = "Troca finalizada";
+        document.getElementById("btn-nova-rodada").textContent = "Próxima rodada";
+    }
 }
 
 document.getElementById("btn-trocar").addEventListener("click", () => {
