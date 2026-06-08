@@ -7,16 +7,47 @@ SalaBase::SalaBase(const std::string& idSala, int maxJogadores)
 }
 
 int SalaBase::adicionarJogador() {
-    if (jogadoresConectados_ >= maxJogadores_) {
+    if (estaCheia()) {
         return -1;
     }
 
-    int idJogador = jogadoresConectados_;
+    for (JogadorConectado& jogador : jogadores_) {
+        if (!jogador.conectado) {
+            jogador.conectado = true;
+            jogadoresConectados_++;
+            return jogador.idJogador;
+        }
+    }
+
+    int idJogador = static_cast<int>(jogadores_.size());
+
+    if (idJogador >= maxJogadores_) {
+        return -1;
+    }
 
     jogadores_.push_back({idJogador, true});
     jogadoresConectados_++;
 
     return idJogador;
+}
+
+bool SalaBase::removerJogador(int idJogador) {
+    for (JogadorConectado& jogador : jogadores_) {
+        if (jogador.idJogador != idJogador) {
+            continue;
+        }
+
+        if (!jogador.conectado) {
+            return false;
+        }
+
+        jogador.conectado = false;
+        jogadoresConectados_--;
+
+        return true;
+    }
+
+    return false;
 }
 
 std::string SalaBase::idSala() const {
@@ -29,6 +60,14 @@ int SalaBase::maxJogadores() const {
 
 int SalaBase::jogadoresConectados() const {
     return jogadoresConectados_;
+}
+
+bool SalaBase::estaCheia() const {
+    return jogadoresConectados_ >= maxJogadores_;
+}
+
+bool SalaBase::estaVazia() const {
+    return jogadoresConectados_ == 0;
 }
 
 const std::vector<JogadorConectado>& SalaBase::jogadores() const {

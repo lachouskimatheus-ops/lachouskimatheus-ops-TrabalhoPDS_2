@@ -1,8 +1,7 @@
 #include "multiplayer/Pife/PifeWebSocket.hpp"
 
-#include <iostream>
+#include "multiplayer/Pife/GerenciadorSalasPife.hpp"
 
-std::map<std::string, std::unique_ptr<SalaPife>> PifeWebSocket::salas_;
 std::map<crow::websocket::connection*, SessaoPife> PifeWebSocket::sessoes_;
 
 void PifeWebSocket::registrar(crow::SimpleApp& app) {
@@ -11,7 +10,8 @@ void PifeWebSocket::registrar(crow::SimpleApp& app) {
     .onopen([](crow::websocket::connection& conn) {
         crow::json::wvalue resposta;
         resposta["tipo"] = "conectado";
-        resposta["mensagem"] = "Conectado ao WebSocket do Pife";
+        resposta["mensagem"] = "Conectado ao servidor do Pife";
+
         enviarMensagem(conn, resposta);
     })
 
@@ -45,25 +45,34 @@ void PifeWebSocket::registrar(crow::SimpleApp& app) {
             return;
         }
 
+        if (tipo == "obter_estado") {
+            auto sessaoIt = sessoes_.find(&conn);
+
+            if (sessaoIt == sessoes_.end()) {
+                enviarErro(conn, "Você ainda não entrou em uma sala");
+                return;
+            }
+
+            SalaPife* sala = GerenciadorSalasPife::obterSala(sessaoIt->second.idSala);
+
+            if (sala == nullptr) {
+                enviarErro(conn, "Sala não encontrada");
+                return;
+            }
+
+            enviarEstadoJogador(sala, sessaoIt->second.idJogador, conn);
+            return;
+        }
+
         enviarErro(conn, "Tipo de mensagem não reconhecido");
     })
 
     .onclose([](crow::websocket::connection& conn, const std::string& reason, uint16_t code) {
         (void)reason;
         (void)code;
+
         removerConexao(conn);
     });
-}
-
-SalaPife* PifeWebSocket::obterOuCriarSala(const std::string& idSala, int maxJogadores) {
-    auto it = salas_.find(idSala);
-
-    if (it != salas_.end()) {
-        return it->second.get();
-    }
-
-    salas_[idSala] = std::make_unique<SalaPife>(idSala, maxJogadores);
-    return salas_[idSala].get();
 }
 
 void PifeWebSocket::entrarNaSala(crow::websocket::connection& conn, const crow::json::rvalue& dados) {
@@ -72,38 +81,39 @@ void PifeWebSocket::entrarNaSala(crow::websocket::connection& conn, const crow::
         return;
     }
 
-    std::string idSala = "sala_teste";
-    int maxJogadores = 2;
-
-    if (dados.has("sala")) {
-        idSala = dados["sala"].s();
+    if (!dados.has("sala")) {
+        enviarErro(conn, "Informe o código da sala");
+        return;
     }
 
-    if (dados.has("jogadores")) {
-        maxJogadores = dados["jogadores"].i();
-    }
+    std::string idSala = dados["sala"].s();
 
     if (idSala.empty()) {
-        enviarErro(conn, "O identificador da sala é inválido");
+        enviarErro(conn, "O código da sala é inválido");
         return;
     }
 
-    if (maxJogadores < 2 || maxJogadores > 4) {
-        enviarErro(conn, "A quantidade de jogadores deve estar entre 2 e 4");
+    SalaPife* sala = GerenciadorSalasPife::obterSala(idSala);
+
+    if (sala == nullptr) {
+        enviarErro(conn, "Sala não encontrada");
         return;
     }
 
-    SalaPife* sala = obterOuCriarSala(idSala, maxJogadores);
+    if (sala->partidaIniciada()) {
+        enviarErro(conn, "A partida desta sala já foi iniciada");
+        return;
+    }
 
-    if (sala->maxJogadores() != maxJogadores) {
-        enviarErro(conn, "A sala foi criada para outra quantidade de jogadores");
+    if (sala->estaCheia()) {
+        enviarErro(conn, "A sala está cheia");
         return;
     }
 
     int idJogador = sala->adicionarJogador(&conn);
 
     if (idJogador == -1) {
-        enviarErro(conn, "Sala cheia");
+        enviarErro(conn, "Não foi possível entrar na sala");
         return;
     }
 
@@ -115,6 +125,7 @@ void PifeWebSocket::entrarNaSala(crow::websocket::connection& conn, const crow::
     resposta["idJogador"] = idJogador;
     resposta["maxJogadores"] = sala->maxJogadores();
     resposta["jogadoresConectados"] = sala->jogadoresConectados();
+    resposta["partidaIniciada"] = sala->partidaIniciada();
 
     enviarMensagem(conn, resposta);
     enviarEstadoSala(sala);
@@ -134,16 +145,15 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
     }
 
     const SessaoPife& sessao = sessaoIt->second;
-    auto salaIt = salas_.find(sessao.idSala);
 
-    if (salaIt == salas_.end()) {
+    SalaPife* sala = GerenciadorSalasPife::obterSala(sessao.idSala);
+
+    if (sala == nullptr) {
         enviarErro(conn, "Sala não encontrada");
         return;
     }
 
-    SalaPife* sala = salaIt->second.get();
-
-    if (sala->jogadoresConectados() < sala->maxJogadores()) {
+    if (!sala->partidaIniciada()) {
         enviarErro(conn, "Aguardando os outros jogadores entrarem");
         return;
     }
@@ -157,6 +167,7 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
 
     int idJogador = sessao.idJogador;
     std::string acao = dados["acao"].s();
+
     bool sucesso = false;
     std::string mensagemErro;
 
@@ -181,6 +192,7 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
         }
 
         int indice = dados["indice"].i();
+
         sucesso = jogo.colocarNaMesa(idJogador, indice);
 
         if (!sucesso) {
@@ -221,9 +233,11 @@ void PifeWebSocket::enviarMensagem(crow::websocket::connection& conn, const crow
 
 void PifeWebSocket::enviarErro(crow::websocket::connection& conn, const std::string& mensagem) {
     crow::json::wvalue erro;
+
     erro["tipo"] = "erro";
     erro["erro"] = mensagem;
     erro["mensagem"] = mensagem;
+
     enviarMensagem(conn, erro);
 }
 
@@ -238,6 +252,7 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     }
 
     Pife& jogo = sala->jogo();
+
     crow::json::wvalue estado;
 
     estado["tipo"] = "estado_jogo";
@@ -245,7 +260,7 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     estado["meu_id"] = idJogador;
     estado["max_jogadores"] = sala->maxJogadores();
     estado["jogadores_conectados"] = sala->jogadoresConectados();
-    estado["partida_iniciada"] = sala->jogadoresConectados() >= sala->maxJogadores();
+    estado["partida_iniciada"] = sala->partidaIniciada();
     estado["jogador_atual"] = jogo.consultarIndiceJogadorAtual();
     estado["jogo_finalizado"] = jogo.jogoFinalizado();
     estado["vencedor"] = jogo.consultarVencedor();
@@ -263,14 +278,15 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
         estado["fase"] = "FINALIZADO";
     }
 
-    bool salaCompleta = sala->jogadoresConectados() >= sala->maxJogadores();
+    bool partidaDisponivel = sala->partidaIniciada() && !jogo.jogoFinalizado();
 
-    estado["pode_comprar_baralho"] = salaCompleta && jogo.podeComprarBaralho(idJogador);
-    estado["pode_comprar_mesa"] = salaCompleta && jogo.podeComprarMesa(idJogador);
-    estado["pode_descartar"] = salaCompleta && jogo.podeColocarNaMesa(idJogador);
-    estado["pode_bater"] = salaCompleta && jogo.podeBater(idJogador);
+    estado["pode_comprar_baralho"] = partidaDisponivel && jogo.podeComprarBaralho(idJogador);
+    estado["pode_comprar_mesa"] = partidaDisponivel && jogo.podeComprarMesa(idJogador);
+    estado["pode_descartar"] = partidaDisponivel && jogo.podeColocarNaMesa(idJogador);
+    estado["pode_bater"] = partidaDisponivel && jogo.podeBater(idJogador);
 
     const std::vector<Carta>& mao = jogo.consultarMao(idJogador);
+
     estado["minha_mao"] = crow::json::wvalue::list();
 
     for (std::size_t i = 0; i < mao.size(); i++) {
@@ -278,6 +294,7 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     }
 
     const std::vector<Carta>& mesa = jogo.consultarMesa();
+
     estado["mesa"] = crow::json::wvalue::list();
 
     for (std::size_t i = 0; i < mesa.size(); i++) {
@@ -285,6 +302,7 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     }
 
     const Carta& vira = jogo.consultarVira();
+
     adicionarCartaAoJson(estado["vira"], vira);
 
     estado["jogadores"] = crow::json::wvalue::list();
@@ -293,6 +311,14 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
         estado["jogadores"][i]["id"] = i;
         estado["jogadores"][i]["quantidade_cartas"] = jogo.consultarJogador(i).tmnhMao();
         estado["jogadores"][i]["sou_eu"] = i == idJogador;
+        estado["jogadores"][i]["conectado"] = false;
+
+        for (const JogadorConectado& jogador : sala->jogadores()) {
+            if (jogador.idJogador == i) {
+                estado["jogadores"][i]["conectado"] = jogador.conectado;
+                break;
+            }
+        }
     }
 
     enviarMensagem(conn, estado);
@@ -303,7 +329,7 @@ void PifeWebSocket::enviarEstadoSala(SalaPife* sala) {
         return;
     }
 
-    for (auto& conexao : sala->conexoes()) {
+    for (const ConexaoPife& conexao : sala->conexoes()) {
         if (conexao.conexao == nullptr) {
             continue;
         }
@@ -320,21 +346,20 @@ void PifeWebSocket::removerConexao(crow::websocket::connection& conn) {
     }
 
     std::string idSala = sessaoIt->second.idSala;
+
     sessoes_.erase(sessaoIt);
 
-    auto salaIt = salas_.find(idSala);
+    SalaPife* sala = GerenciadorSalasPife::obterSala(idSala);
 
-    if (salaIt == salas_.end()) {
+    if (sala == nullptr) {
         return;
     }
 
-    SalaPife* sala = salaIt->second.get();
+    sala->removerConexao(&conn);
 
-    for (auto& conexao : sala->conexoes()) {
-        if (conexao.conexao == &conn) {
-            conexao.conexao = nullptr;
-            break;
-        }
+    if (sala->estaVazia()) {
+        GerenciadorSalasPife::removerSala(idSala);
+        return;
     }
 
     enviarEstadoSala(sala);
