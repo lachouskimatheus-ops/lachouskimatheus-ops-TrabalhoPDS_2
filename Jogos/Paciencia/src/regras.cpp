@@ -1,38 +1,34 @@
 #include "Regras.h"
 
-// Verifica se a carta pode ir para a fundação
-bool Regras::podeMoverParaFundacao(const Carta& carta, const std::vector<Carta>& fundacao) {
-    if (fundacao.empty()) {
-        // Fundação vazia só aceita Ás (valor 1)
+// Verifica movimento para o tabuleiro (Colunas)
+bool Regras::podeMoverParaColuna(const Carta& origem, const Carta& destino) {
+    // Regra: Uma unidade menor E cor oposta
+    bool valorCorreto = (origem.getValor() == destino.getValor() - 1);
+    bool coresDiferentes = (ehVermelha(origem) != ehVermelha(destino));
+    
+    return valorCorreto && coresDiferentes;
+}
+
+// Verifica movimento para a fundação (Pilha do topo)
+bool Regras::podeMoverParaFundacao(const Carta& carta, const std::vector<Carta>& pilha) {
+    if (pilha.empty()) {
+        // Regra: Fundação vazia só aceita Ás (1)
         return carta.getValor() == 1;
     }
 
-    const Carta& topo = fundacao.back();
-    
-    // Deve ser do mesmo naipe e exatamente um valor acima
+    // Regra: Deve ser o mesmo naipe e uma unidade maior
+    const Carta& topo = pilha.back();
     return (carta.getNaipe() == topo.getNaipe()) && 
            (carta.getValor() == topo.getValor() + 1);
 }
 
-// Verifica se a carta pode ir para uma coluna (tableau)
-bool Regras::podeMoverParaColuna(const Carta& carta, const std::vector<Carta>& coluna) {
-    if (coluna.empty()) {
-        // Coluna vazia só aceita Rei (valor 13)
-        return carta.getValor() == 13;
-    }
-
-    const Carta& topo = coluna.back();
-
-    // Deve ser cor diferente (ex: Vermelho vs Preto) e exatamente um valor abaixo
-    return (coresDiferentes(carta, topo)) && 
-           (carta.getValor() == topo.getValor() - 1);
+// Verifica movimento para uma coluna vazia
+bool Regras::podeMoverParaColunaVazia(const Carta& carta) {
+    // Regra: Apenas Reis (13) podem ocupar espaços vazios
+    return carta.getValor() == 13;
 }
 
-// Função auxiliar privada para checar cores
-bool Regras::coresDiferentes(const Carta& c1, const Carta& c2) {
-    bool c1Vermelha = (c1.getNaipe() == Naipe::Copa || c1.getNaipe() == Naipe::Ouro);
-    bool c2Vermelha = (c2.getNaipe() == Naipe::Copa || c2.getNaipe() == Naipe::Ouro);
-    
-    // Retorna true apenas se forem cores diferentes
-    return c1Vermelha != c2Vermelha;
+// Auxiliar para verificação de cores
+bool Regras::ehVermelha(const Carta& c) {
+    return (c.getNaipe() == Naipe::Copa || c.getNaipe() == Naipe::Ouro);
 }

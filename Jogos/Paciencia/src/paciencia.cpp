@@ -1,5 +1,5 @@
-#include "paciencia.h"
-#include "regras.h"
+#include "Paciencia.h"
+#include "Regras.h"
 #include <iostream>
 #include <algorithm>
 #include <random>
