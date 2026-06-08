@@ -127,140 +127,105 @@ void Paciencia::comprarCarta() {
         descarte.push_back(c);
     }
 }
-// 10. Mover (Geral)
-// Responsável por mover cartas do descarte ou colunas para fundações ou colunas.
+// --- 10. Mover (Geral) ---
 bool Paciencia::mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoTipo, int destinoIndice) {
-    Carta* cartaParaMover = nullptr;
-    std::vector<Carta>* pilhaOrigem = nullptr;
-
-    // Define a origem
-    if (origemTipo == TipoPilha::Descarte) {
-        if (descarte.empty()) return false;
-        cartaParaMover = &descarte.back();
-        pilhaOrigem = &descarte;
-    } else if (origemTipo == TipoPilha::Coluna) {
-        if (origemIndice < 0 || origemIndice >= 7 || colunas[origemIndice].empty()) return false;
-        cartaParaMover = &colunas[origemIndice].back();
-        pilhaOrigem = &colunas[origemIndice];
+    if (!podeMover(origemTipo, origemIndice, destinoTipo, destinoIndice)) {
+        return false;
     }
-
-    if (!cartaParaMover) return false;
-
-    bool movimentoValido = false;
-    EventoPontuacao evento = EventoPontuacao::CavaParaColuna;
-
-    // Define o destino
-    if (destinoTipo == TipoPilha::Fundacao) {
-        if (destinoIndice < 0 || destinoIndice >= 4) return false;
-        
-        Naipe naipeFundacao = static_cast<Naipe>(destinoIndice); // Assumindo enum 0-3
-        if (cartaParaMover->mostraNaipe() != naipeFundacao) return false;
-
-        if (Regras::podeMoverParaFundacao(*cartaParaMover, fundacoes[destinoIndice])) {
-            movimentoValido = true;
-            evento = (origemTipo == TipoPilha::Descarte) ? EventoPontuacao::CavaParaFundacao : EventoPontuacao::ColunaParaFundacao;
-        }
-    } else if (destinoTipo == TipoPilha::Coluna) {
-        if (destinoIndice < 0 || destinoIndice >= 7) return false;
-        if (colunas[destinoIndice].empty()) {
-            if (Regras::podeMoverParaColunaVazia(*cartaParaMover)) movimentoValido = true;
-        } else {
-            if (Regras::podeMoverParaColuna(*cartaParaMover, colunas[destinoIndice].back())) movimentoValido = true;
-        }
-        evento = EventoPontuacao::CavaParaColuna;
-    }
-
-    if (movimentoValido) {
-        salvarEstadoNoHistorico();
-        Carta c = *cartaParaMover;
-        pilhaOrigem->pop_back();
-
-        if (destinoTipo == TipoPilha::Fundacao) {
-            fundacoes[destinoIndice].push_back(c);
-        } else {
-            colunas[destinoIndice].push_back(c);
-        }
-
-        if (origemTipo == TipoPilha::Coluna && !colunas[origemIndice].empty()) {
-            int tamanho = (int)colunas[origemIndice].size();
-            if (tamanho == cartasEscondidas[origemIndice] && cartasEscondidas[origemIndice] > 0) {
-                virarParaCima(origemIndice);
-            }
-        }
-        pontuacao.aplicar(evento);
-        verificarVitoria();
-        return true;
-    }
-    return false;
-}
-
-// 11. Mover Bloco
-// Move um conjunto de cartas (segmento) entre colunas.
-bool Paciencia::moverBloco(int origemColuna, int cartaIdx, int destinoColuna) {
-    if (origemColuna < 0 || origemColuna >= 7 || destinoColuna < 0 || destinoColuna >= 7) return false;
-    if (origemColuna == destinoColuna) return false;
-
-    auto& colOrigem = colunas[origemColuna];
-    auto& colDestino = colunas[destinoColuna];
-
-    if (colOrigem.empty() || cartaIdx < 0 || cartaIdx >= (int)colOrigem.size()) return false;
-    if (!cartaVisivel(origemColuna, cartaIdx)) return false;
-
-    const Carta& baseBloco = colOrigem[cartaIdx];
-    bool movimentoValido = false;
-
-    if (colDestino.empty()) {
-        if (Regras::podeMoverParaColunaVazia(baseBloco)) movimentoValido = true;
-    } else {
-        if (Regras::podeMoverParaColuna(baseBloco, colDestino.back())) movimentoValido = true;
-    }
-
-    if (!movimentoValido) return false;
 
     salvarEstadoNoHistorico();
-    
-    // Transferência do bloco
-    for (size_t i = cartaIdx; i < colOrigem.size(); ++i) {
-        colDestino.push_back(colOrigem[i]);
-    }
-    colOrigem.erase(colOrigem.begin() + cartaIdx, colOrigem.end());
-
-    if (!colOrigem.empty() && (int)colOrigem.size() == cartasEscondidas[origemColuna] && cartasEscondidas[origemColuna] > 0) {
-        virarParaCima(origemColuna);
-    }
-
-    pontuacao.aplicar(EventoPontuacao::CavaParaColuna);
+    executarMovimento(origemTipo, origemIndice, destinoTipo, destinoIndice);
     verificarVitoria();
     return true;
 }
 
-// 12. Mover da Fundação
-// Permite retirar uma carta de uma fundação caso a jogada precise ser revista.
-bool Paciencia::moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int destinoIndice) {
-    if (fundacaoIndice < 0 || fundacaoIndice >= 4 || destinoTipo != TipoPilha::Coluna || destinoIndice < 0 || destinoIndice >= 7) return false;
-    
-    auto& fundacaoOrigem = fundacoes[fundacaoIndice];
-    auto& colDestino = colunas[destinoIndice];
-
-    if (fundacaoOrigem.empty()) return false;
-
-    const Carta& cartaParaMover = fundacaoOrigem.back();
-    bool movimentoValido = false;
-
-    if (colDestino.empty()) {
-        if (Regras::podeMoverParaColunaVazia(cartaParaMover)) movimentoValido = true;
-    } else {
-        if (Regras::podeMoverParaColuna(cartaParaMover, colDestino.back())) movimentoValido = true;
+// --- 11. Mover Bloco ---
+bool Paciencia::moverBloco(int origemColuna, int cartaIdx, int destinoColuna) {
+    if (!podeMoverBloco(origemColuna, cartaIdx, destinoColuna)) {
+        return false;
     }
 
-    if (!movimentoValido) return false;
+    salvarEstadoNoHistorico();
+    executarMovimentoBloco(origemColuna, cartaIdx, destinoColuna);
+    verificarVitoria();
+    return true;
+}
+
+// --- 12. Mover da Fundação ---
+bool Paciencia::moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int destinoIndice) {
+    // Validação específica: mover da fundação só vai para coluna
+    if (destinoTipo != TipoPilha::Coluna || !podeMoverDaFundacao(fundacaoIndice, destinoIndice)) {
+        return false;
+    }
 
     salvarEstadoNoHistorico();
-    colDestino.push_back(cartaParaMover);
-    fundacaoOrigem.pop_back();
-
-    pontuacao.aplicar(EventoPontuacao::CavaParaColuna);
+    executarMovimentoDaFundacao(fundacaoIndice, destinoIndice);
     return true;
+}
+
+// ==============================================================================
+// LÓGICA PRIVADA: BLOCOS E FUNDAÇÃO
+// ==============================================================================
+
+bool Paciencia::podeMoverBloco(int origemCol, int cartaIdx, int destinoCol) const {
+    if (origemCol < 0 || origemCol >= 7 || destinoCol < 0 || destinoCol >= 7) return false;
+    if (origemCol == destinoCol) return false;
+    if (colunas[origemCol].empty() || cartaIdx < 0 || cartaIdx >= (int)colunas[origemCol].size()) return false;
+    if (!cartaVisivel(origemCol, cartaIdx)) return false;
+
+    const Carta& baseBloco = colunas[origemCol][cartaIdx];
+    
+    if (colunas[destinoCol].empty()) {
+        return Regras::podeMoverParaColunaVazia(baseBloco);
+    } else {
+        return Regras::podeMoverParaColuna(baseBloco, colunas[destinoCol].back());
+    }
+}
+
+void Paciencia::executarMovimentoBloco(int origemCol, int cartaIdx, int destinoCol) {
+    auto& colOrigem = colunas[origemCol];
+    auto& colDestino = colunas[destinoCol];
+
+    // Transfere o bloco
+    colDestino.insert(colDestino.end(), colOrigem.begin() + cartaIdx, colOrigem.end());
+    colOrigem.erase(colOrigem.begin() + cartaIdx, colOrigem.end());
+
+    // Se liberou cartas escondidas, vira a nova carta do topo
+    if (!colOrigem.empty() && (int)colOrigem.size() == cartasEscondidas[origemCol] && cartasEscondidas[origemCol] > 0) {
+        virarParaCima(origemCol);
+    }
+
+    pontuacao.aplicar(EventoPontuacao::ColunaParaColuna);
+    // Nota: O evento exato depende do seu sistema de pontuação (ex: mover bloco pode ter pontuação diferente)
+}
+
+bool Paciencia::podeMoverDaFundacao(int fundacaoIdx, int destinoCol) const {
+    if (fundacaoIdx < 0 || fundacaoIdx >= 4 || destinoCol < 0 || destinoCol >= 7) return false;
+    if (fundacoes[fundacaoIdx].empty()) return false;
+
+    const Carta& cartaParaMover = fundacoes[fundacaoIdx].back();
+    
+    if (colunas[destinoCol].empty()) {
+        return Regras::podeMoverParaColunaVazia(cartaParaMover);
+    } else {
+        return Regras::podeMoverParaColuna(cartaParaMover, colunas[destinoCol].back());
+    }
+}
+
+void Paciencia::executarMovimentoDaFundacao(int fundacaoIdx, int destinoCol) {
+    Carta c = fundacoes[fundacaoIdx].back();
+    fundacoes[fundacaoIdx].pop_back();
+    colunas[destinoCol].push_back(c);
+
+    pontuacao.aplicar(EventoPontuacao::FundacaoParaColuna);
+}
+
+EventoPontuacao Paciencia::definirEvento(TipoPilha origem, TipoPilha destino) const {
+    if (origem == TipoPilha::Descarte && destino == TipoPilha::Fundacao) return EventoPontuacao::CavaParaFundacao;
+    if (origem == TipoPilha::Coluna && destino == TipoPilha::Fundacao) return EventoPontuacao::ColunaParaFundacao;
+    if (origem == TipoPilha::Descarte && destino == TipoPilha::Coluna) return EventoPontuacao::CavaParaColuna;
+    if (origem == TipoPilha::Coluna && destino == TipoPilha::Coluna) return EventoPontuacao::ColunaParaColuna;
+    return EventoPontuacao::CavaParaColuna; // Default
 }
 
 // 13. Verificar Vitória

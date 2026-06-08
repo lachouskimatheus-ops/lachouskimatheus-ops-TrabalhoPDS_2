@@ -53,11 +53,26 @@ private:
     // Métodos utilitários privados
     void salvarEstadoNoHistorico();
     void restaurarEstadoDoHistorico();
-    
+
     // Métodos auxiliares para organizar a listagem de jogadas
     void coletarJogadasDescarte(std::vector<JogadaSimulada>& jogadas) const;
     void coletarJogadasColunas(std::vector<JogadaSimulada>& jogadas) const;
     void coletarJogadasFundacao(std::vector<JogadaSimulada>& jogadas) const;
+
+  private:
+    // Auxiliares de validação (retornam true se o movimento é permitido)
+    bool podeMover(TipoPilha origemTipo, int origemIdx, TipoPilha destinoTipo, int destinoIdx) const;
+    bool podeMoverBloco(int origemCol, int cartaIdx, int destinoCol) const;
+    bool podeMoverDaFundacao(int fundacaoIdx, int destinoCol) const;
+
+    // Auxiliares de execução (realizam a alteração do estado)
+    void executarMovimento(TipoPilha origemTipo, int origemIdx, TipoPilha destinoTipo, int destinoIdx);
+    void executarMovimentoBloco(int origemCol, int cartaIdx, int destinoCol);
+    void executarMovimentoDaFundacao(int fundacaoIdx, int destinoCol);
+
+    // Auxiliar para pontuação
+    EventoPontuacao definirEvento(TipoPilha origem, TipoPilha destino) const;
+
 public:
     Paciencia();
     ~Paciencia();
