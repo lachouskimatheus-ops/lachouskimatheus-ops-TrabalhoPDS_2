@@ -78,8 +78,11 @@ int main() {
                 try {
                     auto msg = json::parse(data);
                     std::string acao = msg["acao"];
+                    bool precisaBroadcast = true; // Flag para controlar o envio
 
                     if (acao == "OBTER_ESTADO_ATUAL") {
+                        // Apenas leitura, envia e não precisa rodar a lógica de broadcast do final
+                        precisaBroadcast = false; 
                         broadcast(estadoParaJson(jogo).dump());
                     } 
                     else if (acao == "COMPRAR_CARTA") {
@@ -92,21 +95,16 @@ int main() {
                         jogo.gerarJogoReversivel();
                     }
                     else if (acao == "COMPLETAR_AUTOMATICAMENTE") {
-                        // Certifique-se de que sua classe Paciencia tenha este método implementado
                         jogo.completarAutomaticamente();
                     }
                     else if (acao == "MOVER") {
-                        std::string origemTipoStr = msg["origem_tipo"];
-                        std::string destinoTipoStr = msg["destino_tipo"];
-                        
                         auto toTipo = [](std::string s) {
                             if (s == "coluna") return TipoPilha::Coluna;
                             if (s == "descarte") return TipoPilha::Descarte;
                             return TipoPilha::Fundacao;
                         };
-
-                        jogo.mover(toTipo(origemTipoStr), (int)msg["origem_indice"], 
-                                   toTipo(destinoTipoStr), (int)msg["destino_indice"]);
+                        jogo.mover(toTipo(msg["origem_tipo"]), (int)msg["origem_indice"], 
+                                toTipo(msg["destino_tipo"]), (int)msg["destino_indice"]);
                     }
                     else if (acao == "MOVER_BLOCO") {
                         jogo.moverBloco((int)msg["origem_coluna"], (int)msg["carta_idx"], (int)msg["destino_coluna"]);
@@ -114,30 +112,18 @@ int main() {
                     else if (acao == "MOVER_DA_FUNDACAO") {
                         jogo.moverDaFundacao((int)msg["fundacao_indice"], TipoPilha::Coluna, (int)msg["destino_indice"]);
                     }
-
-
                     else if (acao == "MOVER_UMA_PARA_FUNDACAO") {
-                        // 1. Tenta mover. Assumindo que seu método retorna bool.
-                        // Se seu método for void, você precisará adaptá-lo para retornar se algo foi movido.
-                        bool moveu = jogo.moverUmaParaFundacao(); 
-                        
-                        // 2. Prepara o JSON do estado atual
-                        json resposta = estadoParaJson(jogo);
-                        
-                        // 3. Adiciona o campo que o JavaScript vai checar
-                        resposta["movimento_realizado"] = moveu;
-                        
-                        // 4. Envia a resposta específica para quem pediu (ou broadcast)
-                        broadcast(resposta.dump());
-                        
+                        // Logica específica mantida, mas agora usamos o broadcast centralizado
+                        bool moveu = jogo.moverUmaParaFundacao();
                         std::cout << "Movimento automatico: " << (moveu ? "Sucesso" : "Falhou") << std::endl;
+                        // Se quiser avisar o front se moveu ou não, pode adicionar um campo extra no JSON final
                     }
 
-
-
-                        json respostaFinal = estadoParaJson(jogo);
-                        respostaFinal["movimento_realizado"] = true; // Para movimentos manuais, sempre é true
-                        broadcast(respostaFinal.dump());
+                    // --- BROADCAST CENTRALIZADO ---
+                    // Se a ação não foi um "OBTER_ESTADO" (que já broadcastou), enviamos o estado final aqui
+                    if (precisaBroadcast) {
+                        broadcast(estadoParaJson(jogo).dump());
+                    }
 
                 } catch (const std::exception& e) {
                     std::cerr << "Erro no processamento: " << e.what() << std::endl;
