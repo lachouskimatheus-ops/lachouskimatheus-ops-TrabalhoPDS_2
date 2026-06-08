@@ -44,18 +44,25 @@ void Paciencia::iniciarJogo() {
     vitoria = false;
 }
 
-void Paciencia::virarParaCima(int colunaIndice) {
-    if (cartasEscondidas[colunaIndice] > 0 && colunas[colunaIndice].size() > 0) {
-        cartasEscondidas[colunaIndice]--;
+// 4. Virar para Cima
+// Método defensivo: valida os índices antes de manipular o estado.
+void Paciencia::virarParaCima(int coluna) {
+    if (coluna < 0 || coluna >= 7) return; 
+    
+    if (cartasEscondidas[coluna] > 0 && !colunas[coluna].empty()) {
+        cartasEscondidas[coluna]--;
         pontuacao.aplicar(EventoPontuacao::VirarCarta);
     }
 }
 
+// 5. Carta Visível (Consulta se a carta está aberta)
 bool Paciencia::cartaVisivel(int coluna, int linha) const {
+    // Defensivo: Verifica limites antes de acessar
+    if (coluna < 0 || coluna >= 7) return false;
     return (linha >= cartasEscondidas[coluna]);
 }
 
-void Paciencia::salvarJogada() {
+void Paciencia::salvarEstadoNoHistorico() {
     EstadoJogo estado;
     estado.colunas = colunas;
     estado.fundacoes = fundacoes;
@@ -63,43 +70,59 @@ void Paciencia::salvarJogada() {
     estado.cava = cava;
     estado.pontos = pontuacao.getPontos();
     estado.passadasCava = pontuacao.getPassadasCava();
-    for (int i = 0; i < 7; i++) estado.cartasEscondidas[i] = cartasEscondidas[i];
-
+    
+    for (int i = 0; i < 7; ++i) {
+        estado.cartasEscondidas[i] = cartasEscondidas[i];
+    }
+    
     historico.push(estado);
 }
 
+
 bool Paciencia::desfazer() {
     if (historico.empty()) return false;
-    
+
     EstadoJogo anterior = historico.top();
     historico.pop();
-    
+
     colunas = anterior.colunas;
     fundacoes = anterior.fundacoes;
     descarte = anterior.descarte;
     cava = anterior.cava;
+    
+    // Restaurando pontuação
     pontuacao.setPontos(anterior.pontos);
     pontuacao.setPassadasCava(anterior.passadasCava);
-    for (int i = 0; i < 7; i++) cartasEscondidas[i] = anterior.cartasEscondidas[i];
+    
+    // Restaurando visibilidade
+    for (int i = 0; i < 7; ++i) {
+        cartasEscondidas[i] = anterior.cartasEscondidas[i];
+    }
 
     return true;
 }
 
+// 8. Comprar Carta
+// Gerencia a compra da cava, a reciclagem do descarte quando a cava esvazia
+// e a pontuação associada.
 void Paciencia::comprarCarta() {
-    salvarJogada();
+    salvarJogada(); // Utilizando o wrapper que chama o salvamento interno
     
     if (cava.estaVazio()) {
         if (descarte.empty()) return;
         
+        // Reciclagem: reverte o descarte para inserir novamente na cava
         std::reverse(descarte.begin(), descarte.end());
         for(const auto& c : descarte) {
             cava.inserirCarta(c);
         }
         descarte.clear();
 
+        // Regra de pontuação: penalização ou contagem de passadas
         pontuacao.setPassadasCava(pontuacao.getPassadasCava() + 1);
         pontuacao.aplicar(EventoPontuacao::PassarBaralho);
     } else {
+        // Movimentação normal
         Carta c = cava.retirarCarta();
         descarte.push_back(c);
     }
@@ -612,9 +635,13 @@ void Paciencia::gerarJogoReversivel() {
 }
 
 
+// 9. Get Pontuação
+// Retorna a pontuação atual. Mantive o nome original que você utilizava.
 int Paciencia::getPontuacao() const {
     return pontuacao.getPontos();
 }
+
+
 void Paciencia::completarAutomaticamente() {
     bool movimentoPossivel = true;
 
