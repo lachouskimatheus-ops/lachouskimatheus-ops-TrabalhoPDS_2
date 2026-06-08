@@ -1,31 +1,39 @@
-#include "regras.h"
 #include "paciencia.h"
+#include "regras.h"
 #include <iostream>
 #include <algorithm>
 #include <random>
-using std::cout;
-using std::vector; // Garantindo o escopo do vector se não estiver no header
+#include <stdexcept>
 
+// 1. Construtor
 Paciencia::Paciencia() : vitoria(false), pontuacao() {
     iniciarJogo();
 }
 
-Paciencia::~Paciencia() {}
+// 2. Destrutor
+Paciencia::~Paciencia() {
+    // Como utilizamos std::vector e std::stack, a memória é liberada automaticamente.
+    // Não é necessária limpeza manual, garantindo segurança de memória.
+}
 
+// 3. Iniciar Jogo (Reset Total)
 void Paciencia::iniciarJogo() {
-    // Limpar estados anteriores
-    colunas.assign(7, vector<Carta>());
-    fundacoes.assign(4, vector<Carta>());
+    // Limpar estados anteriores com segurança
+    colunas.assign(7, std::vector<Carta>());
+    fundacoes.assign(4, std::vector<Carta>());
     descarte.clear();
+    
+    // Esvaziar histórico
     while(!historico.empty()) historico.pop();
     
+    // Reiniciar baralho
     cava = Baralho();
     cava.embaralhar();
     
-    // Distribuir cartas nas colunas 
+    // Distribuir cartas nas colunas (lógica original preservada e otimizada)
     for (int i = 0; i < 7; ++i) {
         colunas[i].clear();
-        cartasEscondidas[i] = i;
+        cartasEscondidas[i] = i; // Define quantas cartas estão de costas
         for (int j = 0; j <= i; ++j) {
             Carta c = cava.retirarCarta();
             colunas[i].push_back(c);
