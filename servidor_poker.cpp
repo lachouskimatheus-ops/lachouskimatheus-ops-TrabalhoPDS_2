@@ -8,11 +8,47 @@
 #include <iostream>
 #include <mutex>
 #include <set>
+#include <map>
 #include <string>
 #include <vector>
 #include <algorithm>
 
 using json = nlohmann::json;
+
+// ===============================
+// VARIÁVEIS GLOBAIS DA MESA
+// ===============================
+
+Baralho baralhoMesa;
+
+Poker jogadores[2];
+
+std::string modoAtual = "COMPUTADOR";
+std::string faseGlobal = "ESCOLHENDO_TROCAS";
+
+int rodada = 1;
+
+int pontosJogador1 = 0;
+int pontosJogador2 = 0;
+int empates = 0;
+
+int ultimaTroca[2] = {0, 0};
+
+bool confirmouTroca[2] = {false, false};
+
+std::vector<int> indicesTroca[2];
+
+crow::websocket::connection* conexaoJogador1 = nullptr;
+crow::websocket::connection* conexaoJogador2 = nullptr;
+
+std::map<crow::websocket::connection*, int> idPorConexao;
+std::set<crow::websocket::connection*> conexoes;
+
+std::mutex mtx;
+
+// ===============================
+// FUNÇÕES AUXILIARES DE CARTA
+// ===============================
 
 int valorNumericoServidor(Valor valor) {
     switch (valor) {
@@ -91,22 +127,80 @@ json maoParaJson(const Poker& jogador, bool revelar) {
     return maoJson;
 }
 
-std::string vencedorParaTexto(int resultado) {
-    if (resultado == 1) return "Jogador";
-    if (resultado == -1) return "Computador";
-    return "Empate";
+// ===============================
+// FUNÇÕES DE JOGO
+// ===============================
+
+void resetarPlacar() {
+    rodada = 1;
+    pontosJogador1 = 0;
+    pontosJogador2 = 0;
+    empates = 0;
+}
+
+void limparConfirmacoes() {
+    confirmouTroca[0] = false;
+    confirmouTroca[1] = false;
+
+    indicesTroca[0].clear();
+    indicesTroca[1].clear();
+
+    ultimaTroca[0] = 0;
+    ultimaTroca[1] = 0;
+}
+
+void distribuirCartas() {
+    baralhoMesa.limpar();
+
+    Baralho novoBaralho;
+    novoBaralho.embaralhar();
+    baralhoMesa = novoBaralho;
+
+    jogadores[0].limparMao();
+    jogadores[1].limparMao();
+
+    for (int i = 0; i < 5; i++) {
+        jogadores[0].receberCarta(baralhoMesa.retirarCarta());
+        jogadores[1].receberCarta(baralhoMesa.retirarCarta());
+    }
+
+    limparConfirmacoes();
+}
+
+void novaRodadaComputador(bool incrementarRodada) {
+    if (incrementarRodada) {
+        rodada++;
+    }
+
+    distribuirCartas();
+
+    modoAtual = "COMPUTADOR";
+    faseGlobal = "ESCOLHENDO_TROCAS";
+}
+
+void novaRodadaMultiplayer(bool incrementarRodada) {
+    if (incrementarRodada) {
+        rodada++;
+    }
+
+    distribuirCartas();
+
+    modoAtual = "MULTIPLAYER_2";
+    faseGlobal = "ESCOLHENDO_TROCAS";
 }
 
 std::vector<int> escolherTrocasComputador(const Poker& computador) {
     std::vector<int> indices;
+
     int categoria = computador.avaliarMao();
 
-    // Mãos fortes: computador mantém tudo.
+    // Se já possui uma mão forte, mantém todas as cartas.
     if (categoria >= 4) {
         return indices;
     }
 
     const std::vector<Carta>& mao = computador.verMao();
+
     std::vector<int> frequencia(15, 0);
 
     for (const auto& carta : mao) {
@@ -162,99 +256,387 @@ std::vector<int> lerIndicesTroca(const json& msg) {
 
     for (const auto& item : msg["indices"]) {
         if (item.is_number_integer()) {
-            indices.push_back(item.get<int>());
+            int valor = item.get<int>();
+
+            if (valor >= 0 && valor < 5) {
+                if (std::find(indices.begin(), indices.end(), valor) == indices.end()) {
+                    indices.push_back(valor);
+                }
+            }
         }
+    }
+
+    if (indices.size() > 3) {
+        indices.resize(3);
     }
 
     return indices;
 }
 
-json estadoParaJson(
-    Poker& jogador,
-    Poker& computador,
-    const std::string& fase,
-    int rodada,
-    int pontosJogador,
-    int pontosComputador,
-    int empates,
-    int ultimaTrocaJogador,
-    int ultimaTrocaComputador
-) {
+// ===============================
+// CONTROLE DE MULTIPLAYER
+// ===============================
+
+int obterIdJogador(crow::websocket::connection* conn) {
+    if (idPorConexao.find(conn) != idPorConexao.end()) {
+        return idPorConexao[conn];
+    }
+
+    return 0;
+}
+
+void resetarConexoesMultiplayer() {
+    conexaoJogador1 = nullptr;
+    conexaoJogador2 = nullptr;
+    idPorConexao.clear();
+}
+
+int registrarJogadorMultiplayer(crow::websocket::connection* conn) {
+    if (idPorConexao.find(conn) != idPorConexao.end()) {
+        return idPorConexao[conn];
+    }
+
+    if (conexaoJogador1 == nullptr) {
+        conexaoJogador1 = conn;
+        idPorConexao[conn] = 1;
+        return 1;
+    }
+
+    if (conexaoJogador2 == nullptr) {
+        conexaoJogador2 = conn;
+        idPorConexao[conn] = 2;
+        return 2;
+    }
+
+    // 0 significa espectador/mesa cheia.
+    idPorConexao[conn] = 0;
+    return 0;
+}
+
+bool multiplayerCompleto() {
+    return conexaoJogador1 != nullptr && conexaoJogador2 != nullptr;
+}
+
+void removerConexao(crow::websocket::connection* conn) {
+    if (conexaoJogador1 == conn) {
+        conexaoJogador1 = nullptr;
+    }
+
+    if (conexaoJogador2 == conn) {
+        conexaoJogador2 = nullptr;
+    }
+
+    idPorConexao.erase(conn);
+
+    if (modoAtual == "MULTIPLAYER_2") {
+        faseGlobal = "AGUARDANDO_JOGADORES";
+        jogadores[0].limparMao();
+        jogadores[1].limparMao();
+        limparConfirmacoes();
+    }
+}
+
+// ===============================
+// JSON PERSONALIZADO POR CLIENTE
+// ===============================
+
+json estadoParaCliente(crow::websocket::connection* conn) {
     json estado;
 
-    bool revelarComputador = (fase == "RESULTADO");
-    int resultado = 0;
+    int id = obterIdJogador(conn);
 
-    estado["fase"] = fase;
+    int indiceEu = 0;
+    int indiceAdversario = 1;
+
+    if (modoAtual == "MULTIPLAYER_2" && id == 2) {
+        indiceEu = 1;
+        indiceAdversario = 0;
+    }
+
+    bool multiplayer = (modoAtual == "MULTIPLAYER_2");
+    bool aguardandoJogadores = (faseGlobal == "AGUARDANDO_JOGADORES");
+    bool resultadoRevelado = (faseGlobal == "RESULTADO");
+
+    std::string faseCliente = faseGlobal;
+
+    if (multiplayer &&
+        faseGlobal == "ESCOLHENDO_TROCAS" &&
+        id >= 1 &&
+        confirmouTroca[indiceEu]) {
+        faseCliente = "AGUARDANDO_OUTRO_JOGADOR";
+    }
+
+    estado["modo"] = modoAtual;
+    estado["fase"] = faseCliente;
+    estado["jogador_id"] = id;
     estado["rodada"] = rodada;
 
-    estado["placar"]["jogador"] = pontosJogador;
-    estado["placar"]["computador"] = pontosComputador;
+    estado["multiplayer"]["ativo"] = multiplayer;
+    estado["multiplayer"]["jogadores_conectados"] =
+        (conexaoJogador1 != nullptr ? 1 : 0) +
+        (conexaoJogador2 != nullptr ? 1 : 0);
+    estado["multiplayer"]["jogadores_necessarios"] =
+        multiplayer ? 2 : 1;
+
+    // Placar sempre é mostrado do ponto de vista do cliente.
+    if (multiplayer && id == 2) {
+        estado["placar"]["jogador"] = pontosJogador2;
+        estado["placar"]["computador"] = pontosJogador1;
+    } else {
+        estado["placar"]["jogador"] = pontosJogador1;
+        estado["placar"]["computador"] = pontosJogador2;
+    }
+
     estado["placar"]["empates"] = empates;
 
-    estado["trocas"]["jogador"] = ultimaTrocaJogador;
-    estado["trocas"]["computador"] = ultimaTrocaComputador;
+    estado["trocas"]["jogador"] = ultimaTroca[indiceEu];
+    estado["trocas"]["computador"] = ultimaTroca[indiceAdversario];
 
-    estado["jogador"]["mao"] = maoParaJson(jogador, true);
-    estado["jogador"]["jogada"] = jogador.nomeJogada();
-    estado["jogador"]["forca"] = jogador.avaliarMao();
+    estado["jogador"]["mao"] = maoParaJson(jogadores[indiceEu], true);
+    estado["jogador"]["jogada"] = jogadores[indiceEu].nomeJogada();
+    estado["jogador"]["forca"] = jogadores[indiceEu].avaliarMao();
 
-    estado["computador"]["mao"] = maoParaJson(computador, revelarComputador);
+    bool revelarAdversario = resultadoRevelado;
 
-    if (revelarComputador) {
-        resultado = jogador.compararCom(computador);
+    estado["computador"]["mao"] = maoParaJson(jogadores[indiceAdversario], revelarAdversario);
 
-        estado["computador"]["jogada"] = computador.nomeJogada();
-        estado["computador"]["forca"] = computador.avaliarMao();
-
-        estado["resultado"] = resultado;
-        estado["vencedor"] = vencedorParaTexto(resultado);
-
-        if (resultado == 1) {
-            estado["mensagem"] = "Você venceu a rodada!";
-        } else if (resultado == -1) {
-            estado["mensagem"] = "O computador venceu a rodada.";
-        } else {
-            estado["mensagem"] = "A rodada terminou empatada.";
-        }
+    if (revelarAdversario) {
+        estado["computador"]["jogada"] = jogadores[indiceAdversario].nomeJogada();
+        estado["computador"]["forca"] = jogadores[indiceAdversario].avaliarMao();
     } else {
         estado["computador"]["jogada"] = "Oculta";
         estado["computador"]["forca"] = -1;
+    }
 
-        estado["resultado"] = 0;
-        estado["vencedor"] = "Aguardando";
+    estado["resultado"] = 0;
+    estado["vencedor"] = "Aguardando";
+
+    if (modoAtual == "COMPUTADOR") {
+        estado["titulo_jogador"] = "Jogador";
+        estado["titulo_adversario"] = "Computador";
+    } else {
+        if (id == 1) {
+            estado["titulo_jogador"] = "Jogador 1";
+            estado["titulo_adversario"] = "Jogador 2";
+        } else if (id == 2) {
+            estado["titulo_jogador"] = "Jogador 2";
+            estado["titulo_adversario"] = "Jogador 1";
+        } else {
+            estado["titulo_jogador"] = "Espectador";
+            estado["titulo_adversario"] = "Mesa cheia";
+        }
+    }
+
+    if (aguardandoJogadores) {
+        estado["mensagem"] = "Aguardando outro jogador entrar na mesa.";
+        estado["vencedor"] = "Aguardando jogadores";
+        estado["jogador"]["jogada"] = "---";
+        estado["computador"]["jogada"] = "---";
+        return estado;
+    }
+
+    if (faseCliente == "ESCOLHENDO_TROCAS") {
         estado["mensagem"] = "Selecione até 3 cartas para trocar.";
+        estado["vencedor"] = "Escolha suas cartas e confirme a troca.";
+        return estado;
+    }
+
+    if (faseCliente == "AGUARDANDO_OUTRO_JOGADOR") {
+        estado["mensagem"] = "Você confirmou sua troca.";
+        estado["vencedor"] = "Aguardando o outro jogador confirmar.";
+        return estado;
+    }
+
+    if (resultadoRevelado) {
+        int resultadoGlobal = jogadores[0].compararCom(jogadores[1]);
+
+        bool clienteVenceu = false;
+        bool adversarioVenceu = false;
+
+        if (modoAtual == "COMPUTADOR") {
+            clienteVenceu = (resultadoGlobal == 1);
+            adversarioVenceu = (resultadoGlobal == -1);
+        } else if (id == 1) {
+            clienteVenceu = (resultadoGlobal == 1);
+            adversarioVenceu = (resultadoGlobal == -1);
+        } else if (id == 2) {
+            clienteVenceu = (resultadoGlobal == -1);
+            adversarioVenceu = (resultadoGlobal == 1);
+        }
+
+        if (clienteVenceu) {
+            estado["resultado"] = 1;
+            estado["vencedor"] = "Jogador";
+            estado["mensagem"] = "Você venceu a rodada!";
+        } else if (adversarioVenceu) {
+            estado["resultado"] = -1;
+            estado["vencedor"] = "Computador";
+            estado["mensagem"] = "O adversário venceu a rodada.";
+        } else {
+            estado["resultado"] = 0;
+            estado["vencedor"] = "Empate";
+            estado["mensagem"] = "A rodada terminou empatada.";
+        }
     }
 
     return estado;
 }
 
-void novaRodada(
-    Baralho& baralho,
-    Poker& jogador,
-    Poker& computador,
-    std::string& fase,
-    int& ultimaTrocaJogador,
-    int& ultimaTrocaComputador
-) {
-    baralho.limpar();
+void enviarEstadoPara(crow::websocket::connection* conn) {
+    if (conn != nullptr) {
+        conn->send_text(estadoParaCliente(conn).dump());
+    }
+}
 
-    Baralho novoBaralho;
-    novoBaralho.embaralhar();
-    baralho = novoBaralho;
+void broadcastEstados() {
+    std::lock_guard<std::mutex> lock(mtx);
 
-    jogador.limparMao();
-    computador.limparMao();
+    for (auto conn : conexoes) {
+        enviarEstadoPara(conn);
+    }
+}
 
-    for (int i = 0; i < 5; i++) {
-        jogador.receberCarta(baralho.retirarCarta());
-        computador.receberCarta(baralho.retirarCarta());
+// ===============================
+// AÇÕES DO SERVIDOR
+// ===============================
+
+void configurarModo(crow::websocket::connection* conn, const json& msg) {
+    std::string modo = "computador";
+    int quantidade = 1;
+
+    if (msg.contains("modo") && msg["modo"].is_string()) {
+        modo = msg["modo"];
     }
 
-    ultimaTrocaJogador = 0;
-    ultimaTrocaComputador = 0;
-    fase = "ESCOLHENDO_TROCAS";
+    if (msg.contains("quantidade_jogadores") && msg["quantidade_jogadores"].is_number_integer()) {
+        quantidade = msg["quantidade_jogadores"].get<int>();
+    }
+
+    if (modo == "computador") {
+        modoAtual = "COMPUTADOR";
+        resetarConexoesMultiplayer();
+        resetarPlacar();
+        novaRodadaComputador(false);
+        return;
+    }
+
+    if (modo == "multiplayer" && quantidade == 2) {
+        if (modoAtual != "MULTIPLAYER_2") {
+            modoAtual = "MULTIPLAYER_2";
+            resetarConexoesMultiplayer();
+            resetarPlacar();
+            limparConfirmacoes();
+            faseGlobal = "AGUARDANDO_JOGADORES";
+        }
+
+        registrarJogadorMultiplayer(conn);
+
+        if (multiplayerCompleto()) {
+            novaRodadaMultiplayer(false);
+        }
+
+        return;
+    }
+
+    // Qualquer outro modo ainda não implementado.
+    modoAtual = "COMPUTADOR";
+    resetarConexoesMultiplayer();
+    resetarPlacar();
+    novaRodadaComputador(false);
 }
+
+void processarTrocaComputador(const json& msg) {
+    if (faseGlobal != "ESCOLHENDO_TROCAS") {
+        return;
+    }
+
+    std::vector<int> indicesJogador = lerIndicesTroca(msg);
+
+    jogadores[0].trocarCartas(indicesJogador, baralhoMesa);
+    ultimaTroca[0] = (int)indicesJogador.size();
+
+    std::vector<int> indicesComputador = escolherTrocasComputador(jogadores[1]);
+
+    jogadores[1].trocarCartas(indicesComputador, baralhoMesa);
+    ultimaTroca[1] = (int)indicesComputador.size();
+
+    faseGlobal = "RESULTADO";
+
+    int resultado = jogadores[0].compararCom(jogadores[1]);
+
+    if (resultado == 1) {
+        pontosJogador1++;
+    } else if (resultado == -1) {
+        pontosJogador2++;
+    } else {
+        empates++;
+    }
+}
+
+void processarTrocaMultiplayer(crow::websocket::connection* conn, const json& msg) {
+    if (faseGlobal != "ESCOLHENDO_TROCAS") {
+        return;
+    }
+
+    int id = obterIdJogador(conn);
+
+    if (id != 1 && id != 2) {
+        return;
+    }
+
+    int indice = id - 1;
+
+    if (confirmouTroca[indice]) {
+        return;
+    }
+
+    indicesTroca[indice] = lerIndicesTroca(msg);
+    ultimaTroca[indice] = (int)indicesTroca[indice].size();
+    confirmouTroca[indice] = true;
+
+    bool todosConfirmaram = confirmouTroca[0] && confirmouTroca[1];
+
+    if (!todosConfirmaram) {
+        return;
+    }
+
+    jogadores[0].trocarCartas(indicesTroca[0], baralhoMesa);
+    jogadores[1].trocarCartas(indicesTroca[1], baralhoMesa);
+
+    faseGlobal = "RESULTADO";
+
+    int resultado = jogadores[0].compararCom(jogadores[1]);
+
+    if (resultado == 1) {
+        pontosJogador1++;
+    } else if (resultado == -1) {
+        pontosJogador2++;
+    } else {
+        empates++;
+    }
+}
+
+void novaRodadaAtual() {
+    if (modoAtual == "COMPUTADOR") {
+        novaRodadaComputador(true);
+        return;
+    }
+
+    if (modoAtual == "MULTIPLAYER_2") {
+        if (multiplayerCompleto()) {
+            novaRodadaMultiplayer(true);
+        } else {
+            faseGlobal = "AGUARDANDO_JOGADORES";
+            jogadores[0].limparMao();
+            jogadores[1].limparMao();
+            limparConfirmacoes();
+        }
+    }
+}
+
+// ===============================
+// MAIN
+// ===============================
 
 int main() {
     try {
@@ -262,53 +644,7 @@ int main() {
 
         std::cout << "Iniciando servidor do Poker..." << std::endl;
 
-        Baralho baralho;
-        Poker jogador;
-        Poker computador;
-
-        std::string fase;
-
-        int rodada = 1;
-        int pontosJogador = 0;
-        int pontosComputador = 0;
-        int empates = 0;
-
-        int ultimaTrocaJogador = 0;
-        int ultimaTrocaComputador = 0;
-
-        novaRodada(
-            baralho,
-            jogador,
-            computador,
-            fase,
-            ultimaTrocaJogador,
-            ultimaTrocaComputador
-        );
-
-        std::mutex mtx;
-        std::set<crow::websocket::connection*> conexoes;
-
-        auto montarEstado = [&]() {
-            return estadoParaJson(
-                jogador,
-                computador,
-                fase,
-                rodada,
-                pontosJogador,
-                pontosComputador,
-                empates,
-                ultimaTrocaJogador,
-                ultimaTrocaComputador
-            ).dump();
-        };
-
-        auto broadcast = [&](const std::string& msg) {
-            std::lock_guard<std::mutex> lock(mtx);
-
-            for (auto conn : conexoes) {
-                conn->send_text(msg);
-            }
-        };
+        novaRodadaComputador(false);
 
         CROW_WEBSOCKET_ROUTE(app, "/ws/poker")
             .onopen([&](crow::websocket::connection& conn) {
@@ -318,76 +654,58 @@ int main() {
                 }
 
                 std::cout << "Cliente conectado ao Poker!" << std::endl;
-                conn.send_text(montarEstado());
+                enviarEstadoPara(&conn);
             })
             .onclose([&](crow::websocket::connection& conn, const std::string&, uint16_t) {
-                std::lock_guard<std::mutex> lock(mtx);
-                conexoes.erase(&conn);
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    conexoes.erase(&conn);
+                    removerConexao(&conn);
+                }
 
                 std::cout << "Cliente desconectado do Poker!" << std::endl;
+                broadcastEstados();
             })
             .onmessage([&](crow::websocket::connection& conn, const std::string& data, bool) {
                 try {
                     auto msg = json::parse(data);
 
                     if (!msg.contains("acao")) {
-                        conn.send_text(montarEstado());
+                        enviarEstadoPara(&conn);
                         return;
                     }
 
                     std::string acao = msg["acao"];
 
+                    if (acao == "CONFIGURAR_MODO") {
+                        configurarModo(&conn, msg);
+                        broadcastEstados();
+                        return;
+                    }
+
                     if (acao == "OBTER_ESTADO_ATUAL") {
-                        conn.send_text(montarEstado());
+                        enviarEstadoPara(&conn);
                         return;
                     }
 
                     if (acao == "NOVA_RODADA" || acao == "NOVO_JOGO") {
-                        rodada++;
-
-                        novaRodada(
-                            baralho,
-                            jogador,
-                            computador,
-                            fase,
-                            ultimaTrocaJogador,
-                            ultimaTrocaComputador
-                        );
-
-                        broadcast(montarEstado());
+                        novaRodadaAtual();
+                        broadcastEstados();
                         return;
                     }
 
                     if (acao == "TROCAR_CARTAS") {
-                        if (fase == "ESCOLHENDO_TROCAS") {
-                            std::vector<int> indicesJogador = lerIndicesTroca(msg);
-
-                            jogador.trocarCartas(indicesJogador, baralho);
-                            ultimaTrocaJogador = (int)indicesJogador.size();
-
-                            std::vector<int> indicesComputador = escolherTrocasComputador(computador);
-
-                            computador.trocarCartas(indicesComputador, baralho);
-                            ultimaTrocaComputador = (int)indicesComputador.size();
-
-                            fase = "RESULTADO";
-
-                            int resultado = jogador.compararCom(computador);
-
-                            if (resultado == 1) {
-                                pontosJogador++;
-                            } else if (resultado == -1) {
-                                pontosComputador++;
-                            } else {
-                                empates++;
-                            }
+                        if (modoAtual == "COMPUTADOR") {
+                            processarTrocaComputador(msg);
+                        } else if (modoAtual == "MULTIPLAYER_2") {
+                            processarTrocaMultiplayer(&conn, msg);
                         }
 
-                        broadcast(montarEstado());
+                        broadcastEstados();
                         return;
                     }
 
-                    conn.send_text(montarEstado());
+                    enviarEstadoPara(&conn);
 
                 } catch (const std::exception& e) {
                     std::cerr << "Erro ao processar mensagem do Poker: " << e.what() << std::endl;
