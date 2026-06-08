@@ -1,92 +1,100 @@
 #ifndef PACIENCIA_H
 #define PACIENCIA_H
 
-#include <stack>
 #include <vector>
-#include "Baralho.hpp"
-#include "pontuacao.h"
+#include <stack>
+#include <string>
 #include <map>
 #include <set>
+#include "Baralho.hpp"
+#include "pontuacao.h"
 
-using std::vector;
-using std::stack;
-
-
-
-
+// Enumerações fora da classe para melhor reuso
 enum class TipoPilha {
     Coluna,
     Descarte,
     Fundacao
 };
 
-
+// Struct para representar a assinatura de uma jogada
 struct JogadaSimulada {
-    std::string tipoAcao; // "MOVER", "MOVER_BLOCO", "MOVER_DA_FUNDACAO", "COMPRAR"
-    
-    // Dados para MOVER normal ou MOVER_DA_FUNDACAO
+    std::string tipoAcao;
     TipoPilha origemTipo;
     int origemIdx;
     TipoPilha destinoTipo;
     int destinoIdx;
-    
-    // Dados extras para MOVER_BLOCO
     int cartaIdx; 
 };
 
 class Paciencia {
 private:
+    // Estado interno 
     struct EstadoJogo {
-        vector<vector<Carta>> colunas;
-        vector<vector<Carta>> fundacoes;
-        vector<Carta> descarte;
+        std::vector<std::vector<Carta>> colunas;
+        std::vector<std::vector<Carta>> fundacoes;
+        std::vector<Carta> descarte;
         Baralho cava;
-        int pontos;        // snapshot da pontuação
-        int passadasCava;  // snapshot das passadas
+        int pontos;
+        int passadasCava;
         int cartasEscondidas[7];
     };
-    
-    int cartasEscondidas[7];
+
+    // Membros da classe
     bool vitoria;
-    vector<vector<Carta>> colunas;
+    std::vector<std::vector<Carta>> colunas;
+    std::vector<std::vector<Carta>> fundacoes;
+    std::vector<Carta> descarte;
     Baralho cava;
-    vector<Carta> descarte;
-    vector<vector<Carta>> fundacoes;
-    stack<EstadoJogo> historico;
-    Pontuacao pontuacao; 
+    int cartasEscondidas[7];
+    
+    std::stack<EstadoJogo> historico;
+    Pontuacao pontuacao;
+
+    // Métodos utilitários privados
+    void salvarEstadoNoHistorico();
+    void restaurarEstadoDoHistorico();
 
 public:
     Paciencia();
-    bool existeJogadaPossivel();
-    bool verificarVitoria();
-    bool cartaVisivel(int colunaIdx, int cartaIdx) const;
+    ~Paciencia();
+
+    // --- Ciclo de Vida do Jogo ---
+    void iniciarJogo();
+    void gerarJogoReversivel();
+    void comprarCarta();
+    bool desfazer();
+    
+    // --- Comandos de Movimento ---
     bool mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoTipo, int destinoIndice);
     bool moverBloco(int origemColuna, int cartaIdx, int destinoColuna);
     bool moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int destinoIndice);
-    bool desfazer();
-    void salvarJogada();
-    void iniciarJogo();
-    void imprimirJogo();
-    void comprarCarta();
-    int getPontuacao() const;
+    bool moverUmaParaFundacao();
     void virarParaCima(int coluna);
-    bool estaExposta(int coluna, int linha);
-    std::string converterParaString();   
-    // Dentro de paciencia.h, na seção public:
-std::vector<JogadaSimulada> listarJogadasPossiveis();
-void completarAutomaticamente();
-bool moverUmaParaFundacao();
-bool simularSolucao(std::set<std::string>& estadosVisitados);
-bool garantirJogoVencivel();   
-void gerarJogoReversivel();
-    // Getters para o servidor web
-const std::vector<std::vector<Carta>>& getColunas() const { return colunas; }
-const std::vector<std::vector<Carta>>& getFundacoes() const { return fundacoes; }
-const std::vector<Carta>& getDescarte() const { return descarte; }
-int getCavaTamanho() const { return cava.tamanho(); }
-int getCartasEscondidas(int i) const { return cartasEscondidas[i]; }
-bool getVitoria() const { return vitoria; }
-    ~Paciencia();
+
+    // --- Verificações e IA ---
+    bool existeJogadaPossivel();
+    bool verificarVitoria();
+    bool cartaVisivel(int colunaIdx, int cartaIdx) const;
+    bool estaExposta(int coluna, int linha) const;
+    void completarAutomaticamente();
+    
+    // IA / Solver
+    std::vector<JogadaSimulada> listarJogadasPossiveis();
+    bool simularSolucao(std::set<std::string>& estadosVisitados);
+    bool garantirJogoVencivel();
+
+    // --- Getters (Interface para o Servidor) ---
+    const std::vector<std::vector<Carta>>& getColunas() const { return colunas; }
+    const std::vector<std::vector<Carta>>& getFundacoes() const { return fundacoes; }
+    const std::vector<Carta>& getDescarte() const { return descarte; }
+    int getCavaTamanho() const { return cava.tamanho(); }
+    int getCartasEscondidas(int i) const { return (i >= 0 && i < 7) ? cartasEscondidas[i] : 0; }
+    int getPontuacao() const { return pontuacao.getPontos(); }
+    bool getVitoria() const { return vitoria; }
+    
+    // --- Debug ---
+    void imprimirJogo();
+    std::string converterParaString();
 };
 
 #endif
