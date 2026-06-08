@@ -10,6 +10,7 @@ enum class EventoPontuacao {
     ColunaParaFundacao,
     FundacaoParaColuna,
     VirarCarta,
+    ColunaParaColuna,
     PassarBaralho
 };
 

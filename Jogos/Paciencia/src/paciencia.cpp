@@ -575,62 +575,41 @@ int Paciencia::getPontuacao() const {
 
 
 void Paciencia::completarAutomaticamente() {
-    bool movimentoPossivel = true;
-
-    while (movimentoPossivel) {
-        movimentoPossivel = false;
-
-        // 1. Tenta mover do descarte
-        if (!descarte.empty()) {
-            Carta& carta = descarte.back();
-            // ADICIONADO static_cast<int>
-            int naipeIdx = static_cast<int>(carta.mostraNaipe()); 
-            if (Regras::podeMoverParaFundacao(carta, fundacoes[naipeIdx])) {
-                mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, naipeIdx);
-                movimentoPossivel = true;
-            }
-        }
-
-        // 2. Tenta mover das colunas
-        if (!movimentoPossivel) {
-            for (int i = 0; i < 7; i++) {
-                if (!colunas[i].empty()) {
-                    Carta& c = colunas[i].back();
-                    // ADICIONADO static_cast<int>
-                    int naipeIdx = static_cast<int>(c.mostraNaipe());
-                    if (Regras::podeMoverParaFundacao(c, fundacoes[naipeIdx])) {
-                        mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, naipeIdx);
-                        movimentoPossivel = true;
-                        break;
-                    }
-                }
-            }
-        }
+    // Executa a tentativa de mover uma carta repetidamente.
+    // O loop continua chamando a função enquanto ela retornar 'true'.
+    // Quando não houver mais movimentos possíveis, a função retorna 'false' e o loop encerra.
+    while (moverUmaParaFundacao()) {
+        // O trabalho está sendo feito pela moverUmaParaFundacao()
     }
 }
 
 // Esta função move apenas UMA carta por vez
 bool Paciencia::moverUmaParaFundacao() {
-    // 1. Tenta descarte
-    for (auto& carta : descarte) {
+    // 1. Tenta mover do DESCARTE (apenas a carta do topo)
+    if (!descarte.empty()) {
+        Carta& carta = descarte.back();
         int nIdx = static_cast<int>(carta.mostraNaipe());
+
         if (Regras::podeMoverParaFundacao(carta, fundacoes[nIdx])) {
-            mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, nIdx);
-            return true; // Moveu uma, para por aqui
+            // Tenta realizar o movimento e retorna o sucesso da operação
+            return mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, nIdx);
         }
     }
-    // 2. Tenta colunas
+
+    // 2. Tenta mover das COLUNAS (apenas a carta do topo)
     for (int i = 0; i < 7; i++) {
         if (!colunas[i].empty()) {
             Carta& c = colunas[i].back();
             int nIdx = static_cast<int>(c.mostraNaipe());
+
             if (Regras::podeMoverParaFundacao(c, fundacoes[nIdx])) {
-                mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, nIdx);
-                return true;
+                // Tenta realizar o movimento e retorna o sucesso da operação
+                return mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, nIdx);
             }
         }
     }
-    return false; // Não há mais movimentos
+    
+    return false; // Nenhum movimento possível encontrado
 }
 
 void Paciencia::imprimirJogo() {
@@ -639,27 +618,27 @@ void Paciencia::imprimirJogo() {
     std::cout << "========================================\n";
     
     // Cava e Descarte (CORRIGIDO: Unificado dentro da função)
-    cout << "Cava [" << cava.tamanho() << "] | Descarte: ";
+    std::cout << "Cava [" << cava.tamanho() << "] | Descarte: ";
     if (descarte.empty()) {
         std::cout << "[ vazio ]";
     } else {
-        cout << "[" << descarte.back().cartaString() << "]";
+        std::cout << "[" << descarte.back().cartaString() << "]";
     }
-    cout << "\n\n";
+    std::cout << "\n\n";
  
     // Fundações
-    cout << "Fundacoes: ";
+    std::cout << "Fundacoes: ";
     for (int i = 0; i < 4; i++) {
         if (fundacoes[i].empty()) {
-            cout << "[ _ ] ";
+            std::cout << "[ _ ] ";
         } else {
-            cout << "[" << fundacoes[i].back().cartaString() << "] ";
+            std::cout << "[" << fundacoes[i].back().cartaString() << "] ";
         }
     }
-    cout << "\n\n";
+    std::cout << "\n\n";
  
     // Colunas
-    cout << "Colunas:\n";
+    std::cout << "Colunas:\n";
     int maxLinhas = 0;
     for (int i = 0; i < 7; i++) {
         if ((int)colunas[i].size() > maxLinhas) maxLinhas = (int)colunas[i].size();
@@ -667,28 +646,28 @@ void Paciencia::imprimirJogo() {
  
     // Cabeçalho das colunas
     for (int i = 0; i < 7; i++) {
-        cout << "  Col" << (i + 1) << "  \t";
+        std::cout << "  Col" << (i + 1) << "  \t";
     }
-    cout << "\n";
+    std::cout << "\n";
  
     for (int linha = 0; linha < maxLinhas; linha++) {
         for (int col = 0; col < 7; col++) {
             if (linha < (int)colunas[col].size()) {
                 // CORRIGIDO: Modificado de 'estaExposta' para '!cartaVisivel'
                 if (!cartaVisivel(col, linha)) {
-                    cout << "[   ???   ]\t";
+                    std::cout << "[   ???   ]\t";
                 } else {
-                    cout << "[" << colunas[col][linha].cartaString() << "]\t";
+                    std::cout << "[" << colunas[col][linha].cartaString() << "]\t";
                 }
             } else {
-                cout << "        \t";
+                std::cout << "        \t";
             }
         }
-        cout << "\n";
+        std::cout << "\n";
     }
-    cout << "\n";
+    std::cout << "\n";
  
     if (vitoria) {
-        cout << "*** PARABENS! VOCE GANHOU! ***\n";
+        std::cout << "*** PARABENS! VOCE GANHOU! ***\n";
     }
 }
