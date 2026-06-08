@@ -30,7 +30,7 @@
 
                     <ul>
                         <li>Cada jogador recebe <strong>5 cartas</strong>.</li>
-                        <li>Você pode trocar até <strong>3 cartas</strong> por rodada.</li>
+                        <li>Cada jogador pode trocar até <strong>3 cartas</strong>.</li>
                         <li>Depois da troca, as mãos são reveladas.</li>
                         <li>Vence quem tiver a melhor combinação de Poker.</li>
                     </ul>
@@ -55,8 +55,9 @@
 
                 <article class="card-menu modos">
                     <h2>Escolha o modo</h2>
+
                     <p class="descricao-modo">
-                        Por enquanto, o modo contra computador já está jogável.
+                        O modo contra computador já está jogável.
                         Os modos multiplayer ficam preparados para a próxima etapa.
                     </p>
 
@@ -109,93 +110,111 @@
             </section>
         </section>
 
-        <!-- ================= -->
-        <!-- TELA DO JOGO      -->
-        <!-- ================= -->
+        <!-- ========================= -->
+        <!-- TELA DO JOGO / MESA REAL  -->
+        <!-- ========================= -->
         <section id="tela-jogo" class="tela-jogo escondida">
-            <header class="cabecalho">
-                <div class="titulo">
-                    <span class="icone-carta">♠</span>
+
+            <header class="cabecalho-jogo">
+                <div class="titulo-jogo">
+                    <span class="mini-carta preta">♠</span>
 
                     <div>
                         <h1>Poker Fechado</h1>
                         <p id="descricao-partida">
-                            Escolha até 3 cartas para trocar e enfrente o computador.
+                            Mesa contra computador.
                         </p>
                     </div>
 
-                    <span class="icone-carta vermelho">♥</span>
+                    <span class="mini-carta vermelha">♥</span>
                 </div>
             </header>
 
-            <section class="topo-jogo">
-                <div class="placar">
-                    <div class="placar-item">
-                        <span class="label">Rodada</span>
-                        <strong id="rodada">1</strong>
-                    </div>
-
-                    <div class="placar-item">
-                        <span class="label">Jogador</span>
-                        <strong id="placar-jogador">0</strong>
-                    </div>
-
-                    <div class="placar-item">
-                        <span class="label">Adversário</span>
-                        <strong id="placar-computador">0</strong>
-                    </div>
-
-                    <div class="placar-item">
-                        <span class="label">Empates</span>
-                        <strong id="placar-empates">0</strong>
-                    </div>
+            <section class="placar-mesa">
+                <div class="placar-item">
+                    <span>Rodada</span>
+                    <strong id="rodada">1</strong>
                 </div>
 
-                <div class="painel">
-                    <h2 id="mensagem">Conectando ao servidor...</h2>
-                    <p id="vencedor">Aguardando rodada.</p>
+                <div class="placar-item">
+                    <span>Jogador</span>
+                    <strong id="placar-jogador">0</strong>
+                </div>
+
+                <div class="placar-item">
+                    <span>Adversário</span>
+                    <strong id="placar-computador">0</strong>
+                </div>
+
+                <div class="placar-item">
+                    <span>Empates</span>
+                    <strong id="placar-empates">0</strong>
                 </div>
             </section>
 
-            <section class="area-jogo">
-                <article class="jogador-card jogador-humano">
-                    <div class="cabecalho-jogador">
+            <section class="mesa-poker">
+
+                <!-- Adversário / Computador -->
+                <div class="area-jogador area-adversario">
+                    <div class="info-jogador">
+                        <div>
+                            <h2 id="titulo-adversario">Computador</h2>
+                            <p id="descricao-adversario">Cartas ocultas até o resultado.</p>
+                        </div>
+
+                        <span class="tag-trocas" id="tag-trocas-computador">0 troca(s)</span>
+                    </div>
+
+                    <div id="mao-computador" class="mao mao-adversario"></div>
+
+                    <div class="resultado-mao">
+                        <span>Jogada</span>
+                        <strong id="jogada-computador">Oculta</strong>
+                    </div>
+                </div>
+
+                <!-- Centro da mesa -->
+                <div class="centro-mesa">
+                    <div class="baralho-visual">
+                        <div class="monte-cartas carta-costas"></div>
+                        <p>Baralho</p>
+                    </div>
+
+                    <div class="painel-central">
+                        <h2 id="mensagem">Conectando ao servidor...</h2>
+                        <p id="vencedor">Aguardando rodada.</p>
+                    </div>
+
+                    <div class="area-troca">
+                        <div class="slot-troca"></div>
+                        <div class="slot-troca"></div>
+                        <div class="slot-troca"></div>
+                        <p>Área de troca</p>
+                    </div>
+                </div>
+
+                <!-- Jogador humano -->
+                <div class="area-jogador area-humano">
+                    <div class="info-jogador">
                         <div>
                             <h2 id="titulo-jogador">Jogador</h2>
                             <p>Clique nas cartas que deseja trocar.</p>
                         </div>
 
-                        <span class="tag" id="tag-trocas-jogador">0 troca(s)</span>
+                        <span class="tag-trocas" id="tag-trocas-jogador">0 troca(s)</span>
                     </div>
 
-                    <div id="mao-jogador" class="mao"></div>
+                    <div id="mao-jogador" class="mao mao-jogador"></div>
 
                     <div class="resultado-mao">
                         <span>Jogada</span>
                         <strong id="jogada-jogador">---</strong>
                     </div>
-                </article>
+                </div>
 
-                <article class="jogador-card computador">
-                    <div class="cabecalho-jogador">
-                        <div>
-                            <h2 id="titulo-adversario">Computador</h2>
-                            <p id="descricao-adversario">A mão fica oculta até o resultado.</p>
-                        </div>
-
-                        <span class="tag" id="tag-trocas-computador">0 troca(s)</span>
-                    </div>
-
-                    <div id="mao-computador" class="mao"></div>
-
-                    <div class="resultado-mao">
-                        <span>Jogada</span>
-                        <strong id="jogada-computador">---</strong>
-                    </div>
-                </article>
             </section>
 
-            <section class="controles">
+            <section class="controles-mesa">
                 <button id="btn-trocar" class="botao principal">
                     Confirmar troca
                 </button>
@@ -217,6 +236,7 @@
                 <p id="selecionadas">Cartas selecionadas: 0/3</p>
                 <p id="status">Conectando...</p>
             </section>
+
         </section>
 
     </main>
