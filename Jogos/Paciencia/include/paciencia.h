@@ -91,7 +91,7 @@ public:
     void virarParaCima(int coluna);
 
     // --- Verificações e IA ---
-    bool existeJogadaPossivel();
+    bool existeJogadaPossivel() const;
     bool verificarVitoria();
     bool cartaVisivel(int colunaIdx, int cartaIdx) const;
     bool estaExposta(int coluna, int linha) const;
