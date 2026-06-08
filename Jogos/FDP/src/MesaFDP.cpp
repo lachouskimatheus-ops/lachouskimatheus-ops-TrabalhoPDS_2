@@ -148,6 +148,10 @@ bool MesaFDP::jogarCarta(int indiceCartaNaMao) {
         return false;
     }
 
+    std::cout << "[DEBUG FDP] Jogador " << jogadorDaVezIndex_ 
+              << " jogou a carta: " << cartaJogada->getValor() 
+              << " de naipe " << static_cast<int>(cartaJogada->getNaipe()) << std::endl;
+
     ordemJogadoresDaVaza_.push_back(jogadorDaVezIndex_);
     cartasNaMesa_.push_back(cartaJogada);
 
@@ -173,7 +177,7 @@ void MesaFDP::apurarVencedorDaVaza() {
     }
 
     JuizPaulista juiz;
-    int indiceVencedorVaza = juiz.decidirVencedor(cartasNaMesa_, cartaVira_, true);
+    int indiceVencedorVaza = juiz.decidirVencedor(cartasNaMesa_, cartaVira_);
 
     // BLINDAGEM 2: Se o Juiz falhar e retornar um índice que não existe no vetor, aborta a execução.
     if (indiceVencedorVaza < 0 || indiceVencedorVaza >= (int)ordemJogadoresDaVaza_.size()) {
@@ -183,6 +187,17 @@ void MesaFDP::apurarVencedorDaVaza() {
 
     int indiceVencedorReal = ordemJogadoresDaVaza_[indiceVencedorVaza];
     JogadorFDP* jogadorVencedor = static_cast<JogadorFDP*>(jogadores_[indiceVencedorReal]);
+
+    std::cout << "\n[DEBUG FDP] --- APURANDO VAZA ---" << std::endl;
+    std::cout << "[DEBUG FDP] Vira: " << cartaVira_.getValor() << " de naipe " << static_cast<int>(cartaVira_.getNaipe()) << std::endl;
+    
+    for (size_t i = 0; i < cartasNaMesa_.size(); i++) {
+        std::cout << "[DEBUG FDP] Mesa[" << i << "] (Jogado pelo Jogador " << ordemJogadoresDaVaza_[i] << "): " 
+                  << cartasNaMesa_[i]->getValor() << " de naipe " << static_cast<int>(cartasNaMesa_[i]->getNaipe()) << std::endl;
+    }
+    
+    std::cout << "[DEBUG FDP] ---> JUIZ ESCOLHEU A MESA[" << indiceVencedorVaza << "]" << std::endl;
+    std::cout << "[DEBUG FDP] ---> VENCEDOR REAL: Jogador " << indiceVencedorReal << "\n" << std::endl;
 
     jogadorVencedor->adicionarVazaFeita(); 
     jogadorDaVezIndex_ = indiceVencedorReal;
