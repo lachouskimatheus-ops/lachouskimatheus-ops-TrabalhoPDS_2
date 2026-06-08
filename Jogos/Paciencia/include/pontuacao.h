@@ -1,7 +1,9 @@
 #ifndef PONTUACAO_H
 #define PONTUACAO_H
+
 #include <string>
 
+// Enum class garante Type Safety (não permite misturar com inteiros)
 enum class EventoPontuacao {
     CavaParaColuna,
     CavaParaFundacao,
@@ -16,20 +18,34 @@ private:
     int pontos;
     int passadasCava;
     int record;
-    const std::string ARQUIVO_RECORD = "record.txt";
+
+    // static constexpr é melhor que const std::string membro
+    static constexpr const char* ARQUIVO_RECORD = "record.txt";
+
+    // Método auxiliar privado (encapsulado)
     void carregarRecord();
 
 public:
     Pontuacao();
+
+    //  Lógica de Negócio 
+    // Aplica a pontuação baseada em um evento do jogo
     void aplicar(EventoPontuacao evento);
-    int getPontos() const;
-    int getRecord() const;
-    bool salvarRecord();
+    
+    // Reseta o estado da pontuação atual
     void resetar();
-    int getPassadasCava() const;
+    
+    // Persistência
+    bool salvarRecord();
+
+    //  Getters (Inline para performance) 
+    int getPontos() const { return pontos; }
+    int getRecord() const { return record; }
+    int getPassadasCava() const { return passadasCava; }
+
+    //  Setters (Usados principalmente para restaurar estado de salvamento) 
     void setPassadasCava(int p);
     void setPontos(int p);
-    
 };
 
 #endif
