@@ -1,39 +1,38 @@
-#include "regras.h"
+#include "Regras.h"
 
-
-// Método privado: verifica a cor 
-bool Regras::ehVermelha(const Carta& c) {
-    // Ajustado para usar os nomes do seu baralho.cpp: Naipe::Copa e Naipe::Ouro
-    return (c.mostraNaipe() == Naipe::Copa || c.mostraNaipe() == Naipe::Ouro);
-}
-
-// Valida o movimento entre colunas da mesa.
-
-bool Regras::podeMoverParaColuna(const Carta& origem, const Carta& destino) {
-    if (ehVermelha(origem) == ehVermelha(destino)) {
-        return false;
+// Verifica se a carta pode ir para a fundação
+bool Regras::podeMoverParaFundacao(const Carta& carta, const std::vector<Carta>& fundacao) {
+    if (fundacao.empty()) {
+        // Fundação vazia só aceita Ás (valor 1)
+        return carta.getValor() == 1;
     }
 
-    return ((int)origem.mostraValor() == (int)destino.mostraValor() - 1);
-}
-
-// Valida o movimento para as pilhas de fundação.
-
-bool Regras::podeMoverParaFundacao(const Carta& carta, const std::vector<Carta>& pilha) {
-    if (pilha.empty()) {
-        // Apenas o Ás pode iniciar a fundação
-        return (carta.mostraValor() == Valor::As);
-    }
-
-    const Carta& topo = pilha.back();
+    const Carta& topo = fundacao.back();
     
-    // Deve ser do mesmo naipe e o valor seguinte
-    return (carta.mostraNaipe() == topo.mostraNaipe() && 
-            (int)carta.mostraValor() == (int)topo.mostraValor() + 1);
+    // Deve ser do mesmo naipe e exatamente um valor acima
+    return (carta.getNaipe() == topo.getNaipe()) && 
+           (carta.getValor() == topo.getValor() + 1);
 }
 
-// Valida se um Rei pode entrar em uma coluna vazia.
+// Verifica se a carta pode ir para uma coluna (tableau)
+bool Regras::podeMoverParaColuna(const Carta& carta, const std::vector<Carta>& coluna) {
+    if (coluna.empty()) {
+        // Coluna vazia só aceita Rei (valor 13)
+        return carta.getValor() == 13;
+    }
 
-bool Regras::podeMoverParaColunaVazia(const Carta& carta) {
-    return (carta.mostraValor() == Valor::Rei);
+    const Carta& topo = coluna.back();
+
+    // Deve ser cor diferente (ex: Vermelho vs Preto) e exatamente um valor abaixo
+    return (coresDiferentes(carta, topo)) && 
+           (carta.getValor() == topo.getValor() - 1);
+}
+
+// Função auxiliar privada para checar cores
+bool Regras::coresDiferentes(const Carta& c1, const Carta& c2) {
+    bool c1Vermelha = (c1.getNaipe() == Naipe::Copa || c1.getNaipe() == Naipe::Ouro);
+    bool c2Vermelha = (c2.getNaipe() == Naipe::Copa || c2.getNaipe() == Naipe::Ouro);
+    
+    // Retorna true apenas se forem cores diferentes
+    return c1Vermelha != c2Vermelha;
 }
