@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Coletânea de Jogos - Truco</title>
+    <link rel="stylesheet" href="/css/truco_style.css">
+</head>
+<body>
+
+    <div class="mesa-de-pano-verde">
+
+        <!-- Cadeiras dos Oponentes -->
+        <div id="cadeira-esquerda" class="assento-oponente"></div>
+        <div id="cadeira-topo" class="assento-oponente"></div>
+        <div id="cadeira-direita" class="assento-oponente"></div>
+
+        <!-- Placar -->
+        <div id="placar" class="placar">
+            <div class="placar-equipe">
+                <span class="placar-label">Equipe 1</span>
+                <span id="pontos-eq1" class="placar-pontos">0</span>
+            </div>
+            <div class="placar-separador">×</div>
+            <div class="placar-equipe">
+                <span id="pontos-eq2" class="placar-pontos">0</span>
+                <span class="placar-label">Equipe 2</span>
+            </div>
+        </div>
+
+        <!-- Centro da Mesa -->
+        <div class="centro-da-mesa">
+
+            <div class="painel-vira">
+                <h3>Vira</h3>
+                <div id="carta-vira" class="carta"></div>
+            </div>
+
+            <div class="info-mao">
+                <h3>Mão Vale</h3>
+                <div id="valor-mao" class="valor-mao-badge">1</div>
+                <div id="queda-atual" class="queda-label">1ª Queda</div>
+            </div>
+
+            <div class="vaza-atual">
+                <h3>Cartas na Mesa</h3>
+                <div id="cartas-na-mesa" class="linhas-cartas"></div>
+            </div>
+        </div>
+
+        <!-- Área do jogador local -->
+        <div id="cadeira-base" class="assento-local area-jogador-local">
+
+            <div id="minha-mao" class="mao-jogador"></div>
+
+            <div id="status-local" class="status-box">
+
+                <div class="info-local">
+                    <h2 id="nome-local">Você</h2>
+                    <div class="dados-local">
+                        <p>Equipe: <strong id="local-equipe">1</strong></p>
+                        <p>Quedas: <strong id="local-quedas">0</strong></p>
+                    </div>
+                </div>
+
+                <!-- Painel de ações (truco / resposta) -->
+                <div id="painel-acoes" class="painel-acoes escondido">
+                    <p class="titulo-acao" id="titulo-acao">Sua vez:</p>
+                    <div id="botoes-acao" class="botoes-acao"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal de Notificações -->
+    <div id="modal-notificacao" class="modal-overlay modal-oculto">
+        <div class="modal-conteudo" id="modal-texto"></div>
+    </div>
+
+    <script src="/js/truco_app.js"></script>
+</body>
+</html>
