@@ -1,10 +1,36 @@
 #include "JuizPaulista.hpp"
 
-int JuizPaulista::decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira, bool forcarVencedor) {
+int JuizPaulista::obterPesoNaipeFDP(Naipe n) {
+    switch (n) {
+        case Naipe::paus: return 4;    // Zap (Mais forte)
+        case Naipe::copas: return 3;   // Copeta
+        case Naipe::espadas: return 2; // Espadilha
+        case Naipe::ouros: return 1;   // Pica-fumo (Mais fraco)
+        default: return 0;
+    }
+}
+
+int JuizPaulista::obterForcaNormalFDP(int valor) {
+    // Retorna uma pontuação arbitrária para garantir a hierarquia correta
+    switch (valor) {
+        case 3: return 10;
+        case 2: return 9;
+        case 1: return 8;  // As
+        case 13: return 7; // Rei (K)
+        case 11: return 6; // Valete (J)
+        case 12: return 5; // Dama (Q)
+        case 7: return 4;
+        case 6: return 3;
+        case 5: return 2;
+        case 4: return 1;
+        default: return 0;
+    }
+}
+
+int JuizPaulista::decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira) {
 
     int indiceVencedor = -1;
     int maiorForcaTotal = -1;
-    bool empate = false;
 
     for (size_t i = 0; i < cartasNaMesa.size(); i++){
         int forcaDaCarta;
@@ -32,26 +58,25 @@ int JuizPaulista::decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira, 
         else if (v == manilha && n == Naipe::copas)    {forcaDaCarta = 99;}
         else if (v == manilha && n == Naipe::espadas)  {forcaDaCarta = 98;}
         else if (v == manilha && n == Naipe::ouros)    {forcaDaCarta = 97;}
-        else{
-            forcaDaCarta = cartasNaMesa[i]->forca();//Forca Normal
+        else {
+            forcaDaCarta = obterForcaNormalFDP(v); // Forca Normal convertida para FDP
         }
 
         //Comparacao Forcas
-        if(forcaDaCarta > maiorForcaTotal) {
+        if (forcaDaCarta > maiorForcaTotal) {
             maiorForcaTotal = forcaDaCarta;
             indiceVencedor = i;
-            empate = false;
-        }else if (forcaDaCarta == maiorForcaTotal){
-            if(forcarVencedor){//Caso empate 2 primeiras
-                if(cartasNaMesa[i]->getForcaNaipe() > cartasNaMesa[indiceVencedor]->getForcaNaipe()){
-                    indiceVencedor = i;
-                    empate = false;
-                }
-            }else {
-                empate = true;
+        } 
+        else if (forcaDaCarta == maiorForcaTotal) {
+            // Em caso de forca igual, OBRIGATORIAMENTE desempata pelo naipe do FDP
+            int pesoNaipeAtual = obterPesoNaipeFDP(n);
+            int pesoNaipeVencedor = obterPesoNaipeFDP(cartasNaMesa[indiceVencedor]->getNaipe());
+            
+            if (pesoNaipeAtual > pesoNaipeVencedor) {
+                indiceVencedor = i;
             }
         }       
-    }
-if(empate == true) return -1;
-return indiceVencedor;
+    } // fim do for
+
+    return indiceVencedor;
 }

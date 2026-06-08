@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Coletânea de Jogos - Fodinha (FDP)</title>
-    <link rel="stylesheet" href="fdp_style.css">
+    <link rel="stylesheet" href="/css/fdp_style.css">
 </head>
 <body>
 
@@ -27,6 +27,7 @@
 
             <div class="painel-vira">
                 <h3>Vira</h3>
+                <!-- A carta vira receberá rotação direto pelo CSS -->
                 <div id="carta-vira" class="carta"></div>
             </div>
             
@@ -39,13 +40,11 @@
         <!-- A sua cadeira (Sempre fixa na base da tela) -->
         <div id="cadeira-base" class="assento-local area-jogador-local">
             
-            <!-- Suas Cartas (AGORA VEM PRIMEIRO, PARA FICAR ACIMA DO PAINEL) -->
+            <!-- Suas Cartas -->
             <div id="minha-mao" class="mao-jogador"></div>
 
-            <!-- Status do Jogador Local (Layout Moderno, Clean e em formato de pílula) -->
+            <!-- Status do Jogador Local -->
             <div id="status-local" class="status-box">
-                
-                <!-- Lado Esquerdo: Informações -->
                 <div class="info-local">
                     <h2>Você (Jogador)</h2>
                     <div class="dados-local">
@@ -54,25 +53,56 @@
                     </div>
                 </div>
                 
-                <!-- Lado Direito: Painel de Apostas -->
                 <div id="painel-apostas" class="escondido">
                     <p class="titulo-aposta">Faça sua aposta:</p>
                     <div id="botoes-aposta" class="botoes-aposta"></div>
                 </div>
-
             </div>
-
         </div>
 
+    </div>
+
+    <!-- Botão de Engrenagem substituído pelo Pincel (Personalização) -->
+    <button id="btn-config" class="btn-config" onclick="abrirConfig()">🖌️</button>
+
+    <!-- Modal de Configurações -->
+    <div id="modal-config" class="modal-overlay modal-oculto">
+        <div class="modal-conteudo">
+            <h2>Personalização</h2>
+            
+            <h3>Seu Avatar</h3>
+            <div class="avatares-container">
+                <img src="/assets/avatares/avatar_1.png" class="avatar-opcao" onclick="mudarAvatar(1)" id="opt-avatar-1" alt="Avatar 1">
+                <img src="/assets/avatares/avatar_2.png" class="avatar-opcao" onclick="mudarAvatar(2)" id="opt-avatar-2" alt="Avatar 2">
+                <img src="/assets/avatares/avatar_3.png" class="avatar-opcao" onclick="mudarAvatar(3)" id="opt-avatar-3" alt="Avatar 3">
+                <img src="/assets/avatares/avatar_4.png" class="avatar-opcao" onclick="mudarAvatar(4)" id="opt-avatar-4" alt="Avatar 4">
+            </div>
+
+            <h3>Verso das Cartas</h3>
+            <div class="opcoes-container">
+                <button class="btn-tema" onclick="mudarVerso('verso1')">Padrão</button>
+                <button class="btn-tema" onclick="mudarVerso('verso2')">Dark</button>
+                <button class="btn-tema" onclick="mudarVerso('verso3')">Minimal</button>
+            </div>
+
+            <h3>Frente das Cartas (Baralhos)</h3>
+            <div class="opcoes-container">
+                <button class="btn-tema" onclick="mudarBaralho('padrao')">Padrão</button>
+                <button class="btn-tema" onclick="mudarBaralho('classico')">Clássico</button>
+                <button class="btn-tema" onclick="mudarBaralho('medieval')">Medieval</button>
+            </div>
+            
+            <button class="btn-fechar" onclick="fecharConfig()">Confirmar e Fechar</button>
+        </div>
     </div>
 
     <!-- Modal Dinâmico de Notificações -->
     <div id="modal-notificacao" class="modal-overlay modal-oculto">
         <div class="modal-conteudo" id="modal-texto">
-            <!-- O JavaScript vai injetar os textos aqui -->
+            <!-- Injetado pelo JS -->
         </div>
     </div>
 
-    <script src="fdp_app.js"></script>
+    <script src="/js/fdp_app.js"></script>
 </body>
 </html>

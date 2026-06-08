@@ -125,6 +125,11 @@ void MesaFDP::iniciarFaseDeCartas() {
 }
 
 bool MesaFDP::jogarCarta(int indiceCartaNaMao) {
+    if (vazaFinalizada()) {
+        std::cout << "[AVISO] Jogada ignorada. A vaza já acabou e a mesa está em apuração." << std::endl;
+        return false;
+    };
+    
     JogadorFDP* jogador = getJogadorDaVez();
 
     // Na rodada cega (1 carta), o índice só pode ser 0
@@ -142,6 +147,10 @@ bool MesaFDP::jogarCarta(int indiceCartaNaMao) {
     if (cartaJogada == nullptr) {
         return false;
     }
+
+    std::cout << "[DEBUG FDP] Jogador " << jogadorDaVezIndex_ 
+              << " jogou a carta: " << cartaJogada->getValor() 
+              << " de naipe " << static_cast<int>(cartaJogada->getNaipe()) << std::endl;
 
     ordemJogadoresDaVaza_.push_back(jogadorDaVezIndex_);
     cartasNaMesa_.push_back(cartaJogada);
@@ -168,7 +177,7 @@ void MesaFDP::apurarVencedorDaVaza() {
     }
 
     JuizPaulista juiz;
-    int indiceVencedorVaza = juiz.decidirVencedor(cartasNaMesa_, cartaVira_, true);
+    int indiceVencedorVaza = juiz.decidirVencedor(cartasNaMesa_, cartaVira_);
 
     // BLINDAGEM 2: Se o Juiz falhar e retornar um índice que não existe no vetor, aborta a execução.
     if (indiceVencedorVaza < 0 || indiceVencedorVaza >= (int)ordemJogadoresDaVaza_.size()) {
@@ -178,6 +187,17 @@ void MesaFDP::apurarVencedorDaVaza() {
 
     int indiceVencedorReal = ordemJogadoresDaVaza_[indiceVencedorVaza];
     JogadorFDP* jogadorVencedor = static_cast<JogadorFDP*>(jogadores_[indiceVencedorReal]);
+
+    std::cout << "\n[DEBUG FDP] --- APURANDO VAZA ---" << std::endl;
+    std::cout << "[DEBUG FDP] Vira: " << cartaVira_.getValor() << " de naipe " << static_cast<int>(cartaVira_.getNaipe()) << std::endl;
+    
+    for (size_t i = 0; i < cartasNaMesa_.size(); i++) {
+        std::cout << "[DEBUG FDP] Mesa[" << i << "] (Jogado pelo Jogador " << ordemJogadoresDaVaza_[i] << "): " 
+                  << cartasNaMesa_[i]->getValor() << " de naipe " << static_cast<int>(cartasNaMesa_[i]->getNaipe()) << std::endl;
+    }
+    
+    std::cout << "[DEBUG FDP] ---> JUIZ ESCOLHEU A MESA[" << indiceVencedorVaza << "]" << std::endl;
+    std::cout << "[DEBUG FDP] ---> VENCEDOR REAL: Jogador " << indiceVencedorReal << "\n" << std::endl;
 
     jogadorVencedor->adicionarVazaFeita(); 
     jogadorDaVezIndex_ = indiceVencedorReal;
@@ -193,63 +213,6 @@ int MesaFDP::getCartasNaRodada() const {
 
 int MesaFDP::getJogadorDaVezIndex() const {
     return jogadorDaVezIndex_;
-}
-
-// ==========================================
-// MISTÉRIO RESOLVIDO: SISTEMA DE BLINDAGEM DE CARTAS
-// ==========================================
-nlohmann::json MesaFDP::paraJson(int idJogadorSolicitante) const {
-    nlohmann::json estadoMesa;
-    
-    estadoMesa["jogador_da_vez_index"] = jogadorDaVezIndex_;
-    estadoMesa["cartas_na_rodada"] = cartasNaRodada_;
-    estadoMesa["total_apostas_rodada"] = totalApostasRodada_;
-    estadoMesa["jogadores_que_ja_apostaram"] = jogadoresQueJaApostaram_;
-    estadoMesa["aposta_proibida"] = getApostaProibida();
-    
-    estadoMesa["carta_vira"] = cartaVira_.paraJson();
-    
-    nlohmann::json jsonCartasMesa = nlohmann::json::array();
-    for (Carta* carta : cartasNaMesa_) {
-        jsonCartasMesa.push_back(carta->paraJson());
-    }
-    estadoMesa["cartas_na_mesa"] = jsonCartasMesa;
-    
-    nlohmann::json jsonJogadores = nlohmann::json::array();
-    for (Jogador* j : jogadores_) {
-        JogadorFDP* jFDP = dynamic_cast<JogadorFDP*>(j);
-        if (jFDP != nullptr) {
-            // Pega as cartas originais desse jogador
-            nlohmann::json jJson = jFDP->paraJson();
-            
-            // Lógica do Anti-Cheat
-            if (idJogadorSolicitante != -1 && jJson.contains("id")) {
-                int idDesteJogador = jJson["id"];
-                bool esconderCartas = false;
-                
-                if (cartasNaRodada_ == 1) {
-                    // RODADA CEGA: O jogador não pode ver a PRÓPRIA carta
-                    if (idDesteJogador == idJogadorSolicitante) esconderCartas = true;
-                } else {
-                    // RODADA NORMAL: O jogador não pode ver a carta dos OPONENTES
-                    if (idDesteJogador != idJogadorSolicitante) esconderCartas = true;
-                }
-                
-                // Se o veredito for esconder as cartas, transformamos todas em "oculto"
-                if (esconderCartas && jJson.contains("mao")) {
-                    for (auto& carta : jJson["mao"]) {
-                        carta["valor"] = 0; 
-                        carta["naipe"] = "oculto";
-                    }
-                }
-            }
-            
-            jsonJogadores.push_back(jJson);
-        }
-    }
-    estadoMesa["jogadores"] = jsonJogadores;
-    
-    return estadoMesa;
 }
 
 void MesaFDP::iniciarRodada() {
