@@ -4,7 +4,7 @@
 
 class Juiz{
     public:
-    virtual int decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira, bool forcarVencedor = false) = 0;
+    virtual int decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira) = 0;
 
     virtual ~Juiz() = default;
 };

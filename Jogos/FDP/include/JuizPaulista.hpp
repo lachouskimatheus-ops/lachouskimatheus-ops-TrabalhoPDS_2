@@ -3,5 +3,7 @@
 
 class JuizPaulista : public Juiz {
     public:
-        int decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira, bool forcarVencedor = false) override;
+        int decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira) override;
+        int obterPesoNaipeFDP(Naipe n);
+        int obterForcaNormalFDP(int valor);
 };
