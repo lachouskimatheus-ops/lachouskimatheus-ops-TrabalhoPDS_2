@@ -6,6 +6,8 @@ let faseAtual = "MENU";
 let modoSelecionado = "computador";
 let quantidadeJogadoresSelecionada = 1;
 
+let ultimaMaoJogador = [];
+
 // ===============================
 // CONTROLE DO MENU INICIAL
 // ===============================
@@ -44,12 +46,14 @@ function atualizarAvisoModo(avisoModo) {
     }
 
     if (modoSelecionado === "solo") {
-        avisoModo.textContent = "Modo selecionado: Treino individual. Será integrado na próxima etapa.";
+        avisoModo.textContent =
+            "Modo selecionado: Treino individual. Será integrado na próxima etapa.";
         return;
     }
 
     avisoModo.textContent =
-        `Modo selecionado: ${quantidadeJogadoresSelecionada} jogadores. Multiplayer será integrado na próxima etapa.`;
+        `Modo selecionado: ${quantidadeJogadoresSelecionada} jogadores. ` +
+        "Multiplayer será integrado na próxima etapa.";
 }
 
 function iniciarModoSelecionado() {
@@ -82,13 +86,14 @@ function mostrarTelaJogo() {
     document.getElementById("tela-jogo").classList.remove("escondida");
 
     document.getElementById("descricao-partida").textContent =
-        "Escolha até 3 cartas para trocar e enfrente o computador.";
+        "Mesa contra computador.";
 
     document.getElementById("titulo-adversario").textContent = "Computador";
     document.getElementById("descricao-adversario").textContent =
-        "A mão fica oculta até o resultado.";
+        "Cartas ocultas até o resultado.";
 
     faseAtual = "CARREGANDO";
+    limparAreaTroca();
 }
 
 function voltarParaMenuPoker() {
@@ -97,6 +102,9 @@ function voltarParaMenuPoker() {
 
     faseAtual = "MENU";
     cartasSelecionadas = [];
+    ultimaMaoJogador = [];
+
+    limparAreaTroca();
 
     if (socket && socket.readyState === WebSocket.OPEN) {
         socket.close();
@@ -113,7 +121,9 @@ function conectar() {
     socket = new WebSocket(`${protocolo}://${window.location.host}/ws/poker`);
 
     socket.onopen = () => {
-        document.getElementById("status").textContent = "Conectado ao servidor do Poker.";
+        document.getElementById("status").textContent =
+            "Conectado ao servidor do Poker.";
+
         enviarAcao("OBTER_ESTADO_ATUAL");
     };
 
@@ -123,11 +133,13 @@ function conectar() {
     };
 
     socket.onclose = () => {
-        document.getElementById("status").textContent = "Conexão encerrada com o servidor.";
+        document.getElementById("status").textContent =
+            "Conexão encerrada com o servidor.";
     };
 
     socket.onerror = () => {
-        document.getElementById("status").textContent = "Erro na conexão com o servidor.";
+        document.getElementById("status").textContent =
+            "Erro na conexão com o servidor.";
     };
 }
 
@@ -148,19 +160,32 @@ function atualizarTela(estado) {
     faseAtual = estado.fase;
     cartasSelecionadas = [];
 
+    ultimaMaoJogador = estado.jogador.mao || [];
+
     atualizarPlacar(estado);
     atualizarMensagens(estado);
     atualizarTrocas(estado);
 
-    desenharMao("mao-jogador", estado.jogador.mao, true);
     desenharMao("mao-computador", estado.computador.mao, false);
+    desenharMao("mao-jogador", estado.jogador.mao, true);
 
-    document.getElementById("jogada-jogador").textContent = estado.jogador.jogada;
-    document.getElementById("jogada-computador").textContent = estado.computador.jogada;
+    document.getElementById("jogada-jogador").textContent =
+        estado.jogador.jogada;
+
+    document.getElementById("jogada-computador").textContent =
+        estado.computador.jogada;
 
     atualizarContadorSelecionadas();
     atualizarBotoes();
     atualizarClasseDaFase();
+
+    if (faseAtual === "ESCOLHENDO_TROCAS") {
+        limparAreaTroca();
+    }
+
+    if (faseAtual === "RESULTADO") {
+        marcarShowdown();
+    }
 }
 
 function atualizarPlacar(estado) {
@@ -175,11 +200,14 @@ function atualizarMensagens(estado) {
 
     if (estado.fase === "RESULTADO") {
         if (estado.vencedor === "Jogador") {
-            document.getElementById("vencedor").textContent = "Você venceu esta rodada!";
+            document.getElementById("vencedor").textContent =
+                "Você venceu esta rodada!";
         } else if (estado.vencedor === "Computador") {
-            document.getElementById("vencedor").textContent = "O computador venceu esta rodada.";
+            document.getElementById("vencedor").textContent =
+                "O computador venceu esta rodada.";
         } else {
-            document.getElementById("vencedor").textContent = "Empate na rodada.";
+            document.getElementById("vencedor").textContent =
+                "Empate na rodada.";
         }
 
         return;
@@ -190,15 +218,22 @@ function atualizarMensagens(estado) {
 }
 
 function atualizarTrocas(estado) {
+    const trocasJogador = estado.trocas ? estado.trocas.jogador : 0;
+    const trocasComputador = estado.trocas ? estado.trocas.computador : 0;
+
     document.getElementById("tag-trocas-jogador").textContent =
-        `${estado.trocas.jogador} troca(s)`;
+        `${trocasJogador} troca(s)`;
 
     document.getElementById("tag-trocas-computador").textContent =
-        `${estado.trocas.computador} troca(s)`;
+        `${trocasComputador} troca(s)`;
 }
 
 function atualizarClasseDaFase() {
-    document.body.classList.remove("fase-escolha", "fase-resultado");
+    document.body.classList.remove("fase-escolha", "fase-resultado", "fase-menu");
+
+    if (faseAtual === "MENU") {
+        document.body.classList.add("fase-menu");
+    }
 
     if (faseAtual === "ESCOLHENDO_TROCAS") {
         document.body.classList.add("fase-escolha");
@@ -290,11 +325,77 @@ function alternarSelecao(indice, elemento) {
     }
 
     atualizarContadorSelecionadas();
+    atualizarAreaTroca();
 }
 
 function atualizarContadorSelecionadas() {
     document.getElementById("selecionadas").textContent =
         `Cartas selecionadas: ${cartasSelecionadas.length}/3`;
+}
+
+// ===============================
+// ÁREA CENTRAL DE TROCA
+// ===============================
+
+function limparAreaTroca() {
+    const slots = document.querySelectorAll(".slot-troca");
+
+    slots.forEach((slot) => {
+        slot.innerHTML = "";
+        slot.classList.remove("preenchido");
+    });
+}
+
+function atualizarAreaTroca() {
+    limparAreaTroca();
+
+    const slots = document.querySelectorAll(".slot-troca");
+
+    cartasSelecionadas.forEach((indice, posicao) => {
+        if (!slots[posicao]) {
+            return;
+        }
+
+        const carta = ultimaMaoJogador[indice];
+
+        if (!carta || carta.oculta) {
+            return;
+        }
+
+        slots[posicao].classList.add("preenchido");
+
+        slots[posicao].innerHTML = `
+            <div class="mini-carta-troca ${carta.cor}">
+                <span>${carta.valor_texto}</span>
+                <strong>${carta.simbolo}</strong>
+            </div>
+        `;
+    });
+}
+
+function animarTrocaParaMesa() {
+    const cartas = document.querySelectorAll("#mao-jogador .carta");
+
+    cartasSelecionadas.forEach((indice) => {
+        if (cartas[indice]) {
+            cartas[indice].classList.add("trocando");
+        }
+    });
+
+    document.querySelector(".area-troca").classList.add("area-troca-ativa");
+
+    setTimeout(() => {
+        document.querySelector(".area-troca").classList.remove("area-troca-ativa");
+    }, 700);
+}
+
+function marcarShowdown() {
+    const cartasComputador = document.querySelectorAll("#mao-computador .carta");
+
+    cartasComputador.forEach((carta, indice) => {
+        carta.style.animationDelay = `${indice * 0.08}s`;
+        carta.classList.add("revelada");
+    });
 }
 
 // ===============================
@@ -327,6 +428,7 @@ function configurarBotoesDoJogo() {
     });
 
     document.getElementById("btn-nova-rodada").addEventListener("click", () => {
+        limparAreaTroca();
         enviarAcao("NOVA_RODADA");
     });
 }
@@ -336,24 +438,18 @@ function confirmarTrocaComAnimacao() {
         return;
     }
 
-    const cartas = document.querySelectorAll("#mao-jogador .carta");
-
-    cartasSelecionadas.forEach((indice) => {
-        if (cartas[indice]) {
-            cartas[indice].classList.add("trocando");
-        }
-    });
+    animarTrocaParaMesa();
 
     document.getElementById("status").textContent =
         cartasSelecionadas.length === 0
             ? "Nenhuma carta trocada. Revelando resultado..."
-            : "Trocando cartas selecionadas...";
+            : "Cartas enviadas para a área de troca...";
 
     setTimeout(() => {
         enviarAcao("TROCAR_CARTAS", {
             indices: cartasSelecionadas
         });
-    }, 420);
+    }, 520);
 }
 
 // ===============================
