@@ -1,9 +1,115 @@
 let socket = null;
+
 let cartasSelecionadas = [];
-let faseAtual = "CARREGANDO";
+let faseAtual = "MENU";
+
+let modoSelecionado = "computador";
+let quantidadeJogadoresSelecionada = 1;
+
+// ===============================
+// CONTROLE DO MENU INICIAL
+// ===============================
+
+function configurarMenuInicial() {
+    const botoesModo = document.querySelectorAll(".botao-modo");
+    const avisoModo = document.getElementById("aviso-modo");
+    const btnIniciar = document.getElementById("btn-iniciar-poker");
+    const btnVoltarMenuPoker = document.getElementById("btn-voltar-menu-poker");
+
+    botoesModo.forEach((botao) => {
+        botao.addEventListener("click", () => {
+            botoesModo.forEach((b) => b.classList.remove("ativo"));
+            botao.classList.add("ativo");
+
+            modoSelecionado = botao.dataset.modo;
+            quantidadeJogadoresSelecionada = Number(botao.dataset.jogadores);
+
+            atualizarAvisoModo(avisoModo);
+        });
+    });
+
+    btnIniciar.addEventListener("click", () => {
+        iniciarModoSelecionado();
+    });
+
+    btnVoltarMenuPoker.addEventListener("click", () => {
+        voltarParaMenuPoker();
+    });
+}
+
+function atualizarAvisoModo(avisoModo) {
+    if (modoSelecionado === "computador") {
+        avisoModo.textContent = "Modo selecionado: Contra computador.";
+        return;
+    }
+
+    if (modoSelecionado === "solo") {
+        avisoModo.textContent = "Modo selecionado: Treino individual. Será integrado na próxima etapa.";
+        return;
+    }
+
+    avisoModo.textContent =
+        `Modo selecionado: ${quantidadeJogadoresSelecionada} jogadores. Multiplayer será integrado na próxima etapa.`;
+}
+
+function iniciarModoSelecionado() {
+    if (modoSelecionado !== "computador") {
+        const avisoModo = document.getElementById("aviso-modo");
+
+        avisoModo.textContent =
+            "Este modo já está no menu, mas a lógica multiplayer ainda será integrada ao servidor.";
+
+        avisoModo.classList.add("aviso-destaque");
+
+        setTimeout(() => {
+            avisoModo.classList.remove("aviso-destaque");
+        }, 1200);
+
+        return;
+    }
+
+    mostrarTelaJogo();
+
+    if (!socket || socket.readyState === WebSocket.CLOSED) {
+        conectar();
+    } else if (socket.readyState === WebSocket.OPEN) {
+        enviarAcao("NOVA_RODADA");
+    }
+}
+
+function mostrarTelaJogo() {
+    document.getElementById("tela-menu").classList.add("escondida");
+    document.getElementById("tela-jogo").classList.remove("escondida");
+
+    document.getElementById("descricao-partida").textContent =
+        "Escolha até 3 cartas para trocar e enfrente o computador.";
+
+    document.getElementById("titulo-adversario").textContent = "Computador";
+    document.getElementById("descricao-adversario").textContent =
+        "A mão fica oculta até o resultado.";
+
+    faseAtual = "CARREGANDO";
+}
+
+function voltarParaMenuPoker() {
+    document.getElementById("tela-jogo").classList.add("escondida");
+    document.getElementById("tela-menu").classList.remove("escondida");
+
+    faseAtual = "MENU";
+    cartasSelecionadas = [];
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+    }
+}
+
+// ===============================
+// CONEXÃO COM O SERVIDOR
+// ===============================
 
 function conectar() {
     const protocolo = window.location.protocol === "https:" ? "wss" : "ws";
+
     socket = new WebSocket(`${protocolo}://${window.location.host}/ws/poker`);
 
     socket.onopen = () => {
@@ -34,6 +140,10 @@ function enviarAcao(acao, dados = {}) {
     }
 }
 
+// ===============================
+// ATUALIZAÇÃO DA TELA DO JOGO
+// ===============================
+
 function atualizarTela(estado) {
     faseAtual = estado.fase;
     cartasSelecionadas = [];
@@ -50,6 +160,7 @@ function atualizarTela(estado) {
 
     atualizarContadorSelecionadas();
     atualizarBotoes();
+    atualizarClasseDaFase();
 }
 
 function atualizarPlacar(estado) {
@@ -70,10 +181,12 @@ function atualizarMensagens(estado) {
         } else {
             document.getElementById("vencedor").textContent = "Empate na rodada.";
         }
-    } else {
-        document.getElementById("vencedor").textContent =
-            "Escolha suas cartas e confirme a troca para revelar o resultado.";
+
+        return;
     }
+
+    document.getElementById("vencedor").textContent =
+        "Escolha suas cartas e confirme a troca para revelar o resultado.";
 }
 
 function atualizarTrocas(estado) {
@@ -84,49 +197,79 @@ function atualizarTrocas(estado) {
         `${estado.trocas.computador} troca(s)`;
 }
 
+function atualizarClasseDaFase() {
+    document.body.classList.remove("fase-escolha", "fase-resultado");
+
+    if (faseAtual === "ESCOLHENDO_TROCAS") {
+        document.body.classList.add("fase-escolha");
+    }
+
+    if (faseAtual === "RESULTADO") {
+        document.body.classList.add("fase-resultado");
+    }
+}
+
+// ===============================
+// DESENHO DAS CARTAS
+// ===============================
+
 function desenharMao(idElemento, mao, clicavel) {
     const container = document.getElementById(idElemento);
+
     container.innerHTML = "";
 
     mao.forEach((carta, indice) => {
-        const div = document.createElement("div");
-        div.classList.add("carta");
-
-        if (carta.oculta) {
-            div.classList.add("oculta");
-            div.innerHTML = `
-                <div class="verso-carta">
-                    <span>♠</span>
-                    <span>♦</span>
-                </div>
-            `;
-        } else {
-            div.classList.add(carta.cor);
-
-            div.innerHTML = `
-                <div class="canto topo">
-                    <span>${carta.valor_texto}</span>
-                    <span>${carta.simbolo}</span>
-                </div>
-
-                <div class="centro">
-                    ${carta.simbolo}
-                </div>
-
-                <div class="canto base">
-                    <span>${carta.valor_texto}</span>
-                    <span>${carta.simbolo}</span>
-                </div>
-            `;
-        }
-
-        if (clicavel && faseAtual === "ESCOLHENDO_TROCAS") {
-            div.classList.add("clicavel");
-            div.addEventListener("click", () => alternarSelecao(indice, div));
-        }
-
-        container.appendChild(div);
+        const elementoCarta = criarElementoCarta(carta, indice, clicavel);
+        container.appendChild(elementoCarta);
     });
+}
+
+function criarElementoCarta(carta, indice, clicavel) {
+    const div = document.createElement("div");
+
+    div.classList.add("carta");
+    div.dataset.indice = indice;
+
+    if (carta.oculta) {
+        div.classList.add("oculta");
+
+        div.innerHTML = `
+            <div class="verso-carta">
+                <span>♠</span>
+                <span>♦</span>
+            </div>
+        `;
+
+        return div;
+    }
+
+    div.classList.add(carta.cor);
+
+    div.innerHTML = `
+        <div class="canto topo">
+            <span>${carta.valor_texto}</span>
+            <span>${carta.simbolo}</span>
+        </div>
+
+        <div class="centro">
+            ${carta.simbolo}
+        </div>
+
+        <div class="canto base">
+            <span>${carta.valor_texto}</span>
+            <span>${carta.simbolo}</span>
+        </div>
+    `;
+
+    if (clicavel && faseAtual === "ESCOLHENDO_TROCAS") {
+        div.classList.add("clicavel");
+
+        div.addEventListener("click", () => {
+            alternarSelecao(indice, div);
+        });
+    }
+
+    return div;
 }
 
 function alternarSelecao(indice, elemento) {
@@ -154,31 +297,68 @@ function atualizarContadorSelecionadas() {
         `Cartas selecionadas: ${cartasSelecionadas.length}/3`;
 }
 
+// ===============================
+// BOTÕES E AÇÕES
+// ===============================
+
 function atualizarBotoes() {
     const podeTrocar = faseAtual === "ESCOLHENDO_TROCAS";
     const resultadoRevelado = faseAtual === "RESULTADO";
 
-    document.getElementById("btn-trocar").disabled = !podeTrocar;
+    const btnTrocar = document.getElementById("btn-trocar");
+    const btnNovaRodada = document.getElementById("btn-nova-rodada");
+
+    btnTrocar.disabled = !podeTrocar;
 
     if (podeTrocar) {
-        document.getElementById("btn-trocar").textContent = "Confirmar troca";
-        document.getElementById("btn-nova-rodada").textContent = "Reiniciar rodada";
+        btnTrocar.textContent = "Confirmar troca";
+        btnNovaRodada.textContent = "Reiniciar rodada";
     }
 
     if (resultadoRevelado) {
-        document.getElementById("btn-trocar").textContent = "Troca finalizada";
-        document.getElementById("btn-nova-rodada").textContent = "Próxima rodada";
+        btnTrocar.textContent = "Troca finalizada";
+        btnNovaRodada.textContent = "Próxima rodada";
     }
 }
 
-document.getElementById("btn-trocar").addEventListener("click", () => {
-    enviarAcao("TROCAR_CARTAS", {
-        indices: cartasSelecionadas
+function configurarBotoesDoJogo() {
+    document.getElementById("btn-trocar").addEventListener("click", () => {
+        confirmarTrocaComAnimacao();
     });
-});
 
-document.getElementById("btn-nova-rodada").addEventListener("click", () => {
-    enviarAcao("NOVA_RODADA");
-});
+    document.getElementById("btn-nova-rodada").addEventListener("click", () => {
+        enviarAcao("NOVA_RODADA");
+    });
+}
 
-conectar();
+function confirmarTrocaComAnimacao() {
+    if (faseAtual !== "ESCOLHENDO_TROCAS") {
+        return;
+    }
+
+    const cartas = document.querySelectorAll("#mao-jogador .carta");
+
+    cartasSelecionadas.forEach((indice) => {
+        if (cartas[indice]) {
+            cartas[indice].classList.add("trocando");
+        }
+    });
+
+    document.getElementById("status").textContent =
+        cartasSelecionadas.length === 0
+            ? "Nenhuma carta trocada. Revelando resultado..."
+            : "Trocando cartas selecionadas...";
+
+    setTimeout(() => {
+        enviarAcao("TROCAR_CARTAS", {
+            indices: cartasSelecionadas
+        });
+    }, 420);
+}
+
+// ===============================
+// INICIALIZAÇÃO
+// ===============================
+
+configurarMenuInicial();
+configurarBotoesDoJogo();
