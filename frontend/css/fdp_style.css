@@ -65,6 +65,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
 }
 
 .avatar-imagem {
@@ -77,7 +78,7 @@ body {
 .perfil-jogador h3 { font-size: 1.15rem; color: #f3f4f6; margin-bottom: 5px; }
 .perfil-jogador .status { font-size: 1.05rem; color: #e2e8f0; font-weight: 600; }
 
-.perfil-jogador.sua-vez { border-color: transparent; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); position: relative; overflow: hidden; background: transparent; }
+.perfil-jogador.sua-vez { border-color: transparent; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); overflow: hidden; background: transparent; }
 .perfil-jogador.sua-vez .avatar-imagem { border-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.6); }
 .perfil-jogador.sua-vez::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(#065f46, #34d399, #10b981, #064e3b, #065f46); animation: giro-rgb 2.5s linear infinite; z-index: -2; }
 .perfil-jogador.sua-vez::after { content: ''; position: absolute; inset: 3px; background: #0f172a; border-radius: 13px; z-index: -1; }
@@ -89,21 +90,27 @@ body {
 .pontinhos::after { content: ''; animation: animar-pontinhos 1.5s infinite step-start; }
 @keyframes animar-pontinhos { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
 
+/* --- MARCADOR DE JOGADOR MORTO --- */
+.perfil-jogador.morto { opacity: 0.6; filter: grayscale(80%); }
+.perfil-jogador.morto .avatar-imagem { border-color: #ef4444; }
+.marcador-morte {
+    position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+    font-size: 3.5rem; z-index: 10; pointer-events: none;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+
 /* ==========================================
    CARTAS DOS OPONENTES E BASES DE VERSO
    ========================================== */
 .mao-oponente { display: flex; justify-content: center; margin-top: -15px; position: relative; z-index: 10; }
 
-/* Removemos a imagem daqui, agora as classes de tema gerenciam isso */
-.carta-verso, .verso-grande, .minha-carta-cega, .baralho-visual::before, .baralho-visual::after {
-    background-color: #1e3a8a;
-}
+.carta-verso, .verso-grande, .minha-carta-cega, .baralho-visual::before, .baralho-visual::after { background-color: #1e3a8a; }
 
-.carta-verso { width: 55px; height: 82px; border: 2px solid #f8fafc; border-radius: 6px; box-shadow: -3px 3px 8px rgba(0, 0, 0, 0.5); transform-origin: bottom center; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px)); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+.carta-verso { width: 55px; height: 82px; border: 2px solid #f8fafc; border-radius: 6px; box-shadow: -3px 3px 8px rgba(0, 0, 0, 0.5); transform-origin: bottom center; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px)); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); outline: 1px solid transparent; }
 .carta-verso:not(:first-child) { margin-left: -35px; }
 .mao-oponente:hover .carta-verso { margin-left: -20px; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(calc(var(--transY-oponente, 0px) - 15px)); }
 
-.mini-carta { width: 55px; height: 82px; background: transparent; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6); margin-top: 15px; cursor: pointer; position: relative; transform-origin: bottom center; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px)); transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease; }
+.mini-carta { width: 55px; height: 82px; background: transparent; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6); margin-top: 15px; cursor: pointer; position: relative; transform-origin: bottom center; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px)); transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease; outline: 1px solid transparent; }
 .mao-oponente .mini-carta:not(:first-child) { margin-left: -35px; }
 .mao-oponente:hover .mini-carta { margin-left: -20px; }
 .mini-carta:hover { transform: rotate(0deg) scale(2) translateY(-10px) !important; z-index: 100; box-shadow: 0 15px 30px rgba(0,0,0,0.8); }
@@ -116,7 +123,7 @@ body {
 .centro-da-mesa h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; opacity: 0.8; }
 .linhas-cartas { display: flex; gap: 12px; min-width: 140px; justify-content: flex-start; align-items: center; }
 
-#cartas-na-mesa .carta { animation: surgirNaMesa 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; box-shadow: 0 6px 15px rgba(0,0,0,0.4); transform: rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px)); }
+#cartas-na-mesa .carta { animation: surgirNaMesa 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; box-shadow: 0 6px 15px rgba(0,0,0,0.4); transform: rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px)); outline: 1px solid transparent; }
 @keyframes surgirNaMesa { 0% { opacity: 0; transform: scale(0.7) rotate(0deg); } 100% { opacity: 1; transform: scale(1) rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px)); } }
 
 /* ==========================================
@@ -129,20 +136,18 @@ body {
     display: flex; justify-content: center; align-items: center;
     position: relative; user-select: none;
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    /* Correções de Serrilhado / Anti-aliasing */
     will-change: transform; transform-style: preserve-3d; backface-visibility: hidden;
+    outline: 1px solid transparent; -webkit-font-smoothing: antialiased;
 }
 
 .carta-sprite { width: 100%; height: 100%; object-fit: contain; pointer-events: none; border-radius: 12px; }
 
-/* --- A CARTA VIRA ROTACIONADA PARA DAR DINAMICIDADE --- */
-#carta-vira { 
-    transform: rotate(12deg); 
-    box-shadow: -3px 5px 15px rgba(0, 0, 0, 0.4); 
-}
+#carta-vira { transform: rotate(12deg); box-shadow: -3px 5px 15px rgba(0, 0, 0, 0.4); }
 
-.mao-jogador { display: flex; justify-content: center; gap: 0; padding: 10px; margin-bottom: 5px; }
+.mao-jogador { display: flex; justify-content: center; gap: 0; padding: 10px; margin-bottom: 5px; flex-wrap: wrap; }
 .mao-jogador .carta { cursor: pointer; margin: 0 -12px; transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px)); transform-origin: bottom center; }
-.mao-jogador .carta:hover { transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08); z-index: 100; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 15px 20px rgba(0, 0, 0, 0.4); }
+.mao-jogador .carta:hover { transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08) !important; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 15px 20px rgba(0, 0, 0, 0.4); }
 
 /* ==========================================
    ESTILOS DO BARALHO PADRÃO (CSS PURO)
@@ -159,14 +164,17 @@ body {
 
 .mini-carta.padrao-css { padding: 4px; font-size: 1.2rem; background: #ffffff; }
 .mini-carta.padrao-css::after { font-size: 1.3rem; bottom: 4px; right: 6px; }
-.mini-carta.padrao-css .naipe-central {
-    font-size: 2rem;
-}
+.mini-carta.padrao-css .naipe-central { font-size: 2rem; }
+
 /* ==========================================
-   SUA ÁREA DE JOGADOR (COM ANIMAÇÃO VERDE)
+   SUA ÁREA DE JOGADOR E HUD DINÂMICA
    ========================================== */
 .status-box { 
-    position: relative; background: #111827; border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px 35px; border-radius: 50px; display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 680px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: all 0.3s ease;
+    position: relative; background: #111827; border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px 35px; border-radius: 50px; 
+    display: flex; justify-content: space-between; align-items: center; 
+    /* Permitindo a HUD crescer e quebrar linha para não vazar a tela */
+    width: auto; min-width: 680px; max-width: 95vw; flex-wrap: wrap; gap: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: all 0.3s ease;
 }
 
 .status-box.sua-vez { border-color: transparent; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); overflow: hidden; background: transparent; }
@@ -175,6 +183,10 @@ body {
 .status-box.sua-vez > * { position: relative; z-index: 1; }
 .status-box.sua-vez .local-avatar { border-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.6); }
 
+/* Se VOCÊ Morrer: */
+.status-box.morto { opacity: 0.7; filter: grayscale(50%); border: 1px solid #ef4444; }
+.status-box.morto .local-avatar { border-color: #ef4444; filter: grayscale(100%); }
+
 .info-local { display: flex; align-items: center; gap: 15px; }
 .local-avatar { width: 45px; height: 45px; margin-bottom: 0; border-width: 1.5px; }
 .info-local h2 { font-size: 1.15rem; font-weight: 700; color: #4ade80; margin: 0; }
@@ -182,10 +194,11 @@ body {
 .dados-local p { font-size: 0.95rem; color: #9ca3af; margin: 0; font-weight: 500; }
 .dados-local strong { color: #f3f4f6; font-weight: 600; margin-left: 2px; }
 .escondido { display: none !important; }
-#painel-apostas { display: flex; align-items: center; gap: 15px; }
+
+#painel-apostas { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: flex-end; }
 .titulo-aposta { font-size: 0.85rem !important; color: #9ca3af !important; font-weight: 600; margin: 0 !important; }
-.botoes-aposta { display: flex; gap: 8px; }
-.btn-aposta { background: #2563eb; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; font-weight: 700; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); transition: all 0.2s ease; }
+.botoes-aposta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.btn-aposta { background: #2563eb; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; font-weight: 700; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); transition: all 0.2s ease; flex-shrink: 0; }
 .btn-aposta:hover { transform: translateY(-2px) scale(1.05); background: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
 .btn-aposta.proibido { background: #374151; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
 
@@ -211,39 +224,20 @@ body {
 .baralho-visual { position: relative; width: 90px; height: 135px; margin-right: 30px; cursor: pointer; }
 .baralho-visual::before, .baralho-visual::after { content: ""; position: absolute; top: 0; left: 0; width: 90px; height: 135px; border-radius: 12px; border: 5px solid #f8fafc; box-shadow: -2px 2px 6px rgba(0, 0, 0, 0.4); opacity: 0; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease, box-shadow 0.35s ease; }
 .baralho-visual::before { z-index: 1; } .baralho-visual::after { z-index: 0; }
-.verso-grande { position: relative; width: 90px; height: 135px; border: 5px solid #f8fafc; border-radius: 12px; box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6); z-index: 2; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease; }
+.verso-grande { position: relative; width: 90px; height: 135px; border: 5px solid #f8fafc; border-radius: 12px; box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6); z-index: 2; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease; outline: 1px solid transparent; }
 .baralho-visual:hover .verso-grande { transform: translate(12px, -8px) rotate(6deg); box-shadow: -6px 10px 20px rgba(0, 0, 0, 0.5); }
 .baralho-visual:hover::before { opacity: 1; transform: translate(0px, 0px) rotate(0deg); }
 .baralho-visual:hover::after { opacity: 1; transform: translate(-12px, 8px) rotate(-6deg); box-shadow: -3px 5px 10px rgba(0, 0, 0, 0.3); }
 .empilhada { position: absolute; margin: 0 !important; }
 .carta-animada { position: fixed; z-index: 9999; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
 
-.minha-carta-cega { width: 90px; height: 135px; border: 5px solid #f8fafc; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; margin: 0 -12px; transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px)); transform-origin: bottom center; }
-.minha-carta-cega:hover { transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08); z-index: 100; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 15px 20px rgba(0, 0, 0, 0.4); }
+.minha-carta-cega { width: 90px; height: 135px; border: 5px solid #f8fafc; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; margin: 0 -12px; transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px)); transform-origin: bottom center; outline: 1px solid transparent; }
+.minha-carta-cega:hover { transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08) !important; z-index: 100; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 15px 20px rgba(0, 0, 0, 0.4); }
 
-/* --- A MÁGICA DOS TEMAS DE VERSO FICA AQUI --- */
-
-/* Padrão -> Puxa a imagem limpa da sua pasta assets */
-.tema-verso-verso1 .carta-verso, .tema-verso-verso1 .verso-grande, .tema-verso-verso1 .minha-carta-cega, .tema-verso-verso1 .baralho-visual::before, .tema-verso-verso1 .baralho-visual::after { 
-    background-image: url('../assets/verso_padrao.png'); 
-    background-size: cover; 
-    background-position: center; 
-}
-
-/* Dark -> Puxa a imagem dark da sua pasta assets */
-.tema-verso-verso2 .carta-verso, .tema-verso-verso2 .verso-grande, .tema-verso-verso2 .minha-carta-cega, .tema-verso-verso2 .baralho-visual::before, .tema-verso-verso2 .baralho-visual::after { 
-    background-image: url('../assets/verso_dark.png'); 
-    background-size: cover; 
-    background-position: center; 
-}
-
-/* Minimal -> É o CSS listrado de antes! Sem imagens necessárias. */
-.tema-verso-verso3 .carta-verso, .tema-verso-verso3 .verso-grande, .tema-verso-verso3 .minha-carta-cega, .tema-verso-verso3 .baralho-visual::before, .tema-verso-verso3 .baralho-visual::after { 
-    background-image: linear-gradient(135deg, #2563eb 25%, transparent 25%), linear-gradient(225deg, #2563eb 25%, transparent 25%), linear-gradient(45deg, #2563eb 25%, transparent 25%), linear-gradient(315deg, #2563eb 25%, #1e3a8a 25%); 
-    background-position: 8px 0, 8px 0, 0 0, 0 0; 
-    background-size: 16px 16px; 
-    background-repeat: repeat; 
-}
+/* --- A MÁGICA DOS TEMAS DE VERSO --- */
+.tema-verso-verso1 .carta-verso, .tema-verso-verso1 .verso-grande, .tema-verso-verso1 .minha-carta-cega, .tema-verso-verso1 .baralho-visual::before, .tema-verso-verso1 .baralho-visual::after { background-image: url('../assets/verso_padrao.png'); background-size: cover; background-position: center; }
+.tema-verso-verso2 .carta-verso, .tema-verso-verso2 .verso-grande, .tema-verso-verso2 .minha-carta-cega, .tema-verso-verso2 .baralho-visual::before, .tema-verso-verso2 .baralho-visual::after { background-image: url('../assets/verso_dark.png'); background-size: cover; background-position: center; }
+.tema-verso-verso3 .carta-verso, .tema-verso-verso3 .verso-grande, .tema-verso-verso3 .minha-carta-cega, .tema-verso-verso3 .baralho-visual::before, .tema-verso-verso3 .baralho-visual::after { background-image: linear-gradient(135deg, #2563eb 25%, transparent 25%), linear-gradient(225deg, #2563eb 25%, transparent 25%), linear-gradient(45deg, #2563eb 25%, transparent 25%), linear-gradient(315deg, #2563eb 25%, #1e3a8a 25%); background-position: 8px 0, 8px 0, 0 0, 0 0; background-size: 16px 16px; background-repeat: repeat; }
 
 .btn-config { position: fixed; top: 20px; right: 20px; width: 65px; height: 65px; background: #1e293b; border: 3px solid #475569; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 99990; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s ease, background 0.2s ease; }
 .btn-config:hover { transform: scale(1.1); background: #334155; border-color: #64748b; }

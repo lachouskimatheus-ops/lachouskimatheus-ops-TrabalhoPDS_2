@@ -32,7 +32,6 @@ PACIENCIA_OBJECTS = \
 
 FDP_OBJECTS = \
 ../Jogos/FDP/obj/BaralhoSujo.o \
-../Jogos/FDP/obj/Excecoes.o \
 ../Jogos/FDP/obj/Jogador.o \
 ../Jogos/FDP/obj/JogadorFDP.o \
 ../Jogos/FDP/obj/Juiz.o \

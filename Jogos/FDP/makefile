@@ -7,7 +7,6 @@ OBJ_DIR = obj
 
 SOURCES = \
 	$(SRC_DIR)/BaralhoSujo.cpp \
-	$(SRC_DIR)/Excecoes.cpp \
 	$(SRC_DIR)/Jogador.cpp \
 	$(SRC_DIR)/JogadorFDP.cpp \
 	$(SRC_DIR)/Juiz.cpp \

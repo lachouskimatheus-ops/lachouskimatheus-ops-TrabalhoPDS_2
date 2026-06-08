@@ -43,7 +43,7 @@ const meuId = parseInt(urlParams.get('id')) || 0;
 
 let configJogo = {
     verso: localStorage.getItem('pref_verso') || 'verso1',
-    baralho: localStorage.getItem('pref_baralho') || 'padrao', // AGORA O PADRÃO VEM PRIMEIRO
+    baralho: localStorage.getItem('pref_baralho') || 'padrao',
     avatar: parseInt(localStorage.getItem('pref_avatar')) || 1
 };
 
@@ -90,6 +90,9 @@ function atualizarInterface(dados) {
     const eu = dados.jogadores.find(j => j.id === meuId);
     if (!eu) return;
 
+    // CONTAGEM DE VIVOS (Corrige o bug da mesa travada)
+    const qtdVivos = dados.jogadores.filter(j => j.vidas > 0).length;
+
     const euAnterior = estadoAnterior ? estadoAnterior.jogadores.find(j => j.id === meuId) : null;
     
     if (!euAnterior && eu.mao.length > 0) {
@@ -135,10 +138,12 @@ function atualizarInterface(dados) {
 
     const ehMinhaVez = (dados.jogador_da_vez_index === meuId);
     const statusBox = document.getElementById('status-local');
-    if (ehMinhaVez) {
+    
+    statusBox.classList.remove('sua-vez', 'morto');
+    if (eu.vidas <= 0) {
+        statusBox.classList.add('morto');
+    } else if (ehMinhaVez) {
         statusBox.classList.add('sua-vez');
-    } else {
-        statusBox.classList.remove('sua-vez');
     }
     
     document.getElementById('cadeira-direita').innerHTML = '';
@@ -170,7 +175,7 @@ function atualizarInterface(dados) {
                 for (let c = 0; c < totalCartasOponente; c++) {
                     const angulo = (c - meioDaMaoOponente) * 8; 
                     const transY = Math.abs(c - meioDaMaoOponente) * 3;
-                    const styleStr = `style="--rotacao-oponente: ${angulo}deg; --transY-oponente: ${transY}px;"`;
+                    const styleStr = `style="--rotacao-oponente: ${angulo}deg; --transY-oponente: ${transY}px; z-index: ${c + 1};"`;
 
                     if (isRodadaCega && j.mao[c] && j.mao[c].valor) {
                         let cartaClasses = "carta mini-carta";
@@ -178,14 +183,12 @@ function atualizarInterface(dados) {
                         let conteudo = "";
 
                         if (configJogo.baralho === 'padrao') {
-                        cartaClasses += ` padrao-css ${j.mao[c].naipe}`;
-                        attrNaipe = `data-naipe-simbolo="${obterSimboloNaipe(j.mao[c].naipe)}"`;
-                        
-                        // CORREÇÃO: Adicionando o naipe-central também para as mini-cartas da testa!
-                        conteudo = `<span>${traduzirValorCarta(j.mao[c].valor)}</span> <div class="naipe-central">${obterSimboloNaipe(j.mao[c].naipe)}</div>`;
-                    } else {
-                        conteudo = `<img src="${obterCaminhoCarta(j.mao[c].valor, j.mao[c].naipe)}" class="carta-sprite">`;
-                    }
+                            cartaClasses += ` padrao-css ${j.mao[c].naipe}`;
+                            attrNaipe = `data-naipe-simbolo="${obterSimboloNaipe(j.mao[c].naipe)}"`;
+                            conteudo = `<span>${traduzirValorCarta(j.mao[c].valor)}</span> <div class="naipe-central">${obterSimboloNaipe(j.mao[c].naipe)}</div>`;
+                        } else {
+                            conteudo = `<img src="${obterCaminhoCarta(j.mao[c].valor, j.mao[c].naipe)}" class="carta-sprite">`;
+                        }
 
                         htmlCartasVerso += `<div class="${cartaClasses}" ${attrNaipe} ${styleStr}>${conteudo}</div>`;
                     } else {
@@ -196,9 +199,16 @@ function atualizarInterface(dados) {
 
                 const apostaOponenteStr = j.aposta_atual === -1 ? '<span class="pontinhos"></span>' : j.aposta_atual;
                 const caminhoAvatar = obterCaminhoAvatar(j.id);
+                
+                const isOponenteMorto = (j.vidas <= 0);
+                const isOponenteVez = (dados.jogador_da_vez_index === j.id && !isOponenteMorto);
+                let classesPerfil = "perfil-jogador";
+                if (isOponenteMorto) classesPerfil += " morto";
+                else if (isOponenteVez) classesPerfil += " sua-vez";
 
                 cadeiraDiv.innerHTML = `
-                    <div class="perfil-jogador ${dados.jogador_da_vez_index === j.id ? 'sua-vez' : ''}">
+                    <div class="${classesPerfil}">
+                        ${isOponenteMorto ? '<div class="marcador-morte">❌</div>' : ''}
                         <img src="${caminhoAvatar}" class="avatar-imagem" alt="Avatar">
                         <h3>${j.name || j.nome || 'Jogador ' + j.id}</h3>
                         <div class="status">Vidas: ${j.vidas} | Aposta: ${apostaOponenteStr}</div>
@@ -209,7 +219,6 @@ function atualizarInterface(dados) {
         }
     });
 
-    // 1. ATUALIZA A CARTA VIRA
     const viraDiv = document.getElementById('carta-vira');
     viraDiv.className = `carta`; 
     if (dados.carta_vira && dados.carta_vira.valor) {
@@ -219,7 +228,6 @@ function atualizarInterface(dados) {
         viraDiv.innerHTML = "";
     }
 
-    // 2. ATUALIZA AS CARTAS JOGADAS NA MESA
     const mesaDiv = document.getElementById('cartas-na-mesa');
     if (mesaDiv) {
         mesaDiv.innerHTML = ''; 
@@ -234,13 +242,13 @@ function atualizarInterface(dados) {
                 const transY = (indice % 2 === 0) ? -3 : 3;
                 elementoCarta.style.setProperty('--rotacao-mesa', `${rotacoes[indice % 4]}deg`);
                 elementoCarta.style.setProperty('--transY-mesa', `${transY}px`);
+                elementoCarta.style.zIndex = indice + 1;
                 
                 mesaDiv.appendChild(elementoCarta);
             });
         }
     }
 
-    // 3. RENDERIZA A SUA MÃO DE CARTAS
     const minhaMaoDiv = document.getElementById('minha-mao');
     minhaMaoDiv.innerHTML = '';
     const totalMinhasCartas = eu.mao.length;
@@ -253,6 +261,7 @@ function atualizarInterface(dados) {
         
         elementoCarta.style.setProperty('--rotacao', `${angulo}deg`);
         elementoCarta.style.setProperty('--transY', `${translateY}px`);
+        elementoCarta.style.zIndex = indice + 1;
         
         if (isRodadaCega) {
             elementoCarta.className = 'minha-carta-cega';
@@ -261,7 +270,8 @@ function atualizarInterface(dados) {
             construirFaceCarta(elementoCarta, carta);
         }
         
-        if (ehMinhaVez && dados.jogadores_que_ja_apostaram >= dados.jogadores.length) {
+        // CORREÇÃO: Usa qtdVivos ao invés de dados.jogadores.length
+        if (ehMinhaVez && dados.jogadores_que_ja_apostaram >= qtdVivos && eu.vidas > 0) {
             elementoCarta.onmousedown = () => jogarCarta(indice);
         } else {
             elementoCarta.style.opacity = "0.6";
@@ -270,9 +280,9 @@ function atualizarInterface(dados) {
         minhaMaoDiv.appendChild(elementoCarta);
     });
 
-    // 4. CONTROLA O PAINEL DE APOSTAS
     const painelApostas = document.getElementById('painel-apostas');
-    if (ehMinhaVez && dados.jogadores_que_ja_apostaram < dados.jogadores.length && eu.aposta_atual === -1) {
+    // CORREÇÃO: Usa qtdVivos ao invés de dados.jogadores.length
+    if (ehMinhaVez && dados.jogadores_que_ja_apostaram < qtdVivos && eu.aposta_atual === -1 && eu.vidas > 0) {
         painelApostas.classList.remove('escondido');
         const containerBotoes = document.getElementById('botoes-aposta');
         containerBotoes.innerHTML = ''; 

@@ -1,5 +1,7 @@
 #include "MesaFDP.hpp"
 #include "JuizPaulista.hpp"
+#include <stdexcept>
+#include <iostream>
 
 MesaFDP::~MesaFDP() {
 }
@@ -16,49 +18,54 @@ void MesaFDP::iniciarFaseApostas() {
     totalApostasRodada_ = 0;
     jogadoresQueJaApostaram_ = 0;
 
-    //Controle para saber se o primeiro jogador tiver morto (pula pro próximo vivo)
     while (getJogadorDaVez()->getVidas() <= 0) {
         jogadorDaVezIndex_ = (jogadorDaVezIndex_ + 1) % jogadores_.size();
     }
 }
 
 JogadorFDP* MesaFDP::getJogadorDaVez() {
-    //Tem que transformar de jogador para jogadorFDP pq o compilador é burro
     return static_cast<JogadorFDP*>(jogadores_[jogadorDaVezIndex_]);
 }
 
-//Logica da aposta de FDP
 int MesaFDP::getApostaProibida() const {
-    int qtd_jogadores = jogadores_.size();
-    int indiceUltimo = (indicePrimeiro_ - 1 + qtd_jogadores) % qtd_jogadores;
-    
-    if (jogadorDaVezIndex_ == indiceUltimo) {
+    // 1. Conta quantos jogadores vivos restam na mesa
+    int vivos = 0;
+    for (auto j : jogadores_) {
+        if (static_cast<JogadorFDP*>(j)->getVidas() > 0) vivos++;
+    }
+
+    if (jogadoresQueJaApostaram_ == vivos - 1) {
         return cartasNaRodada_ - totalApostasRodada_; 
     }
-    return -99; //Valor impossível para controle
+    
+    return -99; 
 }
 
 bool MesaFDP::registrarAposta(int apostaDesejada) {
     int maxPossivel = cartasNaRodada_;
     int proibida = getApostaProibida();
 
-    // Validações para a interface grafica
     if (apostaDesejada < 0 || apostaDesejada > maxPossivel) return false;
     
     bool temRestricao = (proibida >= 0 && proibida <= maxPossivel);
     if (temRestricao && apostaDesejada == proibida) return false;
 
-    //Salva a aposta
     JogadorFDP* jogador = getJogadorDaVez();
-    jogador->setAposta(apostaDesejada); // Salva no jogador
+    jogador->setAposta(apostaDesejada); 
     
     totalApostasRodada_ += apostaDesejada;
     jogadoresQueJaApostaram_++;
     
-    // Passa a vez para o próximo jogador VIVO
-    do {
-        jogadorDaVezIndex_ = (jogadorDaVezIndex_ + 1) % jogadores_.size();
-    } while (getJogadorDaVez()->getVidas() <= 0 && !faseApostasFinalizada());
+    if (faseApostasFinalizada()) {
+        jogadorDaVezIndex_ = indicePrimeiro_;
+        while (getJogadorDaVez()->getVidas() <= 0) {
+            jogadorDaVezIndex_ = (jogadorDaVezIndex_ + 1) % jogadores_.size();
+        }
+    } else {
+        do {
+            jogadorDaVezIndex_ = (jogadorDaVezIndex_ + 1) % jogadores_.size();
+        } while (getJogadorDaVez()->getVidas() <= 0);
+    }
 
     return true; 
 }
@@ -72,26 +79,17 @@ bool MesaFDP::faseApostasFinalizada() {
 }
 
 void MesaFDP::atualizarQtdCartas() {
-    int vivos = placar_partida_->jogadoresVivos(jogadores_);
-    
-    // Segurança contra divisão por zero caso todos morram simultaneamente
-    if (vivos == 0) vivos = 1; 
-
-    int maxCartasPossivel = 39 / vivos;
-
     if (cartasSubindo_) {
-        if (cartasNaRodada_ < maxCartasPossivel) {
-            cartasNaRodada_++;
-        } else {
-            cartasSubindo_ = false;
-            cartasNaRodada_--;
+        cartasNaRodada_++;
+        if (cartasNaRodada_ >= 5) {
+            cartasNaRodada_ = 5;       
+            cartasSubindo_ = false;    
         }
     } else {
-        if (cartasNaRodada_ > 1) {
-            cartasNaRodada_--;
-        } else {
-            cartasSubindo_ = true;
-            cartasNaRodada_++;
+        cartasNaRodada_--;
+        if (cartasNaRodada_ <= 1) {
+            cartasNaRodada_ = 1;       
+            cartasSubindo_ = true;     
         }
     }
 }
@@ -109,7 +107,6 @@ std::vector<std::string> MesaFDP::obterResumoRodada() {
         if (apostou == fez) {
             resumo.push_back("[SALVO] " + jogador->getNome() + " acertou a aposta de quebradinha!");
         } else {
-            // Mensagem atualizada para a regra fixa de 1 vida
             resumo.push_back("[TOMOU] " + jogador->getNome() + " apostou " + 
                              std::to_string(apostou) + " mas fez " + 
                              std::to_string(fez) + " vaza(s). Perdeu 1 vida!");
@@ -132,20 +129,18 @@ bool MesaFDP::jogarCarta(int indiceCartaNaMao) {
     
     JogadorFDP* jogador = getJogadorDaVez();
 
-    // Na rodada cega (1 carta), o índice só pode ser 0
     if (cartasNaRodada_ == 1) {
         indiceCartaNaMao = 0; 
     } 
 
     if (indiceCartaNaMao < 0 || indiceCartaNaMao >= jogador->getQtdCartasMao()) {
-        std::cout << "[ERRO] Indice invalido. Jogador tem " << jogador->getQtdCartasMao() << " cartas, pediu indice " << indiceCartaNaMao << std::endl;
-        return false; 
+        throw std::out_of_range("Índice de carta inválido ou fora dos limites da mão do jogador.");
     }
 
     Carta* cartaJogada = jogador->jogarCarta(indiceCartaNaMao);
     
     if (cartaJogada == nullptr) {
-        return false;
+        throw std::runtime_error("Erro interno: Falha ao tentar extrair a carta da mão do jogador.");
     }
 
     std::cout << "[DEBUG FDP] Jogador " << jogadorDaVezIndex_ 
@@ -171,38 +166,23 @@ bool MesaFDP::vazaFinalizada() {
 }
 
 void MesaFDP::apurarVencedorDaVaza() {
-    // BLINDAGEM 1: Se a função for chamada quando a mesa já estiver limpa, aborta silenciosamente.
     if (cartasNaMesa_.empty() || ordemJogadoresDaVaza_.empty()) {
-        return;
+        throw std::logic_error("O Juiz não pode apurar o vencedor de uma mesa vazia.");
     }
 
     JuizPaulista juiz;
     int indiceVencedorVaza = juiz.decidirVencedor(cartasNaMesa_, cartaVira_);
 
-    // BLINDAGEM 2: Se o Juiz falhar e retornar um índice que não existe no vetor, aborta a execução.
     if (indiceVencedorVaza < 0 || indiceVencedorVaza >= (int)ordemJogadoresDaVaza_.size()) {
-        std::cout << "[ERRO CRITICO] Juiz retornou indice fora dos limites: " << indiceVencedorVaza << std::endl;
-        return;
+        throw std::runtime_error("Erro Crítico: O Juiz retornou um índice fora dos limites.");
     }
 
     int indiceVencedorReal = ordemJogadoresDaVaza_[indiceVencedorVaza];
     JogadorFDP* jogadorVencedor = static_cast<JogadorFDP*>(jogadores_[indiceVencedorReal]);
 
-    std::cout << "\n[DEBUG FDP] --- APURANDO VAZA ---" << std::endl;
-    std::cout << "[DEBUG FDP] Vira: " << cartaVira_.getValor() << " de naipe " << static_cast<int>(cartaVira_.getNaipe()) << std::endl;
-    
-    for (size_t i = 0; i < cartasNaMesa_.size(); i++) {
-        std::cout << "[DEBUG FDP] Mesa[" << i << "] (Jogado pelo Jogador " << ordemJogadoresDaVaza_[i] << "): " 
-                  << cartasNaMesa_[i]->getValor() << " de naipe " << static_cast<int>(cartasNaMesa_[i]->getNaipe()) << std::endl;
-    }
-    
-    std::cout << "[DEBUG FDP] ---> JUIZ ESCOLHEU A MESA[" << indiceVencedorVaza << "]" << std::endl;
-    std::cout << "[DEBUG FDP] ---> VENCEDOR REAL: Jogador " << indiceVencedorReal << "\n" << std::endl;
-
     jogadorVencedor->adicionarVazaFeita(); 
     jogadorDaVezIndex_ = indiceVencedorReal;
 
-    // Limpa a mesa para a próxima vaza
     cartasNaMesa_.clear(); 
     ordemJogadoresDaVaza_.clear();
 }
@@ -223,8 +203,11 @@ void MesaFDP::iniciarRodada() {
     baralho_->embaralhar();
 
     Carta* ponteiroVira = baralho_->puxarCarta();
+    
     if (ponteiroVira != nullptr) {
         cartaVira_ = *ponteiroVira; 
+    } else {
+        throw std::runtime_error("Erro Crítico: O baralho esgotou ao tentar puxar a carta Vira.");
     }
 
     for (Jogador* j : jogadores_) {
@@ -234,8 +217,11 @@ void MesaFDP::iniciarRodada() {
         if (jogadorFDP->getVidas() > 0) {
             for (int c = 0; c < cartasNaRodada_; ++c) {
                 Carta* cartaDaVez = baralho_->puxarCarta();
+                
                 if (cartaDaVez != nullptr) {
                     jogadorFDP->receberCarta(cartaDaVez);
+                } else {
+                    throw std::runtime_error("Erro Crítico: O baralho esgotou durante a distribuição de cartas.");
                 }
             }
         }
@@ -262,15 +248,7 @@ bool MesaFDP::rodadaFinalizada() const {
 }
 
 void MesaFDP::finalizarRodada() {
-    for (auto* j : jogadores_) {
-        JogadorFDP* jogador = static_cast<JogadorFDP*>(j);
-        if (jogador->getVidas() > 0) {
-            // A MÁGICA ACONTECE AQUI: Só perde vida se errar a aposta!
-            if (jogador->getAposta() != jogador->getVezesGanhas()) {
-                jogador->setVidas(jogador->getVidas() - 1);
-            };
-        };
-    };
+    placar_partida_->calcularResultados(jogadores_);
 
     int vivos = 0;
     for (auto* j : jogadores_) {
