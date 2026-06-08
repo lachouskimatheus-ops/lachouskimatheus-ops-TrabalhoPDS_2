@@ -263,177 +263,183 @@ bool Paciencia::moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int d
     return true;
 }
 
+// 13. Verificar Vitória
+// Verifica se todas as cartas estão nas fundações.
+// É uma boa prática chamar isso após cada movimento bem-sucedido.
 bool Paciencia::verificarVitoria() {
-    for (const auto& f : fundacoes) {
-        if (f.size() != 13) return false;
+    for (int i = 0; i < 4; ++i) {
+        if (fundacoes[i].size() < 13) {
+            vitoria = false;
+            return false;
+        }
     }
     vitoria = true;
-    pontuacao.salvarRecord();
     return true;
 }
-
-bool Paciencia::existeJogadaPossivel() {
-    // 1. Verifica se há carta no descarte que pode ir para algum lugar
-    if (!descarte.empty()) {
-        const Carta& topo = descarte.back();
-        for (int i = 0; i < 4; i++) {
-            if (Regras::podeMoverParaFundacao(topo, fundacoes[i])) return true;
-        }
-        for (int i = 0; i < 7; i++) {
-            if (colunas[i].empty()) {
-                if (Regras::podeMoverParaColunaVazia(topo)) return true;
-            } else {
-                if (Regras::podeMoverParaColuna(topo, colunas[i].back())) return true;
-            }
+// 14. Existe Jogada Possível
+// Verifica se o jogo ainda tem movimentos válidos. 
+// Útil para detectar Game Over.
+bool Paciencia::existeJogadaPossivel() const {
+    // 1. Verifica jogadas das Colunas para as Fundações
+    for (int i = 0; i < 7; ++i) {
+        if (!colunas[i].empty()) {
+            const Carta& c = colunas[i].back();
+            if (Regras::podeMoverParaFundacao(c, fundacoes[static_cast<int>(c.mostraNaipe())])) return true;
         }
     }
 
-    // 2. Verifica se há carta no topo das colunas que pode mover (CORRIGIDO: Removido o ';' do for)
-    for (int i = 0; i < 7; i++) {
+    // 2. Verifica jogadas de Coluna para Coluna
+    for (int i = 0; i < 7; ++i) {
         if (colunas[i].empty()) continue;
-        const Carta& topo = colunas[i].back();
-        for (int k = 0; k < 4; k++) {
-            if (Regras::podeMoverParaFundacao(topo, fundacoes[k])) return true;
-        }
-        for (int j = 0; j < 7; j++) {
+        const Carta& base = colunas[i].back();
+        
+        for (int j = 0; j < 7; ++j) {
             if (i == j) continue;
             if (colunas[j].empty()) {
-                if (Regras::podeMoverParaColunaVazia(topo)) return true;
+                if (Regras::podeMoverParaColunaVazia(base)) return true;
             } else {
-                if (Regras::podeMoverParaColuna(topo, colunas[j].back())) return true;
+                if (Regras::podeMoverParaColuna(base, colunas[j].back())) return true;
             }
         }
     }
 
-    // 3. Se ainda houver cartas para comprar, o jogo não travou
-    if (!cava.estaVazio() || !descarte.empty()) {
-        return true;
+    // 3. Verifica se há cartas no descarte
+    if (!descarte.empty()) {
+        const Carta& d = descarte.back();
+        // Pode mover para fundação?
+        if (Regras::podeMoverParaFundacao(d, fundacoes[static_cast<int>(d.mostraNaipe())])) return true;
+        // Pode mover para alguma coluna?
+        for (int i = 0; i < 7; ++i) {
+            if (colunas[i].empty()) {
+                if (Regras::podeMoverParaColunaVazia(d)) return true;
+            } else {
+                if (Regras::podeMoverParaColuna(d, colunas[i].back())) return true;
+            }
+        }
     }
 
     return false;
 }
 
+std::string Paciencia::converterParaString() const {
+    std::string output = "--- ESTADO DO JOGO ---\n";
+    
+    // 1. Fundações
+    output += "Fundacoes: ";
+    for (int i = 0; i < 4; ++i) {
+        if (fundacoes[i].empty()) output += "[  ] ";
+        else output += "[" + fundacoes[i].back().toString() + "] ";
+    }
+    
+    // 2. Descarte
+    output += "\nDescarte: " + (descarte.empty() ? "[Vazio]" : descarte.back().toString());
+    output += "\n\nColunas:\n";
 
-std::string Paciencia::converterParaString() {
-    std::string s = "";
-
-    // 1. Estado da Cava e Descarte
-    s += "C:" + std::to_string(getCavaTamanho()) + "|D:";
-    if (!descarte.empty()) {
-        s += std::to_string((int)descarte.back().mostraValor()) + "_" + std::to_string((int)descarte.back().mostraNaipe());
+    // 3. Colunas (Iterando até a altura máxima da coluna mais alta)
+    int maxAltura = 0;
+    for (int i = 0; i < 7; ++i) {
+        if ((int)colunas[i].size() > maxAltura) maxAltura = colunas[i].size();
     }
 
-    // 2. Estado das Fundações (apenas a carta do topo importa)
-    s += "|F:";
-    for (int i = 0; i < 4; i++) {
-        if (!fundacoes[i].empty()) {
-            s += std::to_string((int)fundacoes[i].back().mostraValor()) + "_" + std::to_string((int)fundacoes[i].back().mostraNaipe()) + ",";
-        } else {
-            s += "X,";
+    for (int linha = 0; linha < maxAltura; ++linha) {
+        for (int col = 0; col < 7; ++col) {
+            if (linha < (int)colunas[col].size()) {
+                // Verifica se a carta está virada para baixo
+                if (linha < cartasEscondidas[col]) {
+                    output += "[#]  "; 
+                } else {
+                    output += "[" + colunas[col][linha].toString() + "] ";
+                }
+            } else {
+                output += "     "; // Espaço vazio para manter o alinhamento
+            }
         }
+        output += "\n";
     }
 
-    // 3. Estado das Colunas (cartas escondidas + todas as visíveis)
-    s += "|Col:";
-    for (int i = 0; i < 7; i++) {
-        s += std::to_string(getCartasEscondidas(i)) + "[";
-        for (size_t j = getCartasEscondidas(i); j < colunas[i].size(); j++) {
-            s += std::to_string((int)colunas[i][j].mostraValor()) + "_" + std::to_string((int)colunas[i][j].mostraNaipe()) + ",";
-        }
-        s += "];";
-    }
-
-    return s;
+    output += "----------------------\n";
+    return output;
 }
 
 //SOLVER QUE LE TODAS AS JOGADOS POSSIVEIS 
 #include <set>
 
-// 1. MAPEIA TODAS AS JOGADAS VÁLIDAS NO TABLEIRO ATUAL
+// 1. ORQUESTRADOR (O método público agora é limpo e fácil de ler)
 std::vector<JogadaSimulada> Paciencia::listarJogadasPossiveis() {
     std::vector<JogadaSimulada> jogadas;
 
-    // A. Analisar cartas do Descarte
-    if (!descarte.empty()) {
-        const Carta& topoDescarte = descarte.back();
-        
-        // Descarte -> Fundação
-        for (int i = 0; i < 4; i++) {
-            if (Regras::podeMoverParaFundacao(topoDescarte, fundacoes[i])) {
-                jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Fundacao, i, 0});
-            }
-        }
-        // Descarte -> Colunas
-        for (int i = 0; i < 7; i++) {
-            if (colunas[i].empty()) {
-                if (Regras::podeMoverParaColunaVazia(topoDescarte))
-                    jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Coluna, i, 0});
-            } else {
-                if (Regras::podeMoverParaColuna(topoDescarte, colunas[i].back()))
-                    jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Coluna, i, 0});
-            }
-        }
+    coletarJogadasDescarte(jogadas);
+    coletarJogadasColunas(jogadas);
+    coletarJogadasFundacao(jogadas);
+
+    // D. Comprar Carta (Lógica mantida original)
+    if (cava.tamanho() > 0 || !descarte.empty()) {
+        jogadas.push_back({"COMPRAR", TipoPilha::Descarte, 0, TipoPilha::Descarte, 0, 0});
     }
 
-    // B. Analisar cartas e blocos das Colunas
-    for (int i = 0; i < 7; i++) {
+    return jogadas;
+}
+
+// 2. MÉTODOS PRIVADOS (Encapsulamento das regras)
+void Paciencia::coletarJogadasDescarte(std::vector<JogadaSimulada>& jogadas) const {
+    if (descarte.empty()) return;
+    const Carta& topo = descarte.back();
+
+    // Descarte -> Fundação
+    for (int i = 0; i < 4; ++i) {
+        if (Regras::podeMoverParaFundacao(topo, fundacoes[i])) {
+            jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Fundacao, i, 0});
+        }
+    }
+    // Descarte -> Colunas
+    for (int i = 0; i < 7; ++i) {
+        if (colunas[i].empty() ? Regras::podeMoverParaColunaVazia(topo) : Regras::podeMoverParaColuna(topo, colunas[i].back())) {
+            jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Coluna, i, 0});
+        }
+    }
+}
+
+void Paciencia::coletarJogadasColunas(std::vector<JogadaSimulada>& jogadas) const {
+    for (int i = 0; i < 7; ++i) {
         if (colunas[i].empty()) continue;
 
-        // Varre a coluna de trás para frente procurando cartas abertas
-        for (int j = (int)colunas[i].size() - 1; j >= 0; j--) {
-            if (!cartaVisivel(i, j)) break; // Chegou nas ocultas, para a busca nesta coluna
+        for (int j = (int)colunas[i].size() - 1; j >= 0; --j) {
+            if (!cartaVisivel(i, j)) break; // Defensivo: respeita a visibilidade
 
-            const Carta& cartaAtual = colunas[i][j];
-            bool ehUltimaCarta = (j == (int)colunas[i].size() - 1);
+            const Carta& carta = colunas[i][j];
+            bool ehUltima = (j == (int)colunas[i].size() - 1);
 
-            // Mover carta/bloco para outra coluna
-            for (int k = 0; k < 7; k++) {
+            // Mover Bloco
+            for (int k = 0; k < 7; ++k) {
                 if (i == k) continue;
-
-                if (colunas[k].empty()) {
-                    if (Regras::podeMoverParaColunaVazia(cartaAtual)) {
-                        jogadas.push_back({"MOVER_BLOCO", TipoPilha::Coluna, i, TipoPilha::Coluna, k, j});
-                    }
-                } else {
-                    if (Regras::podeMoverParaColuna(cartaAtual, colunas[k].back())) {
-                        jogadas.push_back({"MOVER_BLOCO", TipoPilha::Coluna, i, TipoPilha::Coluna, k, j});
-                    }
+                if (colunas[k].empty() ? Regras::podeMoverParaColunaVazia(carta) : Regras::podeMoverParaColuna(carta, colunas[k].back())) {
+                    jogadas.push_back({"MOVER_BLOCO", TipoPilha::Coluna, i, TipoPilha::Coluna, k, j});
                 }
             }
 
-            // Apenas a última carta da coluna pode ir para a Fundação
-            if (ehUltimaCarta) {
-                for (int k = 0; k < 4; k++) {
-                    if (Regras::podeMoverParaFundacao(cartaAtual, fundacoes[k])) {
+            // Mover para Fundação (apenas se for a última carta)
+            if (ehUltima) {
+                for (int k = 0; k < 4; ++k) {
+                    if (Regras::podeMoverParaFundacao(carta, fundacoes[k])) {
                         jogadas.push_back({"MOVER", TipoPilha::Coluna, i, TipoPilha::Fundacao, k, 0});
                     }
                 }
             }
         }
     }
+}
 
-    // C. Analisar cartas voltando da Fundação para as Colunas
-    for (int i = 0; i < 4; i++) {
+void Paciencia::coletarJogadasFundacao(std::vector<JogadaSimulada>& jogadas) const {
+    for (int i = 0; i < 4; ++i) {
         if (fundacoes[i].empty()) continue;
-        const Carta& topoFundacao = fundacoes[i].back();
+        const Carta& topo = fundacoes[i].back();
 
-        for (int j = 0; j < 7; j++) {
-            if (colunas[j].empty()) {
-                if (Regras::podeMoverParaColunaVazia(topoFundacao))
-                    jogadas.push_back({"MOVER_DA_FUNDACAO", TipoPilha::Fundacao, i, TipoPilha::Coluna, j, 0});
-            } else {
-                if (Regras::podeMoverParaColuna(topoFundacao, colunas[j].back()))
-                    jogadas.push_back({"MOVER_DA_FUNDACAO", TipoPilha::Fundacao, i, TipoPilha::Coluna, j, 0});
+        for (int j = 0; j < 7; ++j) {
+            if (colunas[j].empty() ? Regras::podeMoverParaColunaVazia(topo) : Regras::podeMoverParaColuna(topo, colunas[j].back())) {
+                jogadas.push_back({"MOVER_DA_FUNDACAO", TipoPilha::Fundacao, i, TipoPilha::Coluna, j, 0});
             }
         }
     }
-
-    // D. Comprar Carta da Cava (Se houver cartas na cava ou descarte para reciclar)
-    if (cava.tamanho() > 0 || !descarte.empty()) {
-        jogadas.push_back({"COMPRAR", TipoPilha::Descarte, 0, TipoPilha::Descarte, 0, 0});
-    }
-
-    return jogadas;
 }
 
 // 2. RECURSÃO COM BACKTRACKING: EXPLORA A ÁRVORE DE JOGADAS

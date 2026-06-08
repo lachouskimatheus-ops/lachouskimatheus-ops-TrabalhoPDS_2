@@ -53,7 +53,11 @@ private:
     // Métodos utilitários privados
     void salvarEstadoNoHistorico();
     void restaurarEstadoDoHistorico();
-
+    
+    // Métodos auxiliares para organizar a listagem de jogadas
+    void coletarJogadasDescarte(std::vector<JogadaSimulada>& jogadas) const;
+    void coletarJogadasColunas(std::vector<JogadaSimulada>& jogadas) const;
+    void coletarJogadasFundacao(std::vector<JogadaSimulada>& jogadas) const;
 public:
     Paciencia();
     ~Paciencia();
@@ -94,7 +98,7 @@ public:
     
     // --- Debug ---
     void imprimirJogo();
-    std::string converterParaString();
+    std::string converterParaString() const;
 };
 
 #endif
