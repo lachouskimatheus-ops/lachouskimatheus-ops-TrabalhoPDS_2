@@ -20,38 +20,50 @@ iniciarWebSocket();
 
 function iniciarWebSocket() {
     const parametros = new URLSearchParams(window.location.search);
-    const sala = parametros.get("sala") || "global";
-    const jogadores = Number(parametros.get("jogadores") || 2);
+    const sala = parametros.get("sala");
 
-    const protocolo = location.protocol === "https:" ? "wss" : "ws";
+    if (!sala) {
+        mostrarModal("Código da sala não informado");
+
+        setTimeout(() => {
+            window.location.href = "/pages/pife_config.html";
+        }, 1200);
+
+        return;
+    }
+
+    const protocolo = window.location.protocol === "https:" ? "wss:" : "ws:";
 
     socket = new WebSocket(
-        `${protocolo}://${location.host}/ws/pife`
+        `${protocolo}//${window.location.host}/ws/pife`
     );
 
     socket.onopen = () => {
         socket.send(JSON.stringify({
             tipo: "entrar_sala",
-            sala,
-            jogadores
+            sala: sala
         }));
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = event => {
         const msg = JSON.parse(event.data);
 
-        if (msg.erro) {
-            mostrarModal(msg.erro);
+        if (msg.tipo === "erro" || msg.erro) {
+            mostrarModal(msg.mensagem || msg.erro);
             return;
         }
 
         if (msg.tipo === "entrada_confirmada") {
             meuId = msg.idJogador;
-            mostrarModal(`Jogador ${meuId + 1} conectado`);
+
+            mostrarModal(
+                `Jogador ${meuId + 1} conectado — ${msg.jogadoresConectados}/${msg.maxJogadores}`
+            );
+
             return;
         }
 
-        if (!msg.minha_mao) {
+        if (msg.tipo !== "estado_jogo") {
             return;
         }
 
@@ -60,6 +72,11 @@ function iniciarWebSocket() {
         }
 
         renderizarEstado(msg);
+    };
+
+    socket.onerror = erro => {
+        console.error("Erro no WebSocket:", erro);
+        mostrarModal("Erro ao conectar com o servidor");
     };
 
     socket.onclose = () => {
