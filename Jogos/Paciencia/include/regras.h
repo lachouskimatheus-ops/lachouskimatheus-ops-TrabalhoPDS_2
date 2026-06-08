@@ -6,16 +6,15 @@
 
 class Regras {
 public:
-    // O 'static' permite chamar a função direto pela classe
+    // Construtor deletado: esta classe não deve ser instanciada
+    Regras() = delete;
+
     static bool podeMoverParaColuna(const Carta& origem, const Carta& destino);
     static bool podeMoverParaFundacao(const Carta& carta, const std::vector<Carta>& pilha);
     static bool podeMoverParaColunaVazia(const Carta& carta);
     
 private:
-    // Tornamos o construtor privado para ninguém "instanciar" essa classe sem querer
-    Regras() {} 
     static bool ehVermelha(const Carta& c);
 };
-
 
 #endif
