@@ -1,8 +1,9 @@
 let socket = null;
 let meuId = null;
+let estadoAtual = null;
 let cartaSelecionadaIndice = null;
-
-const CAMINHO_CARTAS = "/assets/cartas/";
+let vitoriaExibida = false;
+let temporizadorModal = null;
 
 const minhaMao = document.getElementById("minha-mao");
 const mesaDescarte = document.getElementById("mesa-descarte");
@@ -10,7 +11,10 @@ const cartaVira = document.getElementById("carta-vira");
 const textoCoringa = document.getElementById("carta-coringa");
 const qtdCartas = document.getElementById("qtd-cartas");
 const jogadorAtualTexto = document.getElementById("jogador-atual");
-
+const mensagemAjuda = document.getElementById("mensagem-ajuda");
+const indicadorTurno = document.getElementById("indicador-turno");
+const indicadorTurnoTexto = document.getElementById("indicador-turno-texto");
+const indicadorTurnoFase = document.getElementById("indicador-turno-fase");
 const btnComprarMonte = document.getElementById("btn-comprar-monte");
 const btnComprarMesa = document.getElementById("btn-comprar-mesa");
 const btnBater = document.getElementById("btn-bater");
@@ -23,26 +27,16 @@ function iniciarWebSocket() {
     const sala = parametros.get("sala");
 
     if (!sala) {
-        mostrarModal("Código da sala não informado");
-
-        setTimeout(() => {
-            window.location.href = "/pages/pife_config.html";
-        }, 1200);
-
+        mostrarModal("Código da sala não informado.");
+        setTimeout(() => window.location.href = "/pages/pife_config.html", 1500);
         return;
     }
 
     const protocolo = window.location.protocol === "https:" ? "wss:" : "ws:";
-
-    socket = new WebSocket(
-        `${protocolo}//${window.location.host}/ws/pife`
-    );
+    socket = new WebSocket(`${protocolo}//${window.location.host}/ws/pife`);
 
     socket.onopen = () => {
-        socket.send(JSON.stringify({
-            tipo: "entrar_sala",
-            sala: sala
-        }));
+        socket.send(JSON.stringify({ tipo: "entrar_sala", sala }));
     };
 
     socket.onmessage = event => {
@@ -55,37 +49,33 @@ function iniciarWebSocket() {
 
         if (msg.tipo === "entrada_confirmada") {
             meuId = msg.idJogador;
-
             mostrarModal(
-                `Jogador ${meuId + 1} conectado — ${msg.jogadoresConectados}/${msg.maxJogadores}`
+                `Jogador ${meuId + 1} conectado — ` +
+                `${msg.jogadoresConectados}/${msg.maxJogadores}`
             );
-
             return;
         }
 
-        if (msg.tipo !== "estado_jogo") {
-            return;
-        }
+        if (msg.tipo !== "estado_jogo") return;
 
-        if (Number.isInteger(msg.meu_id)) {
-            meuId = msg.meu_id;
-        }
-
+        if (Number.isInteger(msg.meu_id)) meuId = msg.meu_id;
         renderizarEstado(msg);
     };
 
     socket.onerror = erro => {
         console.error("Erro no WebSocket:", erro);
-        mostrarModal("Erro ao conectar com o servidor");
+        mostrarModal("Erro ao conectar com o servidor.");
     };
 
     socket.onclose = () => {
-        mostrarModal("Conexão encerrada");
+        if (!estadoAtual?.jogo_finalizado)
+            mostrarModal("Conexão com o servidor encerrada.");
     };
 }
 
 function enviarAcao(acao, dados = {}) {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
+        mostrarModal("Sem conexão com o servidor.");
         return;
     }
 
@@ -97,18 +87,23 @@ function enviarAcao(acao, dados = {}) {
 }
 
 function renderizarEstado(estado) {
-    renderizarMao(estado.minha_mao);
+    estadoAtual = estado;
+
+    renderizarMao(estado.minha_mao || []);
     renderizarMesa(estado.mesa || []);
     renderizarVira(estado.vira);
 
-    qtdCartas.textContent = estado.minha_mao.length;
+    qtdCartas.textContent = (estado.minha_mao || []).length;
+    jogadorAtualTexto.textContent = estado.partida_iniciada
+        ? `Jogador ${estado.jogador_atual + 1}`
+        : "Aguardando";
 
-    jogadorAtualTexto.textContent =
-        `Jogador ${estado.jogador_atual + 1}`;
-
+    atualizarIndicadorTurno(estado);
     atualizarBotoes(estado);
 
     cartaSelecionadaIndice = null;
+
+    if (estado.jogo_finalizado) mostrarResultadoFinal(estado);
 }
 
 function renderizarMao(cartas) {
@@ -118,9 +113,10 @@ function renderizarMao(cartas) {
         const elemento = criarCarta(carta);
 
         elemento.onclick = () => {
-            document
-                .querySelectorAll("#minha-mao .carta")
-                .forEach(c => c.classList.remove("selecionada"));
+            if (!estadoAtual?.pode_descartar) return;
+
+            document.querySelectorAll("#minha-mao .carta")
+                .forEach(carta => carta.classList.remove("selecionada"));
 
             elemento.classList.add("selecionada");
             cartaSelecionadaIndice = indice;
@@ -133,22 +129,23 @@ function renderizarMao(cartas) {
 function renderizarMesa(cartas) {
     mesaDescarte.innerHTML = "";
 
-    if (cartas.length === 0) {
+    if (!cartas.length) {
         mesaDescarte.innerHTML =
             '<div class="carta carta-vazia">Descarte</div>';
-
         return;
     }
 
-    mesaDescarte.appendChild(
-        criarCarta(cartas[cartas.length - 1])
-    );
+    mesaDescarte.appendChild(criarCarta(cartas.at(-1)));
 }
 
 function renderizarVira(vira) {
     cartaVira.innerHTML = "";
 
     if (!vira) {
+        cartaVira.innerHTML =
+            '<div class="carta carta-vazia">Vira</div>';
+
+        textoCoringa.textContent = "aguardando";
         return;
     }
 
@@ -204,7 +201,7 @@ function caminhoImagemCarta(carta) {
     const nomeValor = valores[Number(carta.valor)];
 
     if (!nomeNaipe || !nomeValor) {
-        console.error("Carta inválida para imagem:", carta);
+        console.error("Carta inválida:", carta);
         return "";
     }
 
@@ -212,52 +209,173 @@ function caminhoImagemCarta(carta) {
 }
 
 function cartaParaTexto(carta) {
-    const valores = {
-        1: "A",
-        11: "J",
-        12: "Q",
-        13: "K"
-    };
+    const valores = { 1: "A", 11: "J", 12: "Q", 13: "K" };
+    const naipes = { 0: "♣", 1: "♥", 2: "♠", 3: "♦" };
 
-    const naipes = {
-        0: "♣",
-        1: "♥",
-        2: "♠",
-        3: "♦"
-    };
+    return `${valores[carta.valor] || carta.valor}${naipes[carta.naipe] || ""}`;
+}
 
-    return `${valores[carta.valor] || carta.valor}${naipes[carta.naipe]}`;
+function atualizarIndicadorTurno(estado) {
+    indicadorTurno.classList.remove(
+        "aguardando",
+        "minha-vez",
+        "vez-oponente",
+        "finalizado"
+    );
+
+    if (estado.jogo_finalizado) {
+        indicadorTurno.classList.add("finalizado");
+        indicadorTurnoTexto.textContent = "Partida finalizada";
+        indicadorTurnoFase.textContent = "Confira o resultado";
+        mensagemAjuda.textContent = "A partida terminou.";
+        return;
+    }
+
+    if (!estado.partida_iniciada) {
+        indicadorTurno.classList.add("aguardando");
+        indicadorTurnoTexto.textContent = "Aguardando jogadores";
+        indicadorTurnoFase.textContent =
+            `${estado.jogadores_conectados}/${estado.max_jogadores} conectados`;
+        mensagemAjuda.textContent =
+            "A partida começará quando todos entrarem.";
+        return;
+    }
+
+    const minhaVez = estado.jogador_atual === meuId;
+
+    indicadorTurno.classList.add(
+        minhaVez ? "minha-vez" : "vez-oponente"
+    );
+
+    indicadorTurnoTexto.textContent = minhaVez
+        ? "Sua vez"
+        : `Vez do Jogador ${estado.jogador_atual + 1}`;
+
+    if (estado.fase === "AGUARDANDO_COMPRA") {
+        indicadorTurnoFase.textContent = minhaVez
+            ? "Compre uma carta"
+            : "Aguardando compra";
+
+        mensagemAjuda.textContent = minhaVez
+            ? "Compre uma carta do monte ou da mesa."
+            : "Aguarde o outro jogador comprar.";
+
+        return;
+    }
+
+    if (estado.fase === "AGUARDANDO_DESCARTE") {
+        indicadorTurnoFase.textContent = minhaVez
+            ? "Descarte uma carta"
+            : "Aguardando descarte";
+
+        mensagemAjuda.textContent = minhaVez
+            ? "Selecione uma carta e clique na área de descarte."
+            : "Aguarde o outro jogador descartar.";
+
+        return;
+    }
+
+    indicadorTurnoFase.textContent = "Aguardando atualização";
+    mensagemAjuda.textContent = "Aguarde.";
 }
 
 function atualizarBotoes(estado) {
+    const finalizado = Boolean(estado.jogo_finalizado);
+
     btnComprarMonte.disabled =
-        !estado.pode_comprar_baralho;
+        finalizado || !estado.pode_comprar_baralho;
 
     btnComprarMesa.disabled =
-        !estado.pode_comprar_mesa;
+        finalizado || !estado.pode_comprar_mesa;
 
     btnBater.disabled =
-        !estado.pode_bater;
+        finalizado || !estado.pode_bater;
 
     btnOrganizar.disabled =
-        estado.jogo_finalizado;
+        finalizado || !estado.partida_iniciada;
 }
 
-btnComprarMonte.onclick = () =>
-    enviarAcao("COMPRAR_BARALHO");
+function mostrarResultadoFinal(estado) {
+    if (vitoriaExibida) return;
 
-btnComprarMesa.onclick = () =>
-    enviarAcao("COMPRAR_MESA");
+    vitoriaExibida = true;
 
-btnBater.onclick = () =>
-    enviarAcao("BATER");
+    const venceu = estado.vencedor === meuId;
 
-btnOrganizar.onclick = () =>
-    enviarAcao("ORGANIZAR");
+    mostrarModal(
+        venceu
+            ? "Sua mão formou uma combinação válida de Pife."
+            : `O Jogador ${estado.vencedor + 1} venceu a partida.`,
+        {
+            titulo: venceu ? "Você venceu!" : "Fim de jogo",
+            persistente: true,
+            vitoria: venceu,
+            mostrarBotao: true
+        }
+    );
+}
+
+function mostrarModal(texto, opcoes = {}) {
+    const modal = document.getElementById("modal-notificacao");
+    const titulo = document.getElementById("modal-titulo");
+    const conteudo = document.getElementById("modal-texto");
+    const botao = document.getElementById("modal-botao");
+
+    clearTimeout(temporizadorModal);
+
+    titulo.textContent = opcoes.titulo || "Aviso";
+    conteudo.textContent = texto;
+
+    modal.classList.toggle(
+        "modal-vitoria",
+        Boolean(opcoes.vitoria)
+    );
+
+    botao.classList.toggle(
+        "modal-botao-oculto",
+        !opcoes.mostrarBotao
+    );
+
+    modal.classList.remove("modal-oculto");
+
+    if (!opcoes.persistente) {
+        temporizadorModal = setTimeout(() => {
+            modal.classList.add("modal-oculto");
+            modal.classList.remove("modal-vitoria");
+        }, 1500);
+    }
+}
+
+btnComprarMonte.onclick =
+    () => enviarAcao("COMPRAR_BARALHO");
+
+btnComprarMesa.onclick =
+    () => enviarAcao("COMPRAR_MESA");
+
+btnBater.onclick =
+    () => enviarAcao("BATER");
+
+btnOrganizar.onclick =
+    () => enviarAcao("ORGANIZAR");
 
 mesaDescarte.onclick = () => {
+    if (!estadoAtual) {
+        mostrarModal("O jogo ainda não foi carregado.");
+        return;
+    }
+
+    if (estadoAtual.jogo_finalizado) {
+        mostrarModal("A partida já terminou.");
+        return;
+    }
+
+    if (!estadoAtual.pode_descartar) {
+        mostrarModal("Você não pode descartar agora.");
+        return;
+    }
+
     if (cartaSelecionadaIndice === null) {
-        mostrarModal("Selecione uma carta");
+        mostrarModal("Selecione uma carta da sua mão.");
         return;
     }
 
@@ -266,14 +384,6 @@ mesaDescarte.onclick = () => {
     });
 };
 
-function mostrarModal(texto) {
-    const modal = document.getElementById("modal-notificacao");
-    const modalTexto = document.getElementById("modal-texto");
-
-    modalTexto.textContent = texto;
-    modal.classList.remove("modal-oculto");
-
-    setTimeout(() => {
-        modal.classList.add("modal-oculto");
-    }, 1200);
-}
+document.getElementById("modal-botao").onclick = () => {
+    window.location.href = "/pages/menu.html";
+};

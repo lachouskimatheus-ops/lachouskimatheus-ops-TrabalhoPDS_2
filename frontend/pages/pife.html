@@ -1,21 +1,27 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pife</title>
-
     <link rel="stylesheet" href="/css/pife_style.css">
 </head>
 
 <body>
-
     <div class="mesa-de-pano-verde">
+
+        <div id="indicador-turno" class="indicador-turno aguardando">
+            <span class="indicador-turno-rotulo">Turno atual</span>
+            <strong id="indicador-turno-texto">Aguardando jogadores</strong>
+            <span id="indicador-turno-fase" class="indicador-turno-fase">
+                A partida ainda não começou
+            </span>
+        </div>
 
         <div id="oponente-1" class="area-oponente">
             <h2>Jogador 2</h2>
 
-            <div class="mao-oponente">
+            <div id="mao-oponente" class="mao-oponente">
                 <div class="carta-verso"></div>
                 <div class="carta-verso"></div>
                 <div class="carta-verso"></div>
@@ -34,20 +40,9 @@
                 <h3>Monte</h3>
 
                 <div id="monte-compra" class="baralho-visual">
-                    <div
-                        class="verso-grande empilhada"
-                        style="bottom: 8px; right: 8px;"
-                    ></div>
-
-                    <div
-                        class="verso-grande empilhada"
-                        style="bottom: 4px; right: 4px;"
-                    ></div>
-
-                    <div
-                        class="verso-grande empilhada"
-                        style="bottom: 0; right: 0;"
-                    ></div>
+                    <div class="verso-grande empilhada" style="bottom: 8px; right: 8px;"></div>
+                    <div class="verso-grande empilhada" style="bottom: 4px; right: 4px;"></div>
+                    <div class="verso-grande empilhada" style="bottom: 0; right: 0;"></div>
                 </div>
             </div>
 
@@ -55,16 +50,11 @@
                 <h3>Vira</h3>
 
                 <div id="carta-vira" class="area-vira">
-                    <div class="carta carta-vazia">
-                        Vira
-                    </div>
+                    <div class="carta carta-vazia">Vira</div>
                 </div>
 
                 <p class="texto-coringa">
-                    Coringa:
-                    <strong id="carta-coringa">
-                        aguardando
-                    </strong>
+                    Coringa: <strong id="carta-coringa">aguardando</strong>
                 </p>
             </div>
 
@@ -72,99 +62,76 @@
                 <h3>Mesa / Descarte</h3>
 
                 <div id="mesa-descarte" class="area-descarte">
-                    <div class="carta carta-vazia">
-                        Descarte
-                    </div>
+                    <div class="carta carta-vazia">Descarte</div>
                 </div>
             </div>
 
             <div class="acoes-jogo">
-                <button id="btn-comprar-monte">
+                <button id="btn-comprar-monte" type="button" disabled>
                     Comprar do Monte
                 </button>
 
-                <button id="btn-comprar-mesa">
+                <button id="btn-comprar-mesa" type="button" disabled>
                     Comprar da Mesa
                 </button>
 
-                <button id="btn-bater">
+                <button id="btn-bater" type="button" disabled>
                     Bater
                 </button>
 
-                <button id="btn-organizar">
+                <button id="btn-organizar" type="button" disabled>
                     Organizar
                 </button>
             </div>
-
         </div>
 
-        <div
-            id="area-jogador-local"
-            class="area-jogador-local"
-        >
+        <div id="area-jogador-local" class="area-jogador-local">
+            <h3 class="titulo-mao">Minha mão</h3>
 
-            <h3 class="titulo-mao">
-                Minha mão
-            </h3>
-
-            <div id="minha-mao" class="mao-jogador">
-                <div class="carta">A♠</div>
-                <div class="carta">2♠</div>
-                <div class="carta">3♠</div>
-                <div class="carta">7♥</div>
-                <div class="carta">7♦</div>
-                <div class="carta">7♣</div>
-                <div class="carta">Q♠</div>
-                <div class="carta">K♣</div>
-                <div class="carta">5♥</div>
-            </div>
+            <div id="minha-mao" class="mao-jogador"></div>
 
             <div class="status-box">
-
                 <div class="info-local">
                     <h2>Você</h2>
 
                     <div class="dados-local">
                         <p>
                             Cartas na mão:
-                            <strong id="qtd-cartas">
-                                9
-                            </strong>
+                            <strong id="qtd-cartas">0</strong>
                         </p>
 
                         <p>
                             Turno:
-                            <strong id="jogador-atual">
-                                Jogador 1
-                            </strong>
+                            <strong id="jogador-atual">Aguardando</strong>
                         </p>
                     </div>
                 </div>
 
                 <div class="info-ajuda">
                     <p id="mensagem-ajuda">
-                        Selecione uma carta da mão para descartar.
+                        Aguardando o início da partida.
                     </p>
                 </div>
-
             </div>
-
         </div>
 
     </div>
 
-    <div
-        id="modal-notificacao"
-        class="modal-overlay modal-oculto"
-    >
-        <div
-            class="modal-conteudo"
-            id="modal-texto"
-        ></div>
+    <div id="modal-notificacao" class="modal-overlay modal-oculto">
+        <div class="modal-conteudo">
+            <div id="modal-titulo" class="modal-titulo">Aviso</div>
+            <div id="modal-texto" class="modal-texto"></div>
+
+            <button
+                id="modal-botao"
+                class="modal-botao modal-botao-oculto"
+                type="button"
+            >
+                Voltar ao menu
+            </button>
+        </div>
     </div>
 
     <script src="/js/pife_app.js"></script>
-
 </body>
 </html>
-```

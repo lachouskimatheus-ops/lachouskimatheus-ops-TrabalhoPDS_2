@@ -13,7 +13,6 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
 
 SRC_DIR = src
 OBJ_DIR = obj
-
 TARGET = servidor_api
 
 CORE_OBJECTS = \
@@ -41,7 +40,7 @@ FDP_OBJECTS = \
 ../Jogos/FDP/obj/Placar.o
 
 SOURCES = \
-$(SRC_DIR)/testeAPI.cpp \
+$(SRC_DIR)/TesteAPI.cpp \
 $(SRC_DIR)/coreAPI/Server.cpp \
 $(SRC_DIR)/coreAPI/Responses.cpp \
 $(SRC_DIR)/coreAPI/JsonConversor.cpp \
@@ -74,3 +73,5 @@ rebuild: clean all
 
 run: all
 	./$(TARGET)
+
+.PHONY: all clean rebuild run
