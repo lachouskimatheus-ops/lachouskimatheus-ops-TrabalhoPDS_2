@@ -9,10 +9,21 @@
 
 class GerenciadorSalasPife {
 private:
-    std::map<std::string, std::unique_ptr<SalaPife>> salas_;
+    static std::map<
+        std::string,
+        std::unique_ptr<SalaPife>
+    > salas_;
+
+    static std::string gerarIdSala();
 
 public:
-    SalaPife* obterOuCriarSala(const std::string& idSala, int maxJogadores);
+    static SalaPife* criarSala(int maxJogadores);
+
+    static SalaPife* obterSala(const std::string& idSala);
+
+    static bool salaExiste(const std::string& idSala);
+
+    static bool removerSala(const std::string& idSala);
 };
 
 #endif

@@ -1,13 +1,9 @@
 #include <iostream>
 
-#include <iostream>
-
 #include "../include/BaralhoSujo.hpp"
 #include "../include/Placar.hpp"
 #include "../include/MesaFDP.hpp"
 #include "../include/JogadorFDP.hpp"
-#include "../include/Servidor.hpp"
-
 #include "../include/Servidor.hpp"
 
 int main() {

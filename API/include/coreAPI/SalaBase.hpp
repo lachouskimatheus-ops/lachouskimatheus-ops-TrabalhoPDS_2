@@ -20,11 +20,18 @@ public:
 
     virtual int adicionarJogador();
 
+    virtual bool removerJogador(int idJogador);
+
     std::string idSala() const;
+
     int maxJogadores() const;
     int jogadoresConectados() const;
 
-    const std::vector<JogadorConectado>& jogadores() const;
+    bool estaCheia() const;
+    bool estaVazia() const;
+
+    const std::vector<JogadorConectado>&
+    jogadores() const;
 };
 
 #endif

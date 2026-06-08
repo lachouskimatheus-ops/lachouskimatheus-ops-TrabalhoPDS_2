@@ -32,7 +32,6 @@ PACIENCIA_OBJECTS = \
 
 FDP_OBJECTS = \
 ../Jogos/FDP/obj/BaralhoSujo.o \
-../Jogos/FDP/obj/Excecoes.o \
 ../Jogos/FDP/obj/Jogador.o \
 ../Jogos/FDP/obj/JogadorFDP.o \
 ../Jogos/FDP/obj/Juiz.o \
@@ -53,6 +52,7 @@ $(SRC_DIR)/routes/PifeRoutes.cpp \
 $(SRC_DIR)/routes/PacienciaRoutes.cpp \
 $(SRC_DIR)/routes/FDPRoutes.cpp \
 $(SRC_DIR)/multiplayer/Pife/SalaPife.cpp \
+$(SRC_DIR)/multiplayer/Pife/GerenciadorSalasPife.cpp \
 $(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp \
 $(SRC_DIR)/multiplayer/FDP/SalaFDP.cpp
 

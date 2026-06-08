@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <stdexcept> // ADICIONADO: Necessário para capturar std::out_of_range, std::runtime_error, etc.
 
 namespace {
 
@@ -525,6 +526,21 @@ void FDPRoutes::registrar(crow::SimpleApp& app) {
                 "Ação desconhecida: " + acao
             );
 
+        // ==========================================
+        // CADEIA DE TRATAMENTO DE EXCEÇÕES
+        // ==========================================
+        } catch (const std::out_of_range& erro) {
+            std::cerr << "[FDP] Limites de acesso violados: " << erro.what() << std::endl;
+            enviarErro(conn, std::string("Ação Inválida: ") + erro.what());
+
+        } catch (const std::logic_error& erro) {
+            std::cerr << "[FDP] Regra do jogo violada: " << erro.what() << std::endl;
+            enviarErro(conn, std::string("Regra violada: ") + erro.what());
+
+        } catch (const std::runtime_error& erro) {
+            std::cerr << "[FDP] Erro CRÍTICO no servidor: " << erro.what() << std::endl;
+            enviarErro(conn, std::string("Erro fatal no servidor: ") + erro.what());
+
         } catch (const json::parse_error& erro) {
             std::cerr
                 << "[FDP] JSON inválido: "
@@ -549,7 +565,7 @@ void FDPRoutes::registrar(crow::SimpleApp& app) {
 
         } catch (const std::exception& erro) {
             std::cerr
-                << "[FDP] Erro interno: "
+                << "[FDP] Erro interno desconhecido: "
                 << erro.what()
                 << std::endl;
 
