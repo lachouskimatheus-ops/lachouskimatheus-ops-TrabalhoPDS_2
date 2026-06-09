@@ -9,12 +9,10 @@
 
     <div class="mesa-de-pano-verde">
 
-        <!-- Cadeiras dos Oponentes -->
         <div id="cadeira-esquerda" class="assento-oponente"></div>
         <div id="cadeira-topo" class="assento-oponente"></div>
         <div id="cadeira-direita" class="assento-oponente"></div>
 
-        <!-- Placar -->
         <div id="placar" class="placar">
             <div class="placar-equipe">
                 <span class="placar-label">Equipe 1</span>
@@ -27,7 +25,6 @@
             </div>
         </div>
 
-        <!-- Centro da Mesa -->
         <div class="centro-da-mesa">
 
             <div class="painel-vira">
@@ -47,7 +44,6 @@
             </div>
         </div>
 
-        <!-- Área do jogador local -->
         <div id="cadeira-base" class="assento-local area-jogador-local">
 
             <div id="minha-mao" class="mao-jogador"></div>
@@ -62,7 +58,6 @@
                     </div>
                 </div>
 
-                <!-- Painel de ações (truco / resposta) -->
                 <div id="painel-acoes" class="painel-acoes escondido">
                     <p class="titulo-acao" id="titulo-acao">Sua vez:</p>
                     <div id="botoes-acao" class="botoes-acao"></div>
@@ -73,7 +68,62 @@
 
     </div>
 
-    <!-- Modal de Notificações -->
+    <div id="modal-lobby" class="modal-overlay">
+        <div class="modal-conteudo" style="max-width: 500px;">
+            <h2 id="lobby-titulo" style="color: #4ade80;">Sala de Truco</h2>
+            
+            <div id="lobby-criacao" class="escondido">
+                <h3 style="color: #cbd5e1; margin-bottom: 20px;">Configurar Nova Partida</h3>
+                
+                <div class="opcoes-container" style="flex-direction: column; gap: 5px; margin-bottom: 15px;">
+                    <label style="color: #9ca3af; text-align: left; width: 100%;">Modalidade:</label>
+                    <select id="select-modalidade" class="select-estilizado">
+                        <option value="paulista">Truco Paulista</option>
+                        <option value="mineiro">Truco Mineiro</option>
+                    </select>
+                </div>
+
+                <div class="opcoes-container" style="flex-direction: column; gap: 5px; margin-bottom: 15px;">
+                    <label style="color: #9ca3af; text-align: left; width: 100%;">Número de Jogadores:</label>
+                    <select id="select-jogadores" class="select-estilizado" onchange="atualizarInterfaceLobby()">
+                        <option value="4">4 Jogadores (Duplas)</option>
+                        <option value="2">2 Jogadores (X1)</option>
+                    </select>
+                </div>
+
+                <div class="opcoes-container" id="container-equipe-criacao" style="flex-direction: column; gap: 5px; margin-bottom: 15px;">
+                    <label style="color: #9ca3af; text-align: left; width: 100%;">Sua Equipe:</label>
+                    <select id="select-equipe-criacao" class="select-estilizado">
+                        <option value="1">Equipe 1 (Azul)</option>
+                        <option value="2">Equipe 2 (Vermelha)</option>
+                    </select>
+                </div>
+
+                <button class="btn-fechar" onclick="criarSala()">Criar Partida</button>
+            </div>
+
+            <div id="lobby-entrada" class="escondido">
+                <h3 style="color: #cbd5e1; margin-bottom: 20px;">Partida Encontrada</h3>
+                <p id="info-sala" style="color: #9ca3af; margin-bottom: 20px;"></p>
+                
+                <div id="container-equipe-entrada">
+                    <p style="margin-bottom: 15px;">Escolha sua equipe:</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button id="btn-entrar-eq1" class="btn-acao aceitar" onclick="entrarSala(1)">Equipe 1</button>
+                        <button id="btn-entrar-eq2" class="btn-acao recusar" onclick="entrarSala(2)">Equipe 2</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lobby-espera" class="escondido">
+                <h3 style="color: #f0c040;">Aguardando Jogadores...</h3>
+                <p id="info-jogadores-espera" style="margin-top: 15px; color: #cbd5e1;"></p>
+                <div class="pontinhos" style="font-size: 2rem; color: #4ade80; margin-top: 10px;"></div>
+            </div>
+
+        </div>
+    </div>
+
     <div id="modal-notificacao" class="modal-overlay modal-oculto">
         <div class="modal-conteudo" id="modal-texto"></div>
     </div>

@@ -497,3 +497,26 @@ body {
     transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
     pointer-events: none;
 }
+
+/* ==========================================
+   ESTILOS DO LOBBY / SELECTS
+   ========================================== */
+.select-estilizado {
+    width: 100%;
+    padding: 12px;
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.select-estilizado:focus {
+    border-color: #3b82f6;
+}
+
+.select-estilizado option {
+    background: #0f172a;
+}
