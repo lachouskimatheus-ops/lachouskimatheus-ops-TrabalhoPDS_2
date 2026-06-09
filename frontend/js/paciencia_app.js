@@ -106,9 +106,10 @@ function ehMovimentoValido(origem, tipoDestino, indiceDestino) {
     if (tipoDestino === 'fundacao') {
         const fundacaoDestino = estado.fundacoes[indiceDestino];
         
-        // Se a fundação está vazia, só aceita Ás (valor 1)
+        // Se a fundação está vazia, só aceita Ás do naipe correto
+        // (fundação 0 = paus, 1 = copas, 2 = espadas, 3 = ouros)
         if (!fundacaoDestino || fundacaoDestino.length === 0) {
-            return cartaSendoMovida.valor === 1; 
+            return cartaSendoMovida.valor === 1 && cartaSendoMovida.naipe === indiceDestino;
         }
         
         // Se já tem carta, precisa ser o mesmo naipe e valor superior (n+1)
