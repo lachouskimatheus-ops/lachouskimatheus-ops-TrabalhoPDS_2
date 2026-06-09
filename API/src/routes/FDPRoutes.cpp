@@ -192,10 +192,13 @@ namespace {
             };
 
             // ---> APLICANDO O NOME NO BACKEND <---
-            if (!nomeRecebido.empty()) {
-                // OBSERVAÇÃO: Você precisa garantir que este método exista dentro da sua classe SalaFDP!
-                // sala->definirNomeJogador(idJogador, nomeRecebido);
-            };
+            if (!nomeRecebido.empty() && idJogador != -1) {
+            // Acessa o jogador diretamente pela mesa e altera o nome
+            JogadorFDP* jogadorNaMesa = static_cast<JogadorFDP*>(sala->getMesa()->getJogadores()[idJogador]);
+            if (jogadorNaMesa != nullptr) {
+                jogadorNaMesa->setNome(nomeRecebido);
+            }
+        };
 
             if (conexaoAnterior != nullptr && conexaoAnterior != &conexao) {
                 sessoesFDP.erase(conexaoAnterior);

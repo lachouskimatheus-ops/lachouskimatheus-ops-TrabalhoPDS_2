@@ -36,6 +36,10 @@ public:
         int maxJogadores
     );
 
+    MesaFDP* getMesa() {
+        return &mesa_;
+    }
+
     int adicionarJogador(
         crow::websocket::connection* conexao,
         const std::string& tokenReconexao
@@ -93,3 +97,4 @@ public:
     const std::vector<ConexaoFDP>&
     conexoes() const;
 };
+

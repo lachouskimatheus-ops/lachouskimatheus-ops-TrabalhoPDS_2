@@ -37,7 +37,7 @@ function tocarSom(nomeArquivo) {
 // VARIÁVEIS GERAIS
 // ==========================================
 const urlParams = new URLSearchParams(window.location.search);
-const meuId = parseInt(urlParams.get('id')) || 0;
+let meuId = parseInt(urlParams.get('id')) || 0;
 const salaAtual = urlParams.get('sala') || 'global';
 let meuNome = 'Anônimo'; 
 let socket = null;
@@ -59,12 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnEntrar = document.getElementById("btn-entrar-jogo");
     const codigoSalaVisor = document.getElementById("codigo-sala-entrada");
 
-    // Injeta o nome da sala no modal
     if (codigoSalaVisor) {
         codigoSalaVisor.innerText = "SALA " + salaAtual.toUpperCase();
     }
 
-    // Tenta carregar o nome salvo
     const nomeSalvo = localStorage.getItem('jogador_nickname');
     if (nomeSalvo) {
         inputNome.value = nomeSalvo;
@@ -85,7 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem('jogador_nickname', meuNome);
         modalEntrada.classList.add("modal-oculto"); 
 
-        // Atualiza a interface gráfica do seu lado com seu nome novo
         const tituloJogador = document.querySelector('.info-local h2');
         if (tituloJogador) {
             tituloJogador.innerText = `${meuNome} (Você)`;
@@ -99,7 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
             avatarLocal.alt = 'Seu Avatar';
         }
         
-        // Dispara a conexão APENAS após o clique
         iniciarConexaoFDP(); 
     };
 });
@@ -107,6 +103,12 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================
 // CONEXÃO COM O SERVIDOR (WEBSOCKET)
 // ==========================================
+
+// Função nova para garantir que abas diferentes sejam jogadores diferentes
+function gerarTokenAleatorio() {
+    return 'tk_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+}
+
 function iniciarConexaoFDP() {
     const protocolo = location.protocol === "https:" ? "wss" : "ws";
     socket = new WebSocket(`${protocolo}://${window.location.host}/ws/fdp`);
@@ -114,60 +116,109 @@ function iniciarConexaoFDP() {
     socket.onopen = function() {
         console.log("WebSocket FDP conectado");
         
-        // Pega o token salvo para permitir reconexão
-        let token = sessionStorage.getItem(`fdp_token_${salaAtual}`) || "NOVO_TOKEN";
+        let token = sessionStorage.getItem(`fdp_token_${salaAtual}`);
+        // Se não tiver token salvo, gera um ÚNICO para esta aba!
+        if (!token) {
+            token = gerarTokenAleatorio();
+            sessionStorage.setItem(`fdp_token_${salaAtual}`, token);
+        }
 
         socket.send(JSON.stringify({
             tipo: "ENTRAR_SALA",
             sala: salaAtual,
             token: token,
             jogador_id: meuId,
-            nome: meuNome // Mandando a string para o backend C++
+            nome: meuNome 
         }));
     };
 
     socket.onmessage = function(event) {
-        const estadoMesa = JSON.parse(event.data);
+        const msg = JSON.parse(event.data);
 
-        // Tratamento de erros do backend
-        if (estadoMesa.tipo === "ERRO" || estadoMesa.erro) {
-            mostrarModal(`<h2 style='color: #ef4444;'>Ops!</h2><p>${estadoMesa.erro || estadoMesa.mensagem}</p>`, 3500);
-            // Se o token for invalido, limpa a sessao para poder tentar de novo
-            if(estadoMesa.mensagem && estadoMesa.mensagem.toLowerCase().includes("token")) {
+        if (msg.erro || msg.tipo === "ERRO") {
+            mostrarModal(`<h2 style='color: #ef4444;'>Ops!</h2><p>${msg.erro || msg.mensagem}</p>`, 3500);
+            if(msg.mensagem && msg.mensagem.toLowerCase().includes("token")) {
                 sessionStorage.removeItem(`fdp_token_${salaAtual}`);
             }
             return;
         }
 
-        // Reconexão validada
-        if (estadoMesa.tipo === "ENTRADA_CONFIRMADA" || estadoMesa.tipo === "RECONEXAO_CONFIRMADA") {
-            if (estadoMesa.token_reconexao) {
-                sessionStorage.setItem(`fdp_token_${salaAtual}`, estadoMesa.token_reconexao);
+        if (msg.tipo === "ENTRADA_CONFIRMADA" || msg.tipo === "RECONEXAO_CONFIRMADA") {
+            if (msg.token_reconexao) {
+                sessionStorage.setItem(`fdp_token_${salaAtual}`, msg.token_reconexao);
             }
+            if (Number.isInteger(msg.meu_id)) {
+                meuId = msg.meu_id;
+            } else if (Number.isInteger(msg.jogador_id)) {
+                meuId = msg.jogador_id;
+            }
+            
+            atualizarPainelConexao(msg);
             return; 
         }
 
-        // Se o JSON tiver a estrutura correta do jogo, renderiza a interface
-        if(estadoMesa.jogadores) {
-            atualizarInterface(estadoMesa);
-        }
+        atualizarPainelConexao(msg);
+
+        if(!msg.jogadores) return;
+
+        atualizarInterface(msg);
     };
 
     socket.onclose = function() {
         console.warn("WebSocket fechado.");
+        const painelConexao = document.getElementById('painel-conexao');
+        if (painelConexao) {
+            painelConexao.style.display = 'flex';
+            painelConexao.classList.remove('conectado');
+            painelConexao.classList.add('desconectado');
+            document.querySelector('.indicador-conexao').style.backgroundColor = '#ef4444';
+            document.getElementById('texto-conexao').innerText = "Conexão perdida";
+        }
     };
 }
 
 // ==========================================
 // ATUALIZAÇÃO DA INTERFACE DO JOGO
 // ==========================================
+
+function atualizarPainelConexao(dados) {
+    const painelConexao = document.getElementById('painel-conexao');
+    if (!painelConexao) return;
+
+    painelConexao.classList.remove('desconectado');
+    painelConexao.classList.add('conectado');
+    document.querySelector('.indicador-conexao').style.backgroundColor = '#4ade80';
+    document.getElementById('texto-conexao').innerText = "Conectado";
+
+    let qtdJogadores = null; 
+
+    // Verifica a quantidade real de jogadores com IDs válidos
+    if (dados.jogadores && Array.isArray(dados.jogadores)) {
+        qtdJogadores = dados.jogadores.filter(j => j && j.id !== undefined).length;
+    } else if (Number.isInteger(dados.jogadores_conectados)) {
+        qtdJogadores = dados.jogadores_conectados;
+    }
+
+    if (qtdJogadores !== null) {
+        const maxJogadores = dados.max_jogadores || 4;
+        document.getElementById('texto-jogadores').innerText = `Jogadores: ${qtdJogadores}/${maxJogadores}`;
+    }
+    
+    if (dados.partida_iniciada) {
+        painelConexao.style.display = 'none'; 
+    } else {
+        painelConexao.style.display = 'flex';
+        document.getElementById('texto-turno').innerText = "Aguardando iniciar...";
+    }
+}
+
 function atualizarInterface(dados) {
     const estadoAnterior = window.estadoMesaAtual; 
     let iniciarAnimacao = false; 
 
     const isRodadaCega = (dados.cartas_na_rodada === 1);
     const eu = dados.jogadores.find(j => j.id === meuId);
-    if (!eu) return;
+    if (!eu) return; 
 
     const qtdVivos = dados.jogadores.filter(j => j.vidas > 0).length;
     const euAnterior = estadoAnterior ? estadoAnterior.jogadores.find(j => j.id === meuId) : null;
@@ -189,7 +240,7 @@ function atualizarInterface(dados) {
             perdedores.forEach(j => {
                 const oldJ = estadoAnterior.jogadores.find(o => o.id === j.id);
                 const perdeu = oldJ.vidas - j.vidas;
-                msg += `<p><b>${j.name || j.nome || 'Jogador '+j.id}</b> perdeu ${perdeu} vida</p>`;
+                msg += `<p><b>${j.name || j.nome || 'Jogador '+j.id}</b> perdeu ${perdeu} vida(s)</p>`;
             });
             const vivos = dados.jogadores.filter(j => j.vidas > 0);
             if (vivos.length === 1) {
@@ -390,6 +441,7 @@ function atualizarInterface(dados) {
 // ==========================================
 // FUNÇÕES AUXILIARES E GERADORES DE CARTAS
 // ==========================================
+
 function construirFaceCarta(el, cartaBase) {
     if (configJogo.baralho === 'padrao') {
         const textoValor = traduzirValorCarta(cartaBase.valor);
@@ -429,6 +481,7 @@ function obterCaminhoCarta(valor, naipe) {
 // ==========================================
 // FUNÇÕES DE AÇÕES DO JOGO
 // ==========================================
+
 function jogarCarta(indice) {
     tocarSom('jogar_carta.ogg');
     socket.send(JSON.stringify({ tipo: "ACAO_JOGO", acao: "JOGAR_CARTA", jogador_id: meuId, indice: indice })); 
@@ -451,12 +504,15 @@ function mostrarModal(htmlContent, tempoMs) {
 // ==========================================
 // CONTROLE DO MENU DE PERSONALIZAÇÃO
 // ==========================================
+
 function abrirConfig() {
     document.getElementById('modal-config').classList.remove('modal-oculto');
+    
     for (let i = 1; i <= 4; i++) {
         const img = document.getElementById(`opt-avatar-${i}`);
         if(img) img.src = `/assets/avatares/avatar_${i}.png`;
     }
+
     document.querySelectorAll('.avatar-opcao').forEach(img => img.classList.remove('selecionado'));
     const btnAvatar = document.getElementById(`opt-avatar-${configJogo.avatar}`);
     if(btnAvatar) btnAvatar.classList.add('selecionado');
@@ -485,8 +541,10 @@ function mudarBaralho(tipo) {
 function mudarAvatar(num) {
     configJogo.avatar = num;
     localStorage.setItem('pref_avatar', num);
+    
     document.querySelectorAll('.avatar-opcao').forEach(img => img.classList.remove('selecionado'));
     document.getElementById(`opt-avatar-${num}`).classList.add('selecionado');
+    
     const localAvatarImg = document.querySelector('.local-avatar');
     if(localAvatarImg) localAvatarImg.src = `/assets/avatares/avatar_${num}.png`;
 }
@@ -494,6 +552,7 @@ function mudarAvatar(num) {
 // ==========================================
 // ANIMAÇÕES
 // ==========================================
+
 function animarDistribuicao(dados) {
     tocarSom('shuffle.mp3');
     const baralho = document.getElementById('baralho-central');

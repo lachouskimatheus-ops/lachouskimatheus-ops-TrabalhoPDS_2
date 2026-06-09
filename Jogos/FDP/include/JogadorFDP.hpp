@@ -29,4 +29,5 @@ public:
     }
 
     void setVidas(int novasVidas);
+    void setNome(const std::string& novoNome);
 };

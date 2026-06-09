@@ -43,3 +43,7 @@ int JogadorFDP::getVezesGanhas() const {
 void JogadorFDP::setVidas(int novasVidas) {
     vidas_ = novasVidas;
 }
+
+void JogadorFDP::setNome(const std::string& novoNome) {
+    nome_ = novoNome;
+}
