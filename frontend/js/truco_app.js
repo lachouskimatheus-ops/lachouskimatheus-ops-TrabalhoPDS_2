@@ -1,8 +1,58 @@
-// ==========================================
-// SISTEMA DE ÁUDIO
-// ==========================================
 const CAMINHO_SONS = "/assets/sons/";
 const sonsPreCarregados = {};
+const parametros = new URLSearchParams(window.location.search);
+const idSala = parametros.get("sala");
+
+let socket = null;
+let meuId = null;
+let meuNome = "";
+let equipeEscolhida = 1;
+let estadoAtual = null;
+let estadoAnterior = null;
+let reconectarAutomaticamente = true;
+let tentativaReconexao = 0;
+let intervaloPing = null;
+let eventoAnterior = "";
+let novaMaoAgendada = false;
+
+const modalEntrada = document.getElementById("modal-entrada");
+const modalEspera = document.getElementById("modal-espera");
+const inputNome = document.getElementById("input-nome");
+const btnEntrarJogo = document.getElementById("btn-entrar-jogo");
+const erroEntrada = document.getElementById("erro-entrada");
+const botoesEquipe = document.querySelectorAll(".btn-equipe");
+
+document.addEventListener("DOMContentLoaded", iniciar);
+
+function iniciar() {
+    if (!idSala) {
+        alert("Código da sala de Truco não informado.");
+        window.location.href = "/pages/truco_config.html";
+        return;
+    }
+
+    ["jogar_carta.ogg", "shuffle.mp3", "victory_6.mp3", "click.mp3"].forEach(preCarregarSom);
+
+    document.getElementById("codigo-sala-entrada").textContent = `Sala ${idSala}`;
+
+    inputNome.value = localStorage.getItem(chaveNome()) || "";
+    equipeEscolhida = Number(localStorage.getItem(chaveEquipe()) || 1);
+    atualizarSelecaoEquipe();
+
+    botoesEquipe.forEach(botao => {
+        botao.addEventListener("click", () => {
+            equipeEscolhida = Number(botao.dataset.equipe);
+            atualizarSelecaoEquipe();
+        });
+    });
+
+    btnEntrarJogo.addEventListener("click", entrarNaSala);
+    inputNome.addEventListener("keydown", evento => {
+        if (evento.key === "Enter") entrarNaSala();
+    });
+
+    conectarWebSocket();
+}
 
 function preCarregarSom(nomeArquivo) {
     const audio = new Audio(`${CAMINHO_SONS}${nomeArquivo}`);
@@ -12,592 +62,823 @@ function preCarregarSom(nomeArquivo) {
 }
 
 function tocarSom(nomeArquivo) {
-    const audioOriginal = sonsPreCarregados[nomeArquivo];
-    if (!audioOriginal) return;
-    const audio = audioOriginal.cloneNode(true);
+    const original = sonsPreCarregados[nomeArquivo];
+    if (!original) return;
+
+    const audio = original.cloneNode(true);
     audio.currentTime = 0;
     audio.play().catch(() => {});
 }
 
-["jogar_carta.ogg", "shuffle.mp3", "victory_6.mp3", "click.mp3"].forEach(preCarregarSom);
-
-// ==========================================
-// IDENTIFICAÇÃO DO JOGADOR
-// ==========================================
-const urlParams = new URLSearchParams(window.location.search);
-const idNaUrl = parseInt(urlParams.get('id'));
-
-// Se já tem ?id=X na URL, usa direto. Senão, pede nome e aguarda o servidor atribuir.
-let meuId = idNaUrl || null;
-let meuNome = null;
-
-// Se já tem id na URL, recupera o nome salvo
-if (meuId) {
-    meuNome = localStorage.getItem('truco_nome_' + meuId) || ('Jogador ' + meuId);
+function chaveToken() {
+    return `truco_token_${idSala}`;
 }
 
-// ==========================================
-// INICIALIZAÇÃO
-// ==========================================
-document.addEventListener("DOMContentLoaded", () => {
-    if (!meuId) {
-        // Novo jogador: mostra tela de nome antes de conectar
-        pedirNome();
-    } else {
-        // Jogador retornando (tem ?id= na URL): conecta direto
-        conectarWebSocket();
+function chaveNome() {
+    return `truco_nome_${idSala}`;
+}
+
+function chaveEquipe() {
+    return `truco_equipe_${idSala}`;
+}
+
+function chaveSessaoAtiva() {
+    return `truco_sessao_${idSala}`;
+}
+
+function obterTokenReconexao() {
+    let token = localStorage.getItem(chaveToken());
+
+    if (!token) {
+        token = typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+
+        localStorage.setItem(chaveToken(), token);
     }
-});
 
-function pedirNome() {
-    // Cria overlay de entrada de nome
-    const overlay = document.createElement('div');
-    overlay.id = 'tela-nome';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-        display: flex; justify-content: center; align-items: center;
-        z-index: 2000; backdrop-filter: blur(8px);
-    `;
-    overlay.innerHTML = `
-        <div style="
-            background: #1e293b; border: 2px solid #334155;
-            border-radius: 20px; padding: 50px 60px;
-            text-align: center; min-width: 340px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        ">
-            <div style="font-size: 22px; color: #f0c040; letter-spacing: 8px; margin-bottom: 12px;">♠ ♥ ♦ ♣</div>
-            <h2 style="color: #f8fafc; font-size: 1.8rem; letter-spacing: 4px; margin-bottom: 30px;">TRUCO</h2>
-            <p style="color: #9ca3af; margin-bottom: 16px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 2px;">Seu nome</p>
-            <input id="input-nome" type="text" maxlength="20" placeholder="Digite seu nome..."
-                style="
-                    width: 100%; padding: 14px; background: #0f172a;
-                    border: 1.5px solid #334155; border-radius: 10px;
-                    color: #f8fafc; font-size: 1.1rem; outline: none;
-                    text-align: center; margin-bottom: 20px;
-                    transition: border-color 0.2s;
-                "
-                onfocus="this.style.borderColor='#f0c040'"
-                onblur="this.style.borderColor='#334155'"
-            />
-            <button id="btn-confirmar-nome" onclick="confirmarNome()" style="
-                width: 100%; padding: 14px; background: #b45309;
-                border: none; border-radius: 12px; color: white;
-                font-size: 1rem; font-weight: 700; letter-spacing: 3px;
-                text-transform: uppercase; cursor: pointer;
-                box-shadow: 0 0 20px rgba(180,83,9,0.3);
-                transition: all 0.2s;
-            ">Entrar</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    // Foca no input e permite confirmar com Enter
-    setTimeout(() => {
-        const input = document.getElementById('input-nome');
-        input.focus();
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') confirmarNome(); });
-    }, 100);
+    return token;
 }
 
-function confirmarNome() {
-    const input = document.getElementById('input-nome');
-    const nome = input.value.trim();
-    if (!nome) {
-        input.style.borderColor = '#dc2626';
-        input.placeholder = 'Digite um nome!';
-        return;
-    }
-    meuNome = nome;
-    document.getElementById('tela-nome').remove();
-    conectarWebSocket();
+function atualizarSelecaoEquipe() {
+    botoesEquipe.forEach(botao => {
+        botao.classList.toggle(
+            "selecionado",
+            Number(botao.dataset.equipe) === equipeEscolhida
+        );
+    });
 }
-
-// ==========================================
-// WEBSOCKET
-// ==========================================
-let socket = null;
 
 function conectarWebSocket() {
-    socket = new WebSocket(`ws://${window.location.host}/ws/truco`);
+    atualizarIndicadorConexao("Conectando ao servidor", "Aguarde...");
 
-    socket.onopen = function () {
-        console.log("WebSocket Truco conectado.");
-        // Se não tem id ainda, envia o nome para o servidor atribuir um id
-        if (!meuId) {
-            socket.send(JSON.stringify({ acao: "REGISTRAR", nome: meuNome }));
+    const protocolo = window.location.protocol === "https:" ? "wss:" : "ws:";
+    socket = new WebSocket(`${protocolo}//${window.location.host}/ws/truco`);
+
+    socket.onopen = () => {
+        tentativaReconexao = 0;
+        iniciarPing();
+        atualizarIndicadorConexao("Conectado ao servidor", `Sala ${idSala}`);
+
+        if (localStorage.getItem(chaveSessaoAtiva()) === "true") {
+            enviarEntrada(true);
         } else {
-            // Reconecta com id já conhecido
-            socket.send(JSON.stringify({ acao: "RECONECTAR", jogador_id: meuId, nome: meuNome }));
+            abrirModalEntrada();
         }
     };
 
-    socket.onmessage = function (event) {
-        const estado = JSON.parse(event.data);
+    socket.onmessage = evento => {
+        let dados;
 
-        // Servidor atribuiu um ID para este jogador
-        if (estado.meu_id && !meuId) {
-            meuId = estado.meu_id;
-            localStorage.setItem('truco_nome_' + meuId, meuNome);
-            // Atualiza a URL com o id sem recarregar a página
-            const novaUrl = window.location.pathname + '?id=' + meuId;
-            window.history.replaceState(null, '', novaUrl);
+        try {
+            dados = JSON.parse(evento.data);
+        } catch {
+            console.error("Mensagem inválida recebida:", evento.data);
+            return;
         }
 
-        atualizarInterface(estado);
+        processarMensagem(dados);
     };
 
-    socket.onerror = function (e) {
-        console.error("Erro WebSocket:", e);
+    socket.onerror = erro => {
+        console.error("Erro no WebSocket do Truco:", erro);
+    };
+
+    socket.onclose = () => {
+        pararPing();
+        atualizarIndicadorConexao("Conexão interrompida", "Tentando reconectar...");
+
+        if (!reconectarAutomaticamente) return;
+
+        const atraso = Math.min(1000 * (2 ** tentativaReconexao), 10000);
+        ++tentativaReconexao;
+
+        setTimeout(conectarWebSocket, atraso);
     };
 }
 
-// ==========================================
-// ATUALIZAÇÃO DA INTERFACE E LOBBY
-// ==========================================
-function atualizarInterface(dados) {
-    window.estadoTrucoAtual = dados;
+function iniciarPing() {
+    pararPing();
 
-    const modalLobby = document.getElementById('modal-lobby');
-    const lobbyCriacao = document.getElementById('lobby-criacao');
-    const lobbyEntrada = document.getElementById('lobby-entrada');
-    const lobbyEspera = document.getElementById('lobby-espera');
+    intervaloPing = setInterval(() => {
+        enviarMensagem({ tipo: "ping" });
+    }, 20000);
+}
 
-    const jaEntrou = dados.jogadores && dados.jogadores.find(j => j.id === meuId) !== undefined;
-    const salaCheia = dados.jogadores && dados.jogadores.length === dados.max_jogadores;
+function pararPing() {
+    if (!intervaloPing) return;
+    clearInterval(intervaloPing);
+    intervaloPing = null;
+}
 
-    if (!salaCheia) {
-        modalLobby.classList.remove('modal-oculto');
-        lobbyCriacao.classList.add('escondido');
-        lobbyEntrada.classList.add('escondido');
-        lobbyEspera.classList.add('escondido');
+function processarMensagem(dados) {
+    switch (dados.tipo) {
+        case "conectado":
+        case "pong":
+            return;
 
-        if (jaEntrou) {
-            lobbyEspera.classList.remove('escondido');
-            document.getElementById('info-jogadores-espera').innerText =
-                `${dados.jogadores.length} de ${dados.max_jogadores} jogadores conectados.`;
-        }
-        else if (!dados.sala_configurada) {
-            lobbyCriacao.classList.remove('escondido');
-            atualizarInterfaceLobby();
-        }
-        else {
-            lobbyEntrada.classList.remove('escondido');
-            document.getElementById('info-sala').innerText =
-                `Truco ${dados.modalidade === 'paulista' ? 'Paulista' : 'Mineiro'} - ${dados.max_jogadores} Jogadores`;
+        case "entrou_sala":
+        case "reconectado_sala":
+            meuId = dados.id_jogador;
+            localStorage.setItem(chaveSessaoAtiva(), "true");
+            fecharModalEntrada();
 
-            const btnEq1 = document.getElementById('btn-entrar-eq1');
-            const btnEq2 = document.getElementById('btn-entrar-eq2');
+            if (!dados.partida_iniciada) abrirModalEspera();
+            return;
 
-            if (dados.max_jogadores === 2) {
-                btnEq1.innerText = "Entrar no Jogo";
-                btnEq2.style.display = "none";
-                btnEq1.disabled = false;
-            } else {
-                btnEq2.style.display = "inline-block";
-                btnEq1.innerText = `Equipe 1 (${dados.vagas_eq1} vagas)`;
-                btnEq2.innerText = `Equipe 2 (${dados.vagas_eq2} vagas)`;
-                btnEq1.disabled = dados.vagas_eq1 <= 0;
-                btnEq2.disabled = dados.vagas_eq2 <= 0;
-                btnEq1.style.opacity = dados.vagas_eq1 <= 0 ? "0.5" : "1";
-                btnEq2.style.opacity = dados.vagas_eq2 <= 0 ? "0.5" : "1";
-            }
-        }
+        case "estado_jogo":
+            atualizarInterface(dados);
+            return;
+
+        case "sessao_substituida":
+            reconectarAutomaticamente = false;
+            mostrarModal(
+                "<h2>Sessão substituída</h2><p>Esta sala foi aberta em outra janela.</p>",
+                0
+            );
+            return;
+
+        case "erro":
+            tratarErro(dados.mensagem || "Erro desconhecido.");
+            return;
+    }
+}
+
+function tratarErro(mensagem) {
+    console.error("Erro do Truco:", mensagem);
+
+    const erroDeEntrada =
+        !meuId ||
+        mensagem.includes("equipe") ||
+        mensagem.includes("sala") ||
+        mensagem.includes("entrar") ||
+        mensagem.includes("cheia");
+
+    if (erroDeEntrada) {
+        localStorage.removeItem(chaveSessaoAtiva());
+        abrirModalEntrada();
+        erroEntrada.textContent = mensagem;
+        btnEntrarJogo.disabled = false;
+        btnEntrarJogo.textContent = "Entrar";
         return;
+    }
+
+    mostrarModal(`<h2>Não foi possível realizar a ação</h2><p>${mensagem}</p>`, 2200);
+}
+
+function entrarNaSala() {
+    const nome = inputNome.value.trim();
+
+    if (nome.length < 2) {
+        erroEntrada.textContent = "Digite um nome com pelo menos dois caracteres.";
+        inputNome.focus();
+        return;
+    }
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+        erroEntrada.textContent = "A conexão com o servidor ainda não está pronta.";
+        return;
+    }
+
+    meuNome = nome;
+    localStorage.setItem(chaveNome(), meuNome);
+    localStorage.setItem(chaveEquipe(), String(equipeEscolhida));
+
+    erroEntrada.textContent = "";
+    btnEntrarJogo.disabled = true;
+    btnEntrarJogo.textContent = "Entrando...";
+
+    enviarEntrada(false);
+}
+
+function enviarEntrada(reconexao) {
+    const mensagem = {
+        tipo: "entrar_sala",
+        sala: idSala,
+        token: obterTokenReconexao()
+    };
+
+    if (!reconexao) {
+        mensagem.nome = meuNome || inputNome.value.trim();
+        mensagem.equipe = equipeEscolhida;
+    }
+
+    enviarMensagem(mensagem);
+}
+
+function enviarMensagem(mensagem) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+    socket.send(JSON.stringify(mensagem));
+    return true;
+}
+
+function abrirModalEntrada() {
+    modalEspera.classList.add("modal-oculto");
+    modalEntrada.classList.remove("modal-oculto");
+
+    setTimeout(() => inputNome.focus(), 100);
+}
+
+function fecharModalEntrada() {
+    modalEntrada.classList.add("modal-oculto");
+    btnEntrarJogo.disabled = false;
+    btnEntrarJogo.textContent = "Entrar";
+    erroEntrada.textContent = "";
+}
+
+function abrirModalEspera() {
+    modalEspera.classList.remove("modal-oculto");
+}
+
+function fecharModalEspera() {
+    modalEspera.classList.add("modal-oculto");
+}
+
+function atualizarInterface(dados) {
+    estadoAnterior = estadoAtual;
+    estadoAtual = dados;
+    meuId = dados.meu_id;
+
+    if (!dados.partida_iniciada) {
+        abrirModalEspera();
+
+        document.getElementById("info-jogadores-espera").textContent =
+            `${dados.jogadores_registrados} de ${dados.max_jogadores} jogadores na sala.`;
+
+        atualizarIndicadorConexao(
+            "Aguardando jogadores",
+            `${dados.jogadores_registrados}/${dados.max_jogadores} jogadores`
+        );
+
+        renderizarJogadores(dados);
+        return;
+    }
+
+    fecharModalEntrada();
+    fecharModalEspera();
+
+    atualizarPlacar(dados);
+    atualizarInformacoesMao(dados);
+    renderizarVira(dados.vira);
+    renderizarCartasDaQueda(dados.jogadas_queda || []);
+    renderizarJogadores(dados);
+    renderizarMinhaMao(dados);
+    atualizarPainelAcoes(dados);
+    atualizarIndicadorTurno(dados);
+    tratarEvento(dados);
+    verificarNovaDistribuicao(dados);
+}
+
+function atualizarPlacar(dados) {
+    document.getElementById("pontos-eq1").textContent = dados.pontos_equipe_1 ?? 0;
+    document.getElementById("pontos-eq2").textContent = dados.pontos_equipe_2 ?? 0;
+
+    const equipe1 = dados.jogadores?.find(jogador => jogador.equipe === 1);
+    const equipe2 = dados.jogadores?.find(jogador => jogador.equipe === 2);
+
+    if (dados.max_jogadores === 2) {
+        document.getElementById("nome-equipe-1").textContent =
+            equipe1?.nome || "Equipe 1";
+
+        document.getElementById("nome-equipe-2").textContent =
+            equipe2?.nome || "Equipe 2";
     } else {
-        modalLobby.classList.add('modal-oculto');
+        document.getElementById("nome-equipe-1").textContent = "Equipe 1";
+        document.getElementById("nome-equipe-2").textContent = "Equipe 2";
+    }
+}
+
+function atualizarInformacoesMao(dados) {
+    const valorMao = document.getElementById("valor-mao");
+    valorMao.textContent = dados.valor_mao ?? 1;
+    valorMao.classList.toggle("mao-de-onze", Boolean(dados.mao_de_onze));
+
+    document.getElementById("queda-atual").textContent =
+        `${dados.numero_queda || 1}ª queda`;
+}
+
+function renderizarVira(vira) {
+    const elemento = document.getElementById("carta-vira");
+
+    if (!vira || vira.valor === undefined) {
+        elemento.innerHTML = "?";
+        elemento.className = "carta carta-vazia";
+        elemento.removeAttribute("data-naipe-simbolo");
+        return;
     }
 
-    // --- RENDERIZAÇÃO DA MESA ---
-    const estadoAnterior = window.estadoTrucoAnterior || {};
-    const eu = dados.jogadores ? dados.jogadores.find(j => j.id === meuId) : null;
-    const euAnterior = estadoAnterior.jogadores ? estadoAnterior.jogadores.find(j => j.id === meuId) : null;
-    const novaDistribuicao = (!euAnterior && eu && eu.mao.length > 0)
-        || (euAnterior && eu && eu.mao.length > euAnterior.mao.length);
-    window.estadoTrucoAnterior = dados;
+    preencherCarta(elemento, vira);
+}
 
-    // Placar — no 1v1 usa nomes, no 2v2 usa "Equipe X"
-    const modo1v1 = dados.max_jogadores === 2;
-    if (modo1v1 && dados.jogadores && dados.jogadores.length === 2) {
-        const jog1 = dados.jogadores.find(j => j.equipe === 1);
-        const jog2 = dados.jogadores.find(j => j.equipe === 2);
-        document.querySelector('.placar-equipe:first-child .placar-label').innerText = jog1 ? jog1.nome : 'Jogador 1';
-        document.querySelector('.placar-equipe:last-child .placar-label').innerText  = jog2 ? jog2.nome : 'Jogador 2';
-    } else {
-        document.querySelector('.placar-equipe:first-child .placar-label').innerText = 'Equipe 1';
-        document.querySelector('.placar-equipe:last-child .placar-label').innerText  = 'Equipe 2';
-    }
-    document.getElementById('pontos-eq1').innerText = dados.pontos_equipe1 ?? 0;
-    document.getElementById('pontos-eq2').innerText = dados.pontos_equipe2 ?? 0;
+function renderizarCartasDaQueda(jogadas) {
+    const mesa = document.getElementById("cartas-na-mesa");
+    mesa.innerHTML = "";
 
-    // Valor da mão e queda
-    document.getElementById('valor-mao').innerText = dados.valor_mao ?? 1;
-    const quedaTextos = ["", "1ª Queda", "2ª Queda", "3ª Queda"];
-    document.getElementById('queda-atual').innerText = quedaTextos[dados.queda_atual] || "";
+    jogadas.forEach((jogada, indice) => {
+        if (!jogada.carta) return;
 
-    // Indica regra dos 11
-    const valorMaoEl = document.getElementById('valor-mao');
-    if (dados.mao_travada) {
-        valorMaoEl.title = "Regra dos 11: mão vale 3 pontos, sem truco";
-        valorMaoEl.style.color = '#f87171';
-    } else {
-        valorMaoEl.title = '';
-        valorMaoEl.style.color = '';
-    }
+        const carta = document.createElement("div");
+        preencherCarta(carta, jogada.carta);
+        carta.title = nomeDoJogador(jogada.id_jogador);
+        carta.style.setProperty("--rotacao-mesa", `${[-5, 4, -2, 6][indice % 4]}deg`);
+        mesa.appendChild(carta);
+    });
+}
 
-    // Vira
-    const viraDiv = document.getElementById('carta-vira');
-    if (dados.vira && dados.vira.valor !== undefined) {
-        const textoValor = traduzirValor(dados.vira.valor);
-        const simbolo = obterSimbolo(dados.vira.naipe);
-        viraDiv.innerHTML = `<span>${textoValor}</span>${gerarFigura(textoValor, dados.vira.naipe)}`;
-        viraDiv.className = `carta ${dados.vira.naipe}`;
-        viraDiv.setAttribute('data-naipe-simbolo', simbolo);
-    } else {
-        viraDiv.innerHTML = "?";
-        viraDiv.className = "carta";
-    }
-
-    // Cartas na mesa
-    const mesaDiv = document.getElementById('cartas-na-mesa');
-    mesaDiv.innerHTML = '';
-    if (dados.cartas_na_mesa) {
-        dados.cartas_na_mesa.forEach((carta, i) => {
-            const el = document.createElement('div');
-            const textoValor = traduzirValor(carta.valor);
-            const simbolo = obterSimbolo(carta.naipe);
-            el.className = `carta ${carta.naipe}`;
-            el.innerHTML = `<span>${textoValor}</span>${gerarFigura(textoValor, carta.naipe)}`;
-            el.setAttribute('data-naipe-simbolo', simbolo);
-            const rotacoes = [-4, 3, -2, 5];
-            el.style.setProperty('--rotacao-mesa', `${rotacoes[i % rotacoes.length]}deg`);
-            mesaDiv.appendChild(el);
-        });
-    }
-
-    // Oponentes
-    ['cadeira-esquerda', 'cadeira-topo', 'cadeira-direita'].forEach(id => {
-        document.getElementById(id).innerHTML = '';
+function renderizarJogadores(dados) {
+    ["cadeira-esquerda", "cadeira-topo", "cadeira-direita"].forEach(id => {
+        document.getElementById(id).innerHTML = "";
     });
 
-    if (dados.jogadores) {
-        const total = dados.jogadores.length;
-        dados.jogadores.forEach(j => {
-            if (j.id === meuId) return;
+    const jogadores = dados.jogadores || [];
+    const total = jogadores.length;
 
-            const pos = (j.id - meuId + total) % total;
-            let idCadeira = '';
-            if (total === 4) {
-                if (pos === 1) idCadeira = 'cadeira-direita';
-                else if (pos === 2) idCadeira = 'cadeira-topo';
-                else if (pos === 3) idCadeira = 'cadeira-esquerda';
-            } else if (total === 2) {
-                idCadeira = 'cadeira-topo';
-            }
-            if (!idCadeira) return;
+    jogadores.forEach(jogador => {
+        if (jogador.id === meuId) return;
 
-            const equipe = j.equipe || (j.id % 2 === 0 ? 2 : 1);
-            const suaVez = dados.jogador_da_vez === j.id;
-            const maoHtml = Array.from({ length: j.cartas_na_mao || 0 })
-                .map(() => '<div class="carta-verso"></div>').join('');
-            const tagEquipe = modo1v1 ? '' : `<span class="tag-equipe tag-equipe-${equipe}">Equipe ${equipe}</span>`;
+        const cadeira = obterCadeira(jogador.id, total);
+        if (!cadeira) return;
 
-            document.getElementById(idCadeira).innerHTML = `
-                <div class="perfil-jogador ${suaVez ? 'sua-vez' : ''}">
-                    <h3>${j.nome || 'Jogador ' + j.id}</h3>
-                    ${tagEquipe}
-                </div>
-                <div class="mao-oponente">${maoHtml}</div>
-            `;
-        });
+        const suaVez = dados.jogador_atual === jogador.id;
+        const cartas = Array.from(
+            { length: jogador.quantidade_cartas || 0 },
+            () => '<div class="carta-verso"></div>'
+        ).join("");
 
-        // Minha mão
-        if (eu) {
-            document.getElementById('nome-local').innerText = eu.nome || meuNome;
-            // No 1v1 oculta a tag de equipe
-            const dadosLocaisEl = document.querySelector('.dados-local');
-            if (dadosLocaisEl) {
-                dadosLocaisEl.style.display = modo1v1 ? 'none' : '';
-            }
-            document.getElementById('local-equipe').innerText = eu.equipe;
-            document.getElementById('local-quedas').innerText =
-                eu.equipe === 1 ? (dados.vitoriasEq1 || 0) : (dados.vitoriasEq2 || 0);
+        document.getElementById(cadeira).innerHTML = `
+            <div class="perfil-jogador ${suaVez ? "sua-vez" : ""}">
+                <h3>${escaparHtml(jogador.nome || `Jogador ${jogador.id + 1}`)}</h3>
+                ${dados.max_jogadores === 4
+                    ? `<span class="tag-equipe tag-equipe-${jogador.equipe}">Equipe ${jogador.equipe}</span>`
+                    : ""}
+                ${!jogador.conectado ? '<span class="status-desconectado">Desconectado</span>' : ""}
+            </div>
+            <div class="mao-oponente">${cartas}</div>
+        `;
+    });
 
-            const minhaMaoDiv = document.getElementById('minha-mao');
-            minhaMaoDiv.innerHTML = '';
-            const ehMinhaVez = dados.jogador_da_vez === meuId;
-            const meio = (eu.mao.length - 1) / 2;
+    const jogadorLocal = jogadores.find(jogador => jogador.id === meuId);
 
-            eu.mao.forEach((carta, i) => {
-                const el = document.createElement('div');
-                const textoValor = traduzirValor(carta.valor);
-                const simbolo = obterSimbolo(carta.naipe);
-                const angulo = (i - meio) * 6;
-                const transY = Math.abs(i - meio) * 4;
-                el.style.setProperty('--rotacao', `${angulo}deg`);
-                el.style.setProperty('--transY', `${transY}px`);
-                el.className = `carta ${carta.naipe}${carta.manilha ? ' manilha' : ''}`;
-                el.innerHTML = `<span>${textoValor}</span>${gerarFigura(textoValor, carta.naipe)}`;
-                el.setAttribute('data-naipe-simbolo', simbolo);
+    if (jogadorLocal) {
+        meuNome = jogadorLocal.nome;
+        document.getElementById("nome-local").textContent = jogadorLocal.nome;
+        document.getElementById("local-equipe").textContent = jogadorLocal.equipe;
+        document.getElementById("local-quedas").textContent =
+            jogadorLocal.equipe === 1
+                ? dados.vitorias_equipe_1 || 0
+                : dados.vitorias_equipe_2 || 0;
 
-                if (ehMinhaVez && !dados.aguardando_resposta_truco) {
-                    el.onmousedown = () => jogarCarta(i);
-                } else {
-                    el.classList.add('bloqueada');
-                }
-                minhaMaoDiv.appendChild(el);
-            });
-        }
+        document.querySelector(".dados-local").classList.toggle(
+            "dados-local-ocultos",
+            dados.max_jogadores === 2
+        );
     }
+}
 
-    // Painel de ações
-    atualizarPainelAcoes(dados);
+function renderizarMinhaMao(dados) {
+    const mao = document.getElementById("minha-mao");
+    const cartas = dados.minha_mao || [];
+    const meio = (cartas.length - 1) / 2;
 
-    // Eventos
-    if (dados.evento) tratarEvento(dados.evento, dados);
+    mao.innerHTML = "";
 
-    // Animação de distribuição
-    if (novaDistribuicao) animarDistribuicao(dados);
+    cartas.forEach((carta, indice) => {
+        const elemento = document.createElement("div");
+        preencherCarta(elemento, carta);
+
+        elemento.style.setProperty("--rotacao", `${(indice - meio) * 6}deg`);
+        elemento.style.setProperty("--transY", `${Math.abs(indice - meio) * 4}px`);
+
+        if (dados.pode_jogar) {
+            elemento.addEventListener("click", () => jogarCarta(indice));
+        } else {
+            elemento.classList.add("bloqueada");
+        }
+
+        mao.appendChild(elemento);
+    });
 }
 
 function atualizarPainelAcoes(dados) {
-    const painel = document.getElementById('painel-acoes');
-    const titulo = document.getElementById('titulo-acao');
-    const botoes = document.getElementById('botoes-acao');
-    const ehMinhaVez = dados.jogador_da_vez === meuId;
-    botoes.innerHTML = '';
+    const painel = document.getElementById("painel-acoes");
+    const titulo = document.getElementById("titulo-acao");
+    const botoes = document.getElementById("botoes-acao");
 
-    const eu = dados.jogadores ? dados.jogadores.find(j => j.id === meuId) : null;
-    const minhaEquipe = eu ? eu.equipe : 0;
+    botoes.innerHTML = "";
+    painel.classList.add("escondido");
 
-    if (dados.aguardando_resposta_truco && dados.equipe_respondendo === minhaEquipe) {
-        titulo.innerText = `Pedido de ${dados.nome_nivel_truco}!`;
-        painel.classList.remove('escondido');
-        painel.style.display = '';
+    if (dados.fase === "MAO_FINALIZADA") {
+        painel.classList.remove("escondido");
+        titulo.textContent = "Mão encerrada:";
 
-        const btnAceitar = criarBotao('Aceitar', 'aceitar', () => responderTruco('ACEITAR'));
-        const btnRecusar = criarBotao('Recusar', 'recusar', () => responderTruco('RECUSAR'));
-        botoes.appendChild(btnAceitar);
-        botoes.appendChild(btnRecusar);
+        botoes.appendChild(
+            criarBotao("Nova mão", "aceitar", iniciarNovaMao)
+        );
 
-        if (dados.nivel_truco < 4) {
-            const nomes = ['', 'Truco', 'Seis', 'Nove', 'Doze'];
-            const btnAumentar = criarBotao(nomes[dados.nivel_truco + 1] + '!', 'aumentar', () => responderTruco('AUMENTAR'));
-            botoes.appendChild(btnAumentar);
+        return;
+    }
+
+    if (dados.pode_responder_truco) {
+        painel.classList.remove("escondido");
+        titulo.textContent = `${dados.nome_pedidor || "Adversário"} pediu ${nomeValorTruco(dados.valor_pedido)}:`;
+
+        botoes.appendChild(criarBotao("Aceitar", "aceitar", aceitarTruco));
+        botoes.appendChild(criarBotao("Recusar", "recusar", recusarTruco));
+
+        if (proximoValor(dados.valor_pedido) !== 0) {
+            botoes.appendChild(
+                criarBotao(
+                    `${nomeValorTruco(proximoValor(dados.valor_pedido))}!`,
+                    "aumentar",
+                    aumentarTruco
+                )
+            );
         }
-    } else if (ehMinhaVez && !dados.aguardando_resposta_truco && dados.nivel_truco < 4 && !dados.mao_travada) {
-        titulo.innerText = 'Sua vez:';
-        painel.classList.remove('escondido');
-        painel.style.display = '';
-        const nomes = ['', 'Truco', 'Seis', 'Nove', 'Doze'];
-        const btnTruco = criarBotao(nomes[dados.nivel_truco + 1] + '!', 'truco', () => pedirTruco());
-        botoes.appendChild(btnTruco);
-    } else {
-        painel.classList.add('escondido');
+
+        return;
+    }
+
+    if (dados.pode_pedir_truco) {
+        painel.classList.remove("escondido");
+        titulo.textContent = "Sua vez:";
+
+        botoes.appendChild(
+            criarBotao(
+                `${nomeValorTruco(proximoValor(dados.valor_mao))}!`,
+                "truco",
+                pedirTruco
+            )
+        );
     }
 }
 
-function criarBotao(texto, classe, acao) {
-    const btn = document.createElement('button');
-    btn.className = `btn-acao ${classe}`;
-    btn.innerText = texto;
-    btn.onmousedown = () => { tocarSom('click.mp3'); acao(); };
-    return btn;
-}
+function atualizarIndicadorTurno(dados) {
+    const indicador = document.getElementById("indicador-turno");
+    const texto = document.getElementById("indicador-turno-texto");
+    const fase = document.getElementById("indicador-turno-fase");
 
-function nomeEquipe(dados, equipe) {
-    // No 1v1 usa o nome do jogador, no 2v2 usa "Equipe X"
-    if (dados.max_jogadores === 2 && dados.jogadores) {
-        const jog = dados.jogadores.find(j => j.equipe === equipe);
-        return jog ? jog.nome : ('Jogador ' + equipe);
+    indicador.className = "indicador-turno";
+
+    if (dados.fase === "PARTIDA_FINALIZADA") {
+        indicador.classList.add("finalizado");
+        texto.textContent = `${nomeEquipe(dados.vencedor_partida)} venceu`;
+        fase.textContent = "Partida finalizada";
+        return;
     }
-    return 'Equipe ' + equipe;
+
+    if (dados.fase === "MAO_FINALIZADA") {
+        indicador.classList.add("aguardando");
+        texto.textContent = dados.mensagem || "Mão encerrada";
+        fase.textContent = "Aguardando próxima mão";
+        return;
+    }
+
+    if (dados.pode_responder_truco) {
+        indicador.classList.add("alerta");
+        texto.textContent = "Sua equipe deve responder";
+        fase.textContent = `Pedido de ${nomeValorTruco(dados.valor_pedido)}`;
+        return;
+    }
+
+    if (dados.jogador_atual === meuId) {
+        indicador.classList.add("minha-vez");
+        texto.textContent = "É a sua vez";
+        fase.textContent = `${dados.numero_queda}ª queda`;
+        return;
+    }
+
+    indicador.classList.add("aguardando");
+
+    const jogadorAtual = dados.jogadores?.find(
+        jogador => jogador.id === dados.jogador_atual
+    );
+
+    texto.textContent = `Vez de ${jogadorAtual?.nome || "outro jogador"}`;
+    fase.textContent = `${dados.numero_queda}ª queda`;
 }
 
-function tratarEvento(evento, dados) {
-    switch (evento) {
-        case 'TRUCO_PEDIDO': {
-            // Mostra o valor correto: o que está sendo pedido agora
-            const valoresPedido = { 'Truco': 3, 'Seis': 6, 'Nove': 9, 'Doze': 12 };
-            const valorPedido = valoresPedido[dados.nome_nivel_truco] || dados.valor_se_aceito;
-            mostrarModal(`<h2 style="color:#f0c040;">🃏 ${dados.nome_pedidor || 'Alguém'} pediu ${dados.nome_nivel_truco}!</h2><p>Se aceito, a mão passa a valer ${valorPedido} ponto(s)</p>`, 2000);
-            tocarSom('click.mp3');
+function atualizarIndicadorConexao(texto, fase) {
+    const indicador = document.getElementById("indicador-turno");
+    indicador.className = "indicador-turno aguardando";
+
+    document.getElementById("indicador-turno-texto").textContent = texto;
+    document.getElementById("indicador-turno-fase").textContent = fase;
+}
+
+function tratarEvento(dados) {
+    const assinatura = [
+        dados.ultimo_evento,
+        dados.mensagem,
+        dados.pontos_equipe_1,
+        dados.pontos_equipe_2,
+        dados.numero_queda,
+        dados.valor_pedido
+    ].join("|");
+
+    if (!dados.ultimo_evento || assinatura === eventoAnterior) return;
+    eventoAnterior = assinatura;
+
+    switch (dados.ultimo_evento) {
+        case "TRUCO_PEDIDO":
+            mostrarModal(
+                `<h2 class="texto-dourado">${escaparHtml(dados.nome_pedidor || "Um jogador")} pediu ${nomeValorTruco(dados.valor_pedido)}!</h2>
+                 <p>A mão passará a valer ${dados.valor_pedido} pontos se for aceita.</p>`,
+                2200
+            );
+            tocarSom("click.mp3");
             break;
-        }
-        case 'TRUCO_ACEITO':
-            mostrarModal(`<h2 style="color:#4ade80;">✅ ${dados.nome_nivel_truco} aceito!</h2><p>Mão vale ${dados.valor_mao} ponto(s)</p>`, 2000);
+
+        case "TRUCO_ACEITO":
+            mostrarModal(
+                `<h2 class="texto-verde">Pedido aceito</h2>
+                 <p>A mão agora vale ${dados.valor_mao} pontos.</p>`,
+                2000
+            );
             break;
-        case 'TRUCO_RECUSADO':
-            mostrarModal(`<h2 style="color:#f87171;">❌ ${dados.nome_nivel_truco} recusado!</h2><p>${nomeEquipe(dados, dados.equipe_vencedora)} ganha ${dados.pontos_ganhos} ponto(s)</p>`, 2500);
+
+        case "TRUCO_RECUSADO":
+            mostrarModal(
+                `<h2 class="texto-vermelho">Pedido recusado</h2>
+                 <p>${escaparHtml(dados.mensagem || "")}</p>`,
+                2200
+            );
             break;
-        case 'FIM_QUEDA':
-            if (dados.vencedor_queda === 0) {
-                mostrarModal(`<h2 style="color:#60a5fa;">🤝 Queda empatou!</h2>`, 1800);
-            } else {
-                mostrarModal(`<h2 style="color:#4ade80;">⚔️ ${nomeEquipe(dados, dados.vencedor_queda)} venceu a queda!</h2>`, 1800);
-            }
-            tocarSom('jogar_carta.ogg');
+
+        case "FIM_MAO":
+            mostrarModal(
+                `<h2 class="texto-dourado">Fim da mão</h2>
+                 <p>${escaparHtml(dados.mensagem || "")}</p>`,
+                2300
+            );
+            tocarSom("victory_6.mp3");
             break;
-        case 'FIM_MAO':
-            if (dados.vencedor_mao === 0) {
-                mostrarModal(`<h2 style="color:#9ca3af;">🤝 Mão empatada! Ninguém pontua.</h2>`, 2500);
-            } else {
-                mostrarModal(`<h2 style="color:#f0c040;">🏆 ${nomeEquipe(dados, dados.vencedor_mao)} venceu a mão! +${dados.pontos_ganhos}pt</h2>`, 2500);
-                tocarSom('victory_6.mp3');
-            }
-            break;
-        case 'FIM_PARTIDA':
-            mostrarModal(`
-                <h2 style="color:#f0c040;">🥇 ${nomeEquipe(dados, dados.equipe_vencedora)} VENCEU!</h2>
-                <p>Placar final: ${dados.pontos_equipe1} × ${dados.pontos_equipe2}</p>
-                <p style="margin-top:20px;"><a href="/pages/menu.html" style="color:#60a5fa;">Voltar ao Menu</a></p>
-            `, 0);
-            tocarSom('victory_6.mp3');
+
+        case "FIM_PARTIDA":
+            mostrarModal(
+                `<h2 class="texto-dourado">${nomeEquipe(dados.vencedor_partida)} venceu!</h2>
+                 <p>Placar final: ${dados.pontos_equipe_1} × ${dados.pontos_equipe_2}</p>
+                 <a class="link-modal" href="/pages/menu.html">Voltar ao menu</a>`,
+                0
+            );
+            tocarSom("victory_6.mp3");
             break;
     }
 }
 
-// ==========================================
-// AÇÕES DO JOGADOR
-// ==========================================
+function verificarNovaDistribuicao(dados) {
+    if (!estadoAnterior) return;
+
+    const quantidadeAnterior = estadoAnterior.minha_mao?.length || 0;
+    const quantidadeAtual = dados.minha_mao?.length || 0;
+
+    if (quantidadeAtual > quantidadeAnterior) {
+        animarDistribuicao(dados);
+    }
+}
+
 function jogarCarta(indice) {
-    tocarSom('jogar_carta.ogg');
-    socket.send(JSON.stringify({ acao: "JOGAR_CARTA", jogador_id: meuId, indice: indice }));
+    tocarSom("jogar_carta.ogg");
+
+    enviarMensagem({
+        tipo: "acao_jogo",
+        acao: "JOGAR_CARTA",
+        indice
+    });
 }
 
 function pedirTruco() {
-    socket.send(JSON.stringify({ acao: "PEDIR_TRUCO", jogador_id: meuId }));
+    tocarSom("click.mp3");
+
+    enviarMensagem({
+        tipo: "acao_jogo",
+        acao: "PEDIR_TRUCO"
+    });
 }
 
-function responderTruco(resposta) {
-    socket.send(JSON.stringify({ acao: "RESPONDER_TRUCO", jogador_id: meuId, resposta: resposta }));
+function aceitarTruco() {
+    tocarSom("click.mp3");
+
+    enviarMensagem({
+        tipo: "acao_jogo",
+        acao: "ACEITAR_TRUCO"
+    });
 }
 
-// ==========================================
-// AÇÕES DO LOBBY
-// ==========================================
-function atualizarInterfaceLobby() {
-    const qtdJogadores = parseInt(document.getElementById('select-jogadores').value);
-    const containerEquipe = document.getElementById('container-equipe-criacao');
-    if (qtdJogadores === 2) {
-        containerEquipe.style.display = "none";
-    } else {
-        containerEquipe.style.display = "flex";
-    }
+function recusarTruco() {
+    tocarSom("click.mp3");
+
+    enviarMensagem({
+        tipo: "acao_jogo",
+        acao: "RECUSAR_TRUCO"
+    });
 }
 
-function criarSala() {
-    tocarSom('click.mp3');
-    const modalidade = document.getElementById('select-modalidade').value;
-    const maxJog = parseInt(document.getElementById('select-jogadores').value);
-    const equipe = maxJog === 2 ? 1 : parseInt(document.getElementById('select-equipe-criacao').value);
+function aumentarTruco() {
+    tocarSom("click.mp3");
 
-    socket.send(JSON.stringify({
-        acao: "CRIAR_SALA",
-        jogador_id: meuId,
-        nome: meuNome,
-        max_jogadores: maxJog,
-        modalidade: modalidade,
-        equipe: equipe
-    }));
+    enviarMensagem({
+        tipo: "acao_jogo",
+        acao: "AUMENTAR_TRUCO"
+    });
 }
 
-function entrarSala(equipeEscolhida) {
-    tocarSom('click.mp3');
-    const dados = window.estadoTrucoAtual;
+function iniciarNovaMao() {
+    if (novaMaoAgendada) return;
+    novaMaoAgendada = true;
 
-    if (dados.max_jogadores === 2) {
-        equipeEscolhida = dados.vagas_eq1 > 0 ? 1 : 2;
-    }
+    enviarMensagem({
+        tipo: "acao_jogo",
+        acao: "NOVA_MAO"
+    });
 
-    socket.send(JSON.stringify({
-        acao: "ENTRAR",
-        jogador_id: meuId,
-        nome: meuNome,
-        equipe: equipeEscolhida
-    }));
+    setTimeout(() => {
+        novaMaoAgendada = false;
+    }, 1000);
 }
 
-// ==========================================
-// FUNÇÕES AUXILIARES
-// ==========================================
+function criarBotao(texto, classe, acao) {
+    const botao = document.createElement("button");
+    botao.className = `btn-acao ${classe}`;
+    botao.textContent = texto;
+
+    botao.addEventListener("click", acao);
+    return botao;
+}
+
+function preencherCarta(elemento, carta) {
+    const valor = traduzirValor(carta.valor);
+    const naipe = normalizarNaipe(carta.naipe);
+
+    elemento.className = `carta ${naipe}`;
+    elemento.innerHTML = `<span>${valor}</span>${gerarFigura(valor, naipe)}`;
+    elemento.setAttribute("data-naipe-simbolo", obterSimbolo(naipe));
+}
+
 function traduzirValor(valor) {
-    const mapa = { 1: "A", 11: "J", 12: "Q", 13: "K" };
-    return mapa[valor] || valor;
+    const mapa = {
+        1: "A",
+        11: "J",
+        12: "Q",
+        13: "K"
+    };
+
+    return mapa[Number(valor)] || String(valor);
+}
+
+function normalizarNaipe(naipe) {
+    if (typeof naipe === "string") {
+        const normalizado = naipe.toLowerCase();
+
+        if (normalizado.includes("ouro")) return "ouros";
+        if (normalizado.includes("copa")) return "copas";
+        if (normalizado.includes("espada")) return "espadas";
+        if (normalizado.includes("pau")) return "paus";
+
+        return normalizado;
+    }
+
+    const mapaNumerico = {
+        0: "ouros",
+        1: "copas",
+        2: "espadas",
+        3: "paus"
+    };
+
+    return mapaNumerico[Number(naipe)] || "";
 }
 
 function obterSimbolo(naipe) {
-    const simbolos = { paus: "♣", copas: "♥", espadas: "♠", ouros: "♦" };
-    return simbolos[naipe] || "";
+    return {
+        paus: "♣",
+        copas: "♥",
+        espadas: "♠",
+        ouros: "♦"
+    }[naipe] || "";
 }
 
-function gerarFigura(textoValor, naipe) {
-    const figuras = { K: "rei.png", Q: "rainha.png", J: "valete.png" };
-    const arquivo = figuras[textoValor];
+function gerarFigura(valor, naipe) {
+    const figuras = {
+        K: "rei.png",
+        Q: "rainha.png",
+        J: "valete.png"
+    };
+
+    const arquivo = figuras[valor];
     if (!arquivo) return "";
-    const vermelho = (naipe === "copas" || naipe === "ouros") ? " filtro-vermelho" : "";
-    return `<img src="/assets/cartas/${arquivo}" class="figura-centro${vermelho}" alt="${textoValor}">`;
+
+    const filtro =
+        naipe === "copas" || naipe === "ouros"
+            ? " filtro-vermelho"
+            : "";
+
+    return `<img src="/assets/cartas/${arquivo}" class="figura-centro${filtro}" alt="${valor}">`;
 }
 
-function mostrarModal(htmlContent, tempoMs) {
-    const modal = document.getElementById('modal-notificacao');
-    const texto = document.getElementById('modal-texto');
-    texto.innerHTML = htmlContent;
-    modal.classList.remove('modal-oculto');
-    if (window.modalTimer) clearTimeout(window.modalTimer);
-    if (tempoMs > 0) {
-        window.modalTimer = setTimeout(() => modal.classList.add('modal-oculto'), tempoMs);
+function obterCadeira(idJogador, totalJogadores) {
+    const posicao = (idJogador - meuId + totalJogadores) % totalJogadores;
+
+    if (totalJogadores === 2) return "cadeira-topo";
+    if (posicao === 1) return "cadeira-direita";
+    if (posicao === 2) return "cadeira-topo";
+    if (posicao === 3) return "cadeira-esquerda";
+
+    return "";
+}
+
+function nomeDoJogador(idJogador) {
+    return estadoAtual?.jogadores?.find(jogador => jogador.id === idJogador)?.nome ||
+        `Jogador ${idJogador + 1}`;
+}
+
+function nomeEquipe(equipe) {
+    if (!estadoAtual || estadoAtual.max_jogadores !== 2) {
+        return `Equipe ${equipe}`;
+    }
+
+    return estadoAtual.jogadores?.find(jogador => jogador.equipe === equipe)?.nome ||
+        `Equipe ${equipe}`;
+}
+
+function nomeValorTruco(valor) {
+    return {
+        3: "Truco",
+        6: "Seis",
+        9: "Nove",
+        12: "Doze"
+    }[Number(valor)] || `${valor} pontos`;
+}
+
+function proximoValor(valor) {
+    return {
+        1: 3,
+        3: 6,
+        6: 9,
+        9: 12
+    }[Number(valor)] || 0;
+}
+
+function mostrarModal(conteudo, tempo) {
+    const modal = document.getElementById("modal-notificacao");
+    const texto = document.getElementById("modal-texto");
+
+    texto.innerHTML = conteudo;
+    modal.classList.remove("modal-oculto");
+
+    clearTimeout(window.temporizadorModal);
+
+    if (tempo > 0) {
+        window.temporizadorModal = setTimeout(() => {
+            modal.classList.add("modal-oculto");
+        }, tempo);
     }
 }
 
+function escaparHtml(texto) {
+    const elemento = document.createElement("div");
+    elemento.textContent = String(texto ?? "");
+    return elemento.innerHTML;
+}
+
 function animarDistribuicao(dados) {
-    tocarSom('shuffle.mp3');
-    const baralhoEl = document.querySelector('.centro-da-mesa');
-    if (!baralhoEl) return;
-    const rect = baralhoEl.getBoundingClientRect();
-    const origemX = rect.left + rect.width / 2;
-    const origemY = rect.top + rect.height / 2;
-    let delay = 0;
+    tocarSom("shuffle.mp3");
 
-    if (!dados.jogadores) return;
-    dados.jogadores.forEach(j => {
-        let idAlvo = 'cadeira-base';
-        if (j.id !== meuId) {
-            const total = dados.jogadores.length;
-            const pos = (j.id - meuId + total) % total;
-            if (total === 4) {
-                if (pos === 1) idAlvo = 'cadeira-direita';
-                else if (pos === 2) idAlvo = 'cadeira-topo';
-                else if (pos === 3) idAlvo = 'cadeira-esquerda';
-            } else if (total === 2) {
-                idAlvo = 'cadeira-topo';
-            }
-        }
-        const assento = document.getElementById(idAlvo);
-        if (!assento) return;
-        const rectAlvo = assento.getBoundingClientRect();
-        const destX = rectAlvo.left + rectAlvo.width / 2;
-        const destY = rectAlvo.top + rectAlvo.height / 2;
-        const qtd = j.cartas_na_mao || (j.mao ? j.mao.length : 3);
+    const centro = document.querySelector(".centro-da-mesa");
+    if (!centro || !dados.jogadores) return;
 
-        for (let c = 0; c < qtd; c++) {
+    const origem = centro.getBoundingClientRect();
+    let atraso = 0;
+
+    dados.jogadores.forEach(jogador => {
+        const cadeira = jogador.id === meuId
+            ? "cadeira-base"
+            : obterCadeira(jogador.id, dados.jogadores.length);
+
+        const alvo = document.getElementById(cadeira);
+        if (!alvo) return;
+
+        const destino = alvo.getBoundingClientRect();
+        const quantidade = jogador.quantidade_cartas || 3;
+
+        for (let indice = 0; indice < quantidade; ++indice) {
             setTimeout(() => {
-                const cartaVoadora = document.createElement('div');
-                cartaVoadora.className = 'carta-verso carta-animada';
-                cartaVoadora.style.left = origemX + 'px';
-                cartaVoadora.style.top = origemY + 'px';
-                cartaVoadora.style.width = '40px';
-                cartaVoadora.style.height = '60px';
-                cartaVoadora.style.transform = 'translate(-50%, -50%) scale(1)';
-                document.body.appendChild(cartaVoadora);
+                const carta = document.createElement("div");
+                carta.className = "carta-verso carta-animada";
+                carta.style.left = `${origem.left + origem.width / 2}px`;
+                carta.style.top = `${origem.top + origem.height / 2}px`;
+
+                document.body.appendChild(carta);
+
                 requestAnimationFrame(() => {
-                    cartaVoadora.style.left = destX + 'px';
-                    cartaVoadora.style.top = destY + 'px';
-                    cartaVoadora.style.transform = 'translate(-50%, -50%) scale(0.5) rotate(720deg)';
-                    cartaVoadora.style.opacity = '0';
+                    carta.style.left = `${destino.left + destino.width / 2}px`;
+                    carta.style.top = `${destino.top + destino.height / 2}px`;
+                    carta.style.transform = "translate(-50%, -50%) scale(.5) rotate(720deg)";
+                    carta.style.opacity = "0";
                 });
-                setTimeout(() => cartaVoadora.remove(), 600);
-            }, delay);
-            delay += 80;
+
+                setTimeout(() => carta.remove(), 650);
+            }, atraso);
+
+            atraso += 80;
         }
     });
 }
