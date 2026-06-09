@@ -516,7 +516,8 @@ obj/routes/Routes.o: src/routes/Routes.cpp include/routes/Routes.hpp \
  dependencias/asio/write_at.hpp dependencias/asio/impl/write_at.hpp \
  dependencias/asio/version.hpp include/routes/FrontendRoutes.hpp \
  include/routes/PacienciaRoutes.hpp include/routes/PifeRoutes.hpp \
- include/routes/FDPRoutes.hpp include/routes/TrucoRoutes.hpp
+ include/routes/FDPRoutes.hpp include/routes/TrucoRoutes.hpp \
+ include/routes/PokerRoutes.hpp
 include/routes/Routes.hpp:
 dependencias/crow_all.h:
 dependencias/asio.hpp:
@@ -1104,3 +1105,4 @@ include/routes/PacienciaRoutes.hpp:
 include/routes/PifeRoutes.hpp:
 include/routes/FDPRoutes.hpp:
 include/routes/TrucoRoutes.hpp:
+include/routes/PokerRoutes.hpp:

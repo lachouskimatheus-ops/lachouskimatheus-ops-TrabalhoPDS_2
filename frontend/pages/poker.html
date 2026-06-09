@@ -2,245 +2,104 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Poker Fechado</title>
     <link rel="stylesheet" href="/css/poker_style.css">
 </head>
-
 <body>
-    <main class="container-principal">
+<main>
+    <section id="tela-conexao" class="tela-conexao">
+        <div class="caixa-conexao">
+            <div class="naipes"><span>♠</span><span>♥</span></div>
+            <h1>Poker Fechado</h1>
+            <p id="sala-conexao">Sala: ---</p>
+            <label for="nome-jogador">Nome do jogador</label>
+            <input id="nome-jogador" type="text" maxlength="20" autocomplete="off" placeholder="Digite seu nome">
+            <button id="btn-conectar">Conectar à mesa</button>
+            <p id="mensagem-conexao" class="mensagem-erro"></p>
+            <a href="/pages/poker_config.html">Voltar</a>
+        </div>
+    </section>
 
-        <!-- ========================= -->
-        <!-- TELA INICIAL / MENU POKER -->
-        <!-- ========================= -->
-        <section id="tela-menu" class="tela-menu">
-            <header class="menu-cabecalho">
-                <div class="cartao-decorativo preto">♠</div>
+    <section id="tela-jogo" class="tela-jogo escondido">
+        <aside class="bloco-conexao">
+            <div>
+                <span id="ponto-conexao" class="ponto conectado"></span>
+                <strong id="texto-conexao">Conectado à sala</strong>
+            </div>
+            <span id="jogadores-conexao">Jogadores: 0/0</span>
+            <span id="fase-conexao">Aguardando estado</span>
+        </aside>
 
-                <div>
-                    <h1>Poker Fechado</h1>
-                    <p>Escolha o modo de jogo e entre na mesa.</p>
-                </div>
+        <header class="cabecalho">
+            <div>
+                <h1>Poker Fechado</h1>
+                <p id="descricao-partida">Conectado à mesa</p>
+            </div>
+            <div class="sala-cabecalho">
+                <span>Sala</span>
+                <strong id="sala-jogo">---</strong>
+            </div>
+        </header>
 
-                <div class="cartao-decorativo vermelho">♥</div>
-            </header>
-
-            <section class="menu-conteudo">
-                <article class="card-menu regras">
-                    <h2>Regras rápidas</h2>
-
-                    <ul>
-                        <li>Cada jogador recebe <strong>5 cartas</strong>.</li>
-                        <li>Cada jogador pode trocar até <strong>3 cartas</strong>.</li>
-                        <li>Depois da troca, as mãos são reveladas.</li>
-                        <li>Vence quem tiver a melhor combinação de Poker.</li>
-                    </ul>
-
-                    <div class="ranking-maos">
-                        <h3>Força das mãos</h3>
-
-                        <ol>
-                            <li>Royal Flush</li>
-                            <li>Straight Flush</li>
-                            <li>Quadra</li>
-                            <li>Full House</li>
-                            <li>Flush</li>
-                            <li>Sequência</li>
-                            <li>Trinca</li>
-                            <li>Dois Pares</li>
-                            <li>Um Par</li>
-                            <li>Carta Alta</li>
-                        </ol>
-                    </div>
-                </article>
-
-                <article class="card-menu modos">
-                    <h2>Escolha o modo</h2>
-
-                    <p class="descricao-modo">
-                        O modo contra computador já está jogável.
-                        Os modos multiplayer ficam preparados para a próxima etapa.
-                    </p>
-
-                    <div class="grade-modos">
-                        <button class="botao-modo ativo" data-modo="computador" data-jogadores="1">
-                            <span class="icone-modo">🤖</span>
-                            <strong>Contra computador</strong>
-                            <small>Você contra a máquina</small>
-                        </button>
-
-                        <button class="botao-modo" data-modo="solo" data-jogadores="1">
-                            <span class="icone-modo">👤</span>
-                            <strong>1 jogador</strong>
-                            <small>Treino individual</small>
-                        </button>
-
-                        <button class="botao-modo" data-modo="multiplayer" data-jogadores="2">
-                            <span class="icone-modo">👥</span>
-                            <strong>2 jogadores</strong>
-                            <small>1 contra 1</small>
-                        </button>
-
-                        <button class="botao-modo" data-modo="multiplayer" data-jogadores="3">
-                            <span class="icone-modo">👥</span>
-                            <strong>3 jogadores</strong>
-                            <small>Mesa pequena</small>
-                        </button>
-
-                        <button class="botao-modo" data-modo="multiplayer" data-jogadores="4">
-                            <span class="icone-modo">👥</span>
-                            <strong>4 jogadores</strong>
-                            <small>Mesa completa</small>
-                        </button>
-                    </div>
-
-                    <div class="menu-acoes">
-                        <button id="btn-iniciar-poker" class="botao-menu principal">
-                            Entrar na mesa
-                        </button>
-
-                        <a href="/" class="botao-menu voltar">
-                            Voltar ao menu principal
-                        </a>
-                    </div>
-
-                    <p id="aviso-modo" class="aviso-modo">
-                        Modo selecionado: Contra computador.
-                    </p>
-                </article>
-            </section>
+        <section class="placar">
+            <div><span>Rodada</span><strong id="rodada">0</strong></div>
+            <div><span>Empates</span><strong id="empates">0</strong></div>
+            <div><span>Modo</span><strong id="modo">---</strong></div>
+            <div><span>Jogadores</span><strong id="quantidade-jogadores">0/0</strong></div>
         </section>
 
-        <!-- ========================= -->
-        <!-- TELA DO JOGO / MESA REAL  -->
-        <!-- ========================= -->
-        <section id="tela-jogo" class="tela-jogo escondida">
+        <section class="mesa">
+            <div id="adversarios" class="adversarios"></div>
 
-            <header class="cabecalho-jogo">
-                <div class="titulo-jogo">
-                    <span class="mini-carta preta">♠</span>
+            <div class="centro">
+                <div class="monte">
+                    <div class="carta-verso"></div>
+                    <span>Baralho</span>
+                </div>
 
+                <div class="painel">
+                    <h2 id="mensagem-principal">Aguardando jogadores</h2>
+                    <p id="mensagem-secundaria">A partida começará quando a sala estiver completa.</p>
+                </div>
+
+                <div class="trocas">
+                    <div id="slots-troca">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <small>Cartas selecionadas</small>
+                </div>
+            </div>
+
+            <div class="jogador-local">
+                <div class="cabecalho-jogador">
                     <div>
-                        <h1>Poker Fechado</h1>
-                        <p id="descricao-partida">
-                            Mesa contra computador.
-                        </p>
+                        <h2 id="nome-local">Jogador</h2>
+                        <p id="jogada-local">Aguardando cartas</p>
                     </div>
-
-                    <span class="mini-carta vermelha">♥</span>
-                </div>
-            </header>
-
-            <section class="placar-mesa">
-                <div class="placar-item">
-                    <span>Rodada</span>
-                    <strong id="rodada">1</strong>
-                </div>
-
-                <div class="placar-item">
-                    <span>Jogador</span>
-                    <strong id="placar-jogador">0</strong>
-                </div>
-
-                <div class="placar-item">
-                    <span>Adversário</span>
-                    <strong id="placar-computador">0</strong>
-                </div>
-
-                <div class="placar-item">
-                    <span>Empates</span>
-                    <strong id="placar-empates">0</strong>
-                </div>
-            </section>
-
-            <section class="mesa-poker">
-
-                <!-- Adversário / Computador -->
-                <div class="area-jogador area-adversario">
-                    <div class="info-jogador">
-                        <div>
-                            <h2 id="titulo-adversario">Computador</h2>
-                            <p id="descricao-adversario">Cartas ocultas até o resultado.</p>
-                        </div>
-
-                        <span class="tag-trocas" id="tag-trocas-computador">0 troca(s)</span>
-                    </div>
-
-                    <div id="mao-computador" class="mao mao-adversario"></div>
-
-                    <div class="resultado-mao">
-                        <span>Jogada</span>
-                        <strong id="jogada-computador">Oculta</strong>
+                    <div class="pontos">
+                        <span>Pontos</span>
+                        <strong id="pontos-local">0</strong>
                     </div>
                 </div>
 
-                <!-- Centro da mesa -->
-                <div class="centro-mesa">
-                    <div class="baralho-visual">
-                        <div class="monte-cartas carta-costas"></div>
-                        <p>Baralho</p>
-                    </div>
+                <div id="mao-local" class="mao mao-local"></div>
 
-                    <div class="painel-central">
-                        <h2 id="mensagem">Conectando ao servidor...</h2>
-                        <p id="vencedor">Aguardando rodada.</p>
-                    </div>
-
-                    <div class="area-troca">
-                        <div class="slot-troca"></div>
-                        <div class="slot-troca"></div>
-                        <div class="slot-troca"></div>
-                        <p>Área de troca</p>
-                    </div>
+                <div class="status-troca">
+                    <span id="contador-selecionadas">Selecionadas: 0/3</span>
+                    <span id="status-confirmacao">Troca não confirmada</span>
                 </div>
-
-                <!-- Jogador humano -->
-                <div class="area-jogador area-humano">
-                    <div class="info-jogador">
-                        <div>
-                            <h2 id="titulo-jogador">Jogador</h2>
-                            <p>Clique nas cartas que deseja trocar.</p>
-                        </div>
-
-                        <span class="tag-trocas" id="tag-trocas-jogador">0 troca(s)</span>
-                    </div>
-
-                    <div id="mao-jogador" class="mao mao-jogador"></div>
-
-                    <div class="resultado-mao">
-                        <span>Jogada</span>
-                        <strong id="jogada-jogador">---</strong>
-                    </div>
-                </div>
-
-            </section>
-
-            <section class="controles-mesa">
-                <button id="btn-trocar" class="botao principal">
-                    Confirmar troca
-                </button>
-
-                <button id="btn-nova-rodada" class="botao secundaria">
-                    Próxima rodada
-                </button>
-
-                <button id="btn-voltar-menu-poker" class="botao menu">
-                    Trocar modo
-                </button>
-
-                <a href="/" class="botao voltar">
-                    Voltar ao menu principal
-                </a>
-            </section>
-
-            <section class="rodape-status">
-                <p id="selecionadas">Cartas selecionadas: 0/3</p>
-                <p id="status">Conectando...</p>
-            </section>
-
+            </div>
         </section>
 
-    </main>
+        <section class="controles">
+            <button id="btn-confirmar" disabled>Manter todas as cartas</button>
+            <button id="btn-nova-rodada" class="secundario escondido">Nova rodada</button>
+            <a href="/pages/poker_config.html">Sair da mesa</a>
+        </section>
+    </section>
+</main>
 
-    <script src="/js/poker_app.js"></script>
+<script src="/js/poker_app.js"></script>
 </body>
 </html>

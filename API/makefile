@@ -10,6 +10,7 @@ CXXFLAGS := -std=c++17 -Wall -Wextra -pthread -MMD -MP \
 	-I../Jogos/Paciencia/include \
 	-I../Jogos/Truco/include \
 	-I../Jogos/FDP/include \
+	-I../Jogos/Poker/include \
 	-I..
 
 SRC_DIR := src
@@ -48,12 +49,17 @@ FDP_OBJ := \
 	../Jogos/FDP/obj/MesaFDP.o \
 	../Jogos/FDP/obj/Placar.o
 
+POKER_OBJ := \
+	../Jogos/Poker/obj/Poker.o \
+	../Jogos/Poker/obj/MesaPoker.o
+
 EXTERNAL_OBJ := \
 	$(CORE_OBJ) \
 	$(PIFE_OBJ) \
 	$(PACIENCIA_OBJ) \
 	$(TRUCO_OBJ) \
-	$(FDP_OBJ)
+	$(FDP_OBJ) \
+	$(POKER_OBJ)
 
 SOURCES := $(shell find $(SRC_DIR) -type f -name '*.cpp')
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
@@ -67,6 +73,7 @@ dependencias:
 	$(MAKE) -C ../Jogos/Paciencia
 	$(MAKE) -C ../Jogos/Truco
 	$(MAKE) -C ../Jogos/FDP
+	$(MAKE) -C ../Jogos/Poker
 
 $(TARGET): dependencias $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(EXTERNAL_OBJ)
@@ -84,6 +91,7 @@ clean-all: clean
 	$(MAKE) -C ../Jogos/Paciencia clean
 	$(MAKE) -C ../Jogos/Truco clean
 	$(MAKE) -C ../Jogos/FDP clean
+	$(MAKE) -C ../Jogos/Poker clean
 
 rebuild: clean-all all
 

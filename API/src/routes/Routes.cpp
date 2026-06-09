@@ -4,6 +4,7 @@
 #include "routes/PifeRoutes.hpp"
 #include "routes/FDPRoutes.hpp"
 #include "routes/TrucoRoutes.hpp"
+#include "routes/PokerRoutes.hpp"
 
 void Routes::registrarRotas(crow::SimpleApp& app) {
 
@@ -19,4 +20,5 @@ void Routes::registrarRotas(crow::SimpleApp& app) {
     PifeRoutes::registrar(app);
     FDPRoutes::registrar(app);
     TrucoRoutes::registrar(app);
+    PokerRoutes::registrar(app);
 }
