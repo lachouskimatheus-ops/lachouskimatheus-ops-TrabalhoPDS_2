@@ -26,64 +26,78 @@ body {
     box-shadow: 0 20px 50px #000c, inset 0 0 60px #0009;
 }
 
-.indicador-turno {
+.painel-conexao {
     position: absolute;
-    top: 25px;
-    left: 30px;
-    z-index: 20;
-    min-width: 250px;
-    padding: 15px 22px;
+    top: 28px;
+    left: 35px;
+    z-index: 1000;
+    width: 210px;
+    padding: 12px 15px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    border: 2px solid #ffffff2e;
-    border-radius: 16px;
-    background: #0a121ef2;
-    box-shadow: 0 12px 28px #0008;
-    transition: 0.2s;
-}
-
-.indicador-turno-rotulo {
-    color: #aab4c3;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-}
-
-#indicador-turno-texto {
-    font-size: 22px;
-}
-
-.indicador-turno-fase {
+    gap: 5px;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    background: #0f172aee;
+    box-shadow: 0 8px 22px #0008;
     color: #cbd5e1;
     font-size: 13px;
+    line-height: 1.35;
+    backdrop-filter: blur(8px);
 }
 
-.indicador-turno.minha-vez {
-    transform: scale(1.03);
-    border-color: #43ff8d;
-    box-shadow: 0 0 24px #43ff8d70, 0 12px 28px #0008;
+.painel-conexao-linha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.indicador-turno.minha-vez #indicador-turno-texto {
-    color: #43ff8d;
+.painel-conexao strong {
+    color: #fff;
+    font-size: 14px;
 }
 
-.indicador-turno.vez-oponente {
-    border-color: #f0c040;
+.indicador-conexao {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444cc;
 }
 
-.indicador-turno.vez-oponente #indicador-turno-texto {
-    color: #f0c040;
+.painel-conexao.conectado {
+    border-color: #22c55e99;
 }
 
-.indicador-turno.finalizado {
-    border-color: #a78bfa;
+.painel-conexao.conectado .indicador-conexao {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55ecc;
 }
 
-.indicador-turno.finalizado #indicador-turno-texto {
-    color: #c4b5fd;
+.painel-conexao.aguardando {
+    border-color: #f59e0b99;
+}
+
+.painel-conexao.aguardando .indicador-conexao {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0bcc;
+}
+
+.painel-conexao.minha-vez {
+    border-color: #4ade80;
+    box-shadow: 0 0 18px #4ade804d, 0 8px 22px #0008;
+}
+
+#texto-jogadores,
+#texto-turno {
+    display: block;
+    color: #94a3b8;
+}
+
+.painel-conexao.minha-vez #texto-turno {
+    color: #4ade80;
+    font-weight: 700;
 }
 
 .area-oponente {
@@ -428,13 +442,25 @@ body {
         height: 73px;
     }
 
-    .indicador-turno {
-        min-width: 210px;
-    }
-
     .status-box {
         min-width: 560px;
         gap: 20px;
         padding: 10px 20px;
+    }
+
+    .painel-conexao {
+        top: 22px;
+        left: 25px;
+        width: 195px;
+    }
+}
+
+@media (max-width: 700px) {
+    .painel-conexao {
+        top: 16px;
+        left: 18px;
+        width: 170px;
+        padding: 9px 12px;
+        font-size: 11px;
     }
 }
