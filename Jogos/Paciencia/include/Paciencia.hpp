@@ -114,6 +114,10 @@ public:
     // --- Debug ---
     void imprimirJogo();
     std::string converterParaString() const;
+
+    // -- Record ---
+    int getRecord() const { return pontuacao.getRecord(); }
+    bool salvarRecord() { return pontuacao.salvarRecord(); }
 };
 
 #endif
