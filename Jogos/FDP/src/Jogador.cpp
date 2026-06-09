@@ -35,3 +35,7 @@ Carta* Jogador::jogarCarta(int posicao) {
 int Jogador::getQtdCartasMao() const {
 	return mao_.size();
 }
+
+void Jogador::setNome(std::string novoNome) {
+    nome_ = novoNome;
+}

@@ -24,6 +24,7 @@ public:
 	std::string getNome() const;
 	int getId() const;
     int getQtdCartasMao() const;
+    void setNome(std::string novoNome);
 
 	//Esses métodos ainda podem mudar ou podem ter outros métodos aqui, à medida que a gente for programando os outros jogos
 	//Não vou colocar nada envolvendo os servidores ainda, até a gente ter os jogos rodando

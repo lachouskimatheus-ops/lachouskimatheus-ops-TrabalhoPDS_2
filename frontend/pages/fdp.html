@@ -12,14 +12,8 @@
             <span class="indicador-conexao"></span>
             <strong id="texto-conexao">Conectando...</strong>
         </div>
-
-        <span id="texto-jogadores">
-        Jogadores: 0/4
-        </span>
-
-        <span id="texto-turno">
-        Aguardando jogadores
-        </span>
+        <span id="texto-jogadores">Jogadores: 0/4</span>
+        <span id="texto-turno">Aguardando jogadores</span>
     </div>
 
     <!-- A Mesa Verde que envelopa todo o jogo -->
@@ -52,7 +46,7 @@
             </div>
         </div>
 
-        <!-- A sua cadeira (Sempre fixa na base da tela) -->
+        <!-- A sua cadeira -->
         <div id="cadeira-base" class="assento-local area-jogador-local">
             
             <!-- Suas Cartas -->
@@ -77,7 +71,7 @@
 
     </div>
 
-    <!-- Botão de Engrenagem substituído pelo Pincel (Personalização) -->
+    <!-- Botão de Personalização -->
     <button id="btn-config" class="btn-config" onclick="abrirConfig()">🖌️</button>
 
     <!-- Modal de Configurações -->
@@ -113,8 +107,22 @@
 
     <!-- Modal Dinâmico de Notificações -->
     <div id="modal-notificacao" class="modal-overlay modal-oculto">
-        <div class="modal-conteudo" id="modal-texto">
-            <!-- Injetado pelo JS -->
+        <div class="modal-conteudo" id="modal-texto"></div>
+    </div>
+
+    <!-- Modal de Entrada (Visual Premium) -->
+    <div id="modal-entrada" class="modal-overlay">
+        <div class="modal-conteudo modal-entrada-conteudo">
+            <div class="simbolos-naipes">♠ ♥ ♦ ♣</div>
+            <h2>Entrar na sala</h2>
+            <p id="codigo-sala-entrada" class="codigo-sala-entrada">SALA GLOBAL</p>
+
+            <label class="campo-label" for="input-nome">SEU NOME</label>
+            <input id="input-nome" class="campo-entrada" type="text" maxlength="20" placeholder="Digite seu nome">
+
+            <button type="button" id="btn-entrar-jogo" class="btn-confirmar-entrada">ENTRAR</button>
+            
+            <a href="#" class="link-voltar-lobby" onclick="window.history.back(); return false;">Voltar</a>
         </div>
     </div>
 
