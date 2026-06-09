@@ -1,22 +1,15 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>FDP - Lobby e Regras</title>
 
   <link rel="icon" href="data:,">
 
   <style>
-    @import url(
-      "https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap"
-    );
+    @import url("https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap");
 
     * {
       margin: 0;
@@ -26,21 +19,18 @@
 
     body {
       min-height: 100vh;
+      padding: 25px;
       background: #0a0a0a;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       font-family: "Cinzel", serif;
-      overflow: hidden;
     }
 
     .bg {
       position: fixed;
       inset: 0;
-      background-image: url("/assets/fundo.jpg");
-      background-size: cover;
-      background-position: center;
+      background: url("/assets/fundo.jpg") center/cover;
       filter: brightness(0.25);
       z-index: 0;
     }
@@ -48,67 +38,75 @@
     .container {
       position: relative;
       z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
       width: 100%;
-      max-width: 600px;
-      background: rgba(15, 15, 20, 0.75);
-      border: 1px solid rgba(255, 200, 50, 0.3);
+      max-width: 1050px;
+      padding: 35px;
+      background: rgba(15, 15, 20, 0.8);
+      border: 1px solid rgba(240, 192, 64, 0.35);
       border-radius: 12px;
       backdrop-filter: blur(12px);
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
-      animation: fadeIn 0.6s ease;
     }
 
     h1 {
       font-family: "Cinzel Decorative", serif;
       font-size: 32px;
       color: #ffffff;
-      text-shadow: 0 0 15px rgba(255, 200, 50, 0.5);
-      margin-bottom: 5px;
       text-align: center;
+      text-shadow: 0 0 15px rgba(255, 200, 50, 0.5);
     }
 
-    h1 span {
+    h1 span,
+    h2,
+    .codigo-sala {
       color: #f0c040;
     }
 
     .saudacao {
+      margin: 7px 0 28px;
       color: #aaaaaa;
       font-size: 14px;
       letter-spacing: 2px;
-      margin-bottom: 30px;
-      text-transform: uppercase;
       text-align: center;
+      text-transform: uppercase;
+    }
+
+    .conteudo {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+    }
+
+    .box {
+      padding: 22px;
+      background: rgba(0, 0, 0, 0.58);
+      border-radius: 7px;
     }
 
     .regras-box {
-      background: rgba(0, 0, 0, 0.6);
       border-left: 4px solid #f0c040;
-      padding: 20px 25px;
-      width: 100%;
-      border-radius: 4px;
-      margin-bottom: 30px;
     }
 
-    .regras-box h3 {
-      color: #f0c040;
-      margin-bottom: 15px;
+    .sala-box {
+      border: 1px solid rgba(240, 192, 64, 0.35);
+    }
+
+    h2 {
+      margin-bottom: 16px;
+      font-size: 18px;
       letter-spacing: 2px;
     }
 
     .regras-lista {
       list-style: none;
       color: #dddddd;
-      line-height: 1.8;
-      font-size: 15px;
+      font-size: 14px;
+      line-height: 1.65;
     }
 
     .regras-lista li {
-      margin-bottom: 12px;
       position: relative;
+      margin-bottom: 14px;
       padding-left: 20px;
     }
 
@@ -119,27 +117,122 @@
       color: #f0c040;
     }
 
-    .acoes {
-      display: flex;
-      gap: 15px;
+    .descricao {
+      margin-bottom: 18px;
+      color: #bbbbbb;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    input {
       width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      color: #ffffff;
+      outline: none;
     }
 
     .btn {
-      flex: 1;
-      padding: 15px;
+      width: 100%;
+      padding: 13px;
       border-radius: 6px;
       font-family: "Cinzel", serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       cursor: pointer;
       text-align: center;
       text-decoration: none;
-      transition: 0.3s;
+      transition: 0.25s;
+    }
+
+    .btn-dourado {
+      background: rgba(240, 192, 64, 0.18);
+      border: 1px solid rgba(240, 192, 64, 0.65);
+      color: #f0c040;
+    }
+
+    .btn-dourado:hover {
+      background: rgba(240, 192, 64, 0.35);
+      color: #ffffff;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    .resultado {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .rotulo-codigo {
+      display: block;
+      margin-bottom: 5px;
+      color: #aaaaaa;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .codigo-sala {
+      display: block;
+      margin: 5px 0 15px;
+      font-size: 27px;
+      letter-spacing: 6px;
+      text-align: center;
+    }
+
+    .campo-link {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .campo-link input {
+      min-width: 0;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+    }
+
+    .btn-copiar {
+      width: auto;
+      padding: 0 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    .status {
+      min-height: 18px;
+      margin-top: 12px;
+      color: #cccccc;
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .erro {
+      color: #ff7777;
+    }
+
+    .sucesso {
+      color: #8ee58e;
+    }
+
+    .acoes {
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
     }
 
     .btn-voltar {
+      max-width: 250px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #ffffff;
@@ -149,174 +242,259 @@
       background: rgba(255, 255, 255, 0.15);
     }
 
-    .btn-jogar {
-      background:
-        linear-gradient(
-          135deg,
-          rgba(240, 192, 64, 0.3) 0%,
-          rgba(240, 192, 64, 0.1) 100%
-        );
-      border: 1px solid rgba(240, 192, 64, 0.6);
-      color: #f0c040;
+    .oculto {
+      display: none;
     }
 
-    .btn-jogar:hover {
-      background:
-        linear-gradient(
-          135deg,
-          rgba(240, 192, 64, 0.5) 0%,
-          rgba(240, 192, 64, 0.2) 100%
-        );
-      box-shadow: 0 0 20px rgba(240, 192, 64, 0.4);
-      color: #ffffff;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
+    @media (max-width: 800px) {
+      .conteudo {
+        grid-template-columns: 1fr;
       }
 
-      to {
-        opacity: 1;
-        transform: scale(1);
+      .campo-link {
+        flex-direction: column;
+      }
+
+      .btn-copiar {
+        width: 100%;
+        padding: 11px;
       }
     }
   </style>
 </head>
 
 <body>
-
   <div class="bg"></div>
 
-  <div class="container">
+  <main class="container">
+    <h1>LOBBY <span>FDP</span></h1>
 
-    <h1>
-      LOBBY <span>FDP</span>
-    </h1>
-
-    <div
-      class="saudacao"
-      id="texto-saudacao"
-    >
+    <div id="texto-saudacao" class="saudacao">
       Bem-vindo, Jogador!
     </div>
 
-    <div class="regras-box">
+    <div class="conteudo">
+      <section class="box regras-box">
+        <h2>COMO JOGAR</h2>
 
-      <h3>COMO JOGAR</h3>
+        <ul class="regras-lista">
+          <li>
+            <strong>Rodada Cega:</strong>
+            a primeira rodada inicia com uma carta para cada jogador.
+            Você vê as cartas dos oponentes, mas não vê a sua.
+          </li>
 
-      <ul class="regras-lista">
+          <li>
+            <strong>Apostas:</strong>
+            acerte exatamente quantas vazas você fará.
+            O último jogador não pode fazer uma aposta que deixe
+            a soma total igual ao número de cartas da rodada.
+          </li>
 
-        <li>
-          <strong>Rodada Cega:</strong>
-          A primeira rodada inicia com uma carta para cada jogador.
-          Você vê as cartas dos oponentes, mas não vê a sua.
-        </li>
+          <li>
+            <strong>Sistema de Vidas:</strong>
+            errar a aposta custa uma vida por rodada,
+            independentemente da diferença.
+          </li>
 
-        <li>
-          <strong>Apostas:</strong>
-          Acerte exatamente quantas vazas você fará.
-          O último jogador não pode apostar um número que faça a soma
-          das apostas ser igual ao número de cartas da rodada.
-        </li>
+          <li>
+            <strong>Vira:</strong>
+            a carta virada na mesa define a manilha da rodada.
+          </li>
+        </ul>
+      </section>
 
-        <li>
-          <strong>Sistema de Vidas:</strong>
-          Errar a aposta custa exatamente
-          <strong>uma vida</strong>
-          por rodada, independentemente da diferença.
-        </li>
+      <section class="box sala-box">
+        <h2>CRIAR SALA</h2>
 
-        <li>
-          <strong>Vira:</strong>
-          A carta virada na mesa define a manilha da rodada,
-          seguindo a ordem de força estabelecida pelo jogo.
-        </li>
+        <p class="descricao">
+          A partida será criada para 4 jogadores.
+          Crie a sala e compartilhe o link com os outros participantes.
+        </p>
 
-      </ul>
+        <button
+          type="button"
+          id="btn-criar-sala"
+          class="btn btn-dourado"
+        >
+          CRIAR SALA
+        </button>
 
+        <div id="resultado-sala" class="resultado oculto">
+          <span class="rotulo-codigo">
+            Código da sala
+          </span>
+
+          <strong id="codigo-sala" class="codigo-sala">
+            ------
+          </strong>
+
+          <div class="campo-link">
+            <input
+              type="text"
+              id="link-sala"
+              readonly
+            >
+
+            <button
+              type="button"
+              id="btn-copiar"
+              class="btn btn-copiar"
+            >
+              COPIAR
+            </button>
+          </div>
+
+          <button
+            type="button"
+            id="btn-entrar"
+            class="btn btn-dourado"
+          >
+            ENTRAR NA MESA
+          </button>
+        </div>
+
+        <p id="status" class="status"></p>
+      </section>
     </div>
 
     <div class="acoes">
-
       <a
         href="/pages/menu.html"
         class="btn btn-voltar"
       >
         VOLTAR
       </a>
-
-      <button
-        type="button"
-        id="btn-conectar"
-        class="btn btn-jogar"
-      >
-        CONECTAR À MESA
-      </button>
-
     </div>
-
-  </div>
+  </main>
 
   <script>
+    let linkSalaCriada = "";
+
     document.addEventListener("DOMContentLoaded", () => {
-      const nomeSalvo =
-        localStorage.getItem("jogador_nickname");
+      const nome = localStorage.getItem("jogador_nickname");
 
-      if (nomeSalvo && nomeSalvo !== "Anônimo") {
-        const textoSaudacao =
-          document.getElementById("texto-saudacao");
-
-        textoSaudacao.innerText =
-          `Bem-vindo à mesa, ${nomeSalvo}!`;
+      if (nome && nome !== "Anônimo") {
+        document.getElementById("texto-saudacao").textContent =
+          `Bem-vindo à mesa, ${nome}!`;
       }
 
-      const botaoConectar =
-        document.getElementById("btn-conectar");
+      document
+        .getElementById("btn-criar-sala")
+        .addEventListener("click", criarSala);
 
-      botaoConectar.addEventListener("click", abrirMesasFDP);
+      document
+        .getElementById("btn-copiar")
+        .addEventListener("click", copiarLink);
+
+      document
+        .getElementById("btn-entrar")
+        .addEventListener("click", entrarNaMesa);
     });
 
-    function abrirMesasFDP() {
-      const quantidadeJogadores = 4;
-      const idSala = "teste-fdp";
+    async function criarSala() {
+      const botao = document.getElementById("btn-criar-sala");
 
-      let janelaBloqueada = false;
+      botao.disabled = true;
+      alterarStatus("Criando sala...");
 
-      for (
-        let idJogador = 0;
-        idJogador < quantidadeJogadores;
-        idJogador++
-      ) {
-        const parametros = new URLSearchParams({
-          sala: idSala,
-          id: String(idJogador)
+      try {
+        const resposta = await fetch("/api/fdp/salas", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            jogadores: 4
+          })
         });
 
-        const url =
-          `/pages/fdp.html?${parametros.toString()}`;
+        const dados = await resposta.json();
 
-        const novaJanela = window.open(
-          url,
-          `_blank`
-        );
-
-        if (!novaJanela) {
-          janelaBloqueada = true;
-          break;
+        if (!resposta.ok) {
+          throw new Error(
+            dados.erro || "Não foi possível criar a sala."
+          );
         }
-      }
 
-      if (janelaBloqueada) {
-        alert(
-          "O navegador bloqueou uma ou mais janelas. " +
-          "Permita pop-ups para localhost e tente novamente."
+        const parametros = new URLSearchParams({
+          sala: dados.sala
+        });
+
+        linkSalaCriada =
+          `${window.location.origin}/pages/fdp.html?${parametros.toString()}`;
+
+        document.getElementById("codigo-sala").textContent =
+          dados.sala;
+
+        document.getElementById("link-sala").value =
+          linkSalaCriada;
+
+        document
+          .getElementById("resultado-sala")
+          .classList.remove("oculto");
+
+        alterarStatus(
+          "Sala criada. Compartilhe o link com os outros jogadores.",
+          "sucesso"
         );
+      }
+      catch (erro) {
+        console.error("Erro ao criar sala FDP:", erro);
+
+        alterarStatus(
+          erro.message || "Erro ao criar sala.",
+          "erro"
+        );
+      }
+      finally {
+        botao.disabled = false;
       }
     }
-  </script>
 
+    async function copiarLink() {
+      if (!linkSalaCriada) return;
+
+      const botao = document.getElementById("btn-copiar");
+
+      try {
+        await navigator.clipboard.writeText(linkSalaCriada);
+      }
+      catch {
+        const campo = document.getElementById("link-sala");
+
+        campo.select();
+        campo.setSelectionRange(0, campo.value.length);
+
+        document.execCommand("copy");
+      }
+
+      botao.textContent = "COPIADO";
+
+      setTimeout(() => {
+        botao.textContent = "COPIAR";
+      }, 1500);
+    }
+
+    function entrarNaMesa() {
+      if (!linkSalaCriada) {
+        alterarStatus(
+          "Crie uma sala antes de entrar.",
+          "erro"
+        );
+
+        return;
+      }
+
+      window.location.href = linkSalaCriada;
+    }
+
+    function alterarStatus(mensagem, tipo = "") {
+      const status = document.getElementById("status");
+
+      status.textContent = mensagem;
+      status.className = `status ${tipo}`;
+    }
+  </script>
 </body>
 </html>
-```

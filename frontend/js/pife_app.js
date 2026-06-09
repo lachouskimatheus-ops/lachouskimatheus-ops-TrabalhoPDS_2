@@ -99,7 +99,6 @@ function renderizarOponentes(estado) {
     document.getElementById('cadeira-topo').innerHTML = '';
     document.getElementById('cadeira-esquerda').innerHTML = '';
 
-    // Mock seguro caso a API não envie array explícito de "jogadores" (Garante compatibilidade com 2,3,4 players)
     let listaJogadores = estado.jogadores;
     if (!listaJogadores) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -130,7 +129,6 @@ function renderizarOponentes(estado) {
                 if (posicaoRelativa === 1) idCadeira = 'cadeira-direita';
                 else if (posicaoRelativa === 2) idCadeira = 'cadeira-esquerda';
             } else {
-                // Se for x1 com 2 jogadores, fica no topo
                 idCadeira = 'cadeira-topo';
             }
 
@@ -139,7 +137,6 @@ function renderizarOponentes(estado) {
                 let htmlCartas = '<div class="mao-oponente">';
                 let qtdCartasNaMao = j.qtd_cartas || j.cartas_na_mao || 9; 
 
-                // Feedback visual de quem é o turno
                 const isTurno = (estado.jogador_atual === j.id);
                 const tituloColor = isTurno ? '#3fff85' : '#ffffff';
 
@@ -175,7 +172,7 @@ function renderizarMao(cartas) {
 
         el.ondragstart = (e) => {
             cartaArrastada = el;
-            cartaSelecionadaIndice = item.idx; // Também seleciona ao arrastar
+            cartaSelecionadaIndice = item.idx; 
             el.classList.add('dragging');
             tocarSom('selecionar');
         };

@@ -1,24 +1,22 @@
 #pragma once
-#include <iostream>
-#include <vector>
+
 #include <string>
+#include <vector>
 #include "Carta.hpp"
 
 class Jogador_Truco {
 private:
-    std::string nome;
-    std::vector<Carta*> mao; 
+    std::string nome_;
+    std::vector<Carta*> mao_;
 
 public:
-    Jogador_Truco(std::string nome);
-    
-    void receberCarta(Carta* novacarta);
-    
-    void mostrarmao();
-    
-    void limparMao();
+    explicit Jogador_Truco(const std::string& nome);
 
+    void receberCarta(Carta* novaCarta);
+    void limparMao();
     Carta* jogarCarta(int indice);
 
-    std::string getNome() const;
+    const std::string& getNome() const;
+    const std::vector<Carta*>& getMao() const;
+    int getQuantidadeCartas() const;
 };

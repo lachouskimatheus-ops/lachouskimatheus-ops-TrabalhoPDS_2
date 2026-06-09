@@ -1,37 +1,31 @@
 #include "Jogador_Truco.hpp"
-#include <iostream>
 
-Jogador_Truco::Jogador_Truco(std::string nome) {
-    this->nome = nome;
-}
+Jogador_Truco::Jogador_Truco(const std::string& nome) : nome_(nome) {}
 
-void Jogador_Truco::receberCarta(Carta* novacarta) {
-    this->mao.push_back(novacarta);
-}
-
-void Jogador_Truco::mostrarmao() {
-    for (int i = 0; i < (int)mao.size(); i++) {
-        std::cout << "[" << i << "] ";
-        mao[i]->imprimir(); 
-    }
-}
-
-Carta* Jogador_Truco::jogarCarta(int indice) {
-    if (indice < 0 || indice >= (int)mao.size()) {
-        return nullptr;
-    }
-
-    Carta* cartaParaJogar = mao[indice];
-    
-    mao.erase(mao.begin() + indice);
-    
-    return cartaParaJogar;
+void Jogador_Truco::receberCarta(Carta* novaCarta) {
+    if (novaCarta != nullptr) mao_.push_back(novaCarta);
 }
 
 void Jogador_Truco::limparMao() {
-    this->mao.clear();
+    mao_.clear();
 }
 
-std::string Jogador_Truco::getNome() const {
-    return this->nome;
+Carta* Jogador_Truco::jogarCarta(int indice) {
+    if (indice < 0 || indice >= static_cast<int>(mao_.size())) return nullptr;
+
+    Carta* carta = mao_[indice];
+    mao_.erase(mao_.begin() + indice);
+    return carta;
+}
+
+const std::string& Jogador_Truco::getNome() const {
+    return nome_;
+}
+
+const std::vector<Carta*>& Jogador_Truco::getMao() const {
+    return mao_;
+}
+
+int Jogador_Truco::getQuantidadeCartas() const {
+    return static_cast<int>(mao_.size());
 }

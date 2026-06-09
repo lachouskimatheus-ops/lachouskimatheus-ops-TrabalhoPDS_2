@@ -2,34 +2,19 @@
 #define PIFE_WEBSOCKET_HPP
 
 #include <map>
-#include <memory>
 #include <string>
 
 #include <crow_all.h>
 
+#include "coreAPI/SessaoWebSocket.hpp"
 #include "multiplayer/Pife/SalaPife.hpp"
-
-struct SessaoPife {
-    std::string idSala;
-    int idJogador;
-};
 
 class PifeWebSocket {
 private:
     static std::map<
-        std::string,
-        std::unique_ptr<SalaPife>
-    > salas_;
-
-    static std::map<
         crow::websocket::connection*,
-        SessaoPife
+        SessaoWebSocket
     > sessoes_;
-
-    static SalaPife* obterOuCriarSala(
-        const std::string& idSala,
-        int maxJogadores
-    );
 
     static void entrarNaSala(
         crow::websocket::connection& conn,
@@ -39,6 +24,10 @@ private:
     static void processarAcao(
         crow::websocket::connection& conn,
         const crow::json::rvalue& dados
+    );
+
+    static void processarPing(
+        crow::websocket::connection& conn
     );
 
     static void enviarMensagem(
@@ -68,6 +57,10 @@ private:
 
     static void removerConexao(
         crow::websocket::connection& conn
+    );
+
+    static bool tokenValido(
+        const std::string& tokenReconexao
     );
 
 public:

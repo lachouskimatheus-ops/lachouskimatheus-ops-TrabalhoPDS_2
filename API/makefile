@@ -1,75 +1,95 @@
-CXX = g++
+CXX := g++
 
-CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
-           -DASIO_STANDALONE \
-           -I. \
-           -I./include \
-           -I./dependencias \
-           -I../Jogos/Core/include \
-           -I../Jogos/Pife/include \
-           -I../Jogos/Paciencia/include \
-           -I../Jogos/FDP/include \
-           -I..
+CXXFLAGS := -std=c++17 -Wall -Wextra -pthread -MMD -MP \
+	-DASIO_STANDALONE \
+	-I. \
+	-I./include \
+	-I./dependencias \
+	-I../Jogos/Core/include \
+	-I../Jogos/Pife/include \
+	-I../Jogos/Paciencia/include \
+	-I../Jogos/Truco/include \
+	-I../Jogos/FDP/include \
+	-I..
 
-SRC_DIR = src
-OBJ_DIR = obj
+SRC_DIR := src
+OBJ_DIR := obj
+TARGET := servidor_api
 
-TARGET = servidor_api
+CORE_OBJ := \
+	../Jogos/Core/obj/Carta.o \
+	../Jogos/Core/obj/Baralho.o
 
-CORE_OBJECTS = \
-../Jogos/Core/obj/Carta.o \
-../Jogos/Core/obj/Baralho.o
+PIFE_OBJ := \
+	../Jogos/Pife/obj/Pife.o \
+	../Jogos/Pife/obj/JogadorPife.o \
+	../Jogos/Pife/obj/RegrasPife.o
 
-PIFE_OBJECTS = \
-../Jogos/Pife/obj/Pife.o \
-../Jogos/Pife/obj/JogadorPife.o \
-../Jogos/Pife/obj/RegrasPife.o
+PACIENCIA_OBJ := \
+	../Jogos/Paciencia/obj/Paciencia.o \
+	../Jogos/Paciencia/obj/Regras.o \
+	../Jogos/Paciencia/obj/Pontuacao.o
 
-PACIENCIA_OBJECTS = \
-../Jogos/Paciencia/obj/paciencia.o \
-../Jogos/Paciencia/obj/regras.o \
-../Jogos/Paciencia/obj/pontuacao.o
+TRUCO_OBJ := \
+	../Jogos/Truco/obj/BaralhoTruco.o \
+	../Jogos/Truco/obj/Jogador_Truco.o \
+	../Jogos/Truco/obj/JuizTruco.o \
+	../Jogos/Truco/obj/JuizPaulistaTruco.o \
+	../Jogos/Truco/obj/JuizMineiroTruco.o \
+	../Jogos/Truco/obj/Truco.o
 
-FDP_OBJECTS = \
-../Jogos/FDP/obj/BaralhoSujo.o \
-../Jogos/FDP/obj/Jogador.o \
-../Jogos/FDP/obj/JogadorFDP.o \
-../Jogos/FDP/obj/Juiz.o \
-../Jogos/FDP/obj/JuizPaulista.o \
-../Jogos/FDP/obj/Mesa.o \
-../Jogos/FDP/obj/MesaFDP.o \
-../Jogos/FDP/obj/Placar.o
+FDP_OBJ := \
+	../Jogos/FDP/obj/BaralhoSujo.o \
+	../Jogos/FDP/obj/Jogador.o \
+	../Jogos/FDP/obj/JogadorFDP.o \
+	../Jogos/FDP/obj/Juiz.o \
+	../Jogos/FDP/obj/JuizPaulista.o \
+	../Jogos/FDP/obj/Mesa.o \
+	../Jogos/FDP/obj/MesaFDP.o \
+	../Jogos/FDP/obj/Placar.o
 
-SOURCES = \
-$(SRC_DIR)/testeAPI.cpp \
-$(SRC_DIR)/coreAPI/Server.cpp \
-$(SRC_DIR)/coreAPI/Responses.cpp \
-$(SRC_DIR)/coreAPI/JsonConversor.cpp \
-$(SRC_DIR)/coreAPI/SalaBase.cpp \
-$(SRC_DIR)/routes/Routes.cpp \
-$(SRC_DIR)/routes/FrontendRoutes.cpp \
-$(SRC_DIR)/routes/PifeRoutes.cpp \
-$(SRC_DIR)/routes/PacienciaRoutes.cpp \
-$(SRC_DIR)/routes/FDPRoutes.cpp \
-$(SRC_DIR)/multiplayer/Pife/SalaPife.cpp \
-$(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp \
-$(SRC_DIR)/multiplayer/FDP/SalaFDP.cpp
+EXTERNAL_OBJ := \
+	$(CORE_OBJ) \
+	$(PIFE_OBJ) \
+	$(PACIENCIA_OBJ) \
+	$(TRUCO_OBJ) \
+	$(FDP_OBJ)
 
-OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+SOURCES := $(shell find $(SRC_DIR) -type f -name '*.cpp')
+OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+DEPFILES := $(OBJECTS:.o=.d)
 
 all: $(TARGET)
 
-$(TARGET): $(CORE_OBJECTS) $(PIFE_OBJECTS) $(PACIENCIA_OBJECTS) $(FDP_OBJECTS) $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+dependencias:
+	$(MAKE) -C ../Jogos/Core
+	$(MAKE) -C ../Jogos/Pife
+	$(MAKE) -C ../Jogos/Paciencia
+	$(MAKE) -C ../Jogos/Truco
+	$(MAKE) -C ../Jogos/FDP
 
-$(OBJ_DIR)/%.o: %.cpp
+$(TARGET): dependencias $(OBJECTS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(EXTERNAL_OBJ)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 
-rebuild: clean all
+clean-all: clean
+	$(MAKE) -C ../Jogos/Core clean
+	$(MAKE) -C ../Jogos/Pife clean
+	$(MAKE) -C ../Jogos/Paciencia clean
+	$(MAKE) -C ../Jogos/Truco clean
+	$(MAKE) -C ../Jogos/FDP clean
+
+rebuild: clean-all all
 
 run: all
 	./$(TARGET)
+
+-include $(DEPFILES)
+
+.PHONY: all dependencias clean clean-all rebuild run

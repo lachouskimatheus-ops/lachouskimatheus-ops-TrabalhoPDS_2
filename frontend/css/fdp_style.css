@@ -1,34 +1,54 @@
 /* ==========================================
    RESET E CONFIGURAÇÕES GERAIS
    ========================================== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    background-color: #0b0f19; 
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    height: 100vh;
-    color: #f3f4f6;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center;
     background: radial-gradient(circle at center, #1a202c 0%, #0b0f19 100%);
+    color: #f3f4f6; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .mesa-de-pano-verde {
-    position: relative;
-    width: 95vw;
-    height: 90vh;
+    position: relative; width: 95vw; height: 90vh; overflow: hidden;
     background: radial-gradient(circle at center, #115e3b 0%, #062417 70%, #020c08 100%);
-    border-radius: 120px; 
-    border: 15px solid #0a3a22; 
+    border: 15px solid #0a3a22; border-radius: 120px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 60px rgba(0,0,0,0.6);
-    overflow: hidden; 
 }
+
+/* ==========================================
+   PAINEL DE CONEXÃO E TURNO
+   ========================================== */
+.painel-conexao {
+    position: absolute; top: 28px; left: 35px; z-index: 1000;
+    width: 210px; padding: 12px 15px; display: flex; flex-direction: column; gap: 5px;
+    background: rgba(15,23,42,0.94); border: 1px solid #334155; border-radius: 12px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.55); color: #cbd5e1;
+    font-size: 13px; line-height: 1.35; backdrop-filter: blur(8px);
+}
+
+.painel-conexao-linha { display: flex; align-items: center; gap: 8px; }
+.painel-conexao strong { color: #fff; font-size: 14px; }
+
+.indicador-conexao {
+    width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%;
+    background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.8);
+}
+
+.painel-conexao.conectado { border-color: rgba(34,197,94,0.65); }
+.painel-conexao.conectado .indicador-conexao { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.85); }
+
+.painel-conexao.aguardando { border-color: rgba(245,158,11,0.65); }
+.painel-conexao.aguardando .indicador-conexao { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.85); }
+
+.painel-conexao.desconectado { border-color: rgba(239,68,68,0.65); }
+.painel-conexao.minha-vez {
+    border-color: #4ade80;
+    box-shadow: 0 0 18px rgba(74,222,128,0.3), 0 8px 22px rgba(0,0,0,0.55);
+}
+
+#texto-jogadores, #texto-turno { display: block; color: #94a3b8; }
+.painel-conexao.minha-vez #texto-turno { color: #4ade80; font-weight: 700; }
 
 /* ==========================================
    POSICIONAMENTO E CADEIRAS
@@ -37,207 +57,447 @@ body {
 #cadeira-esquerda { top: 50%; left: 40px; transform: translateY(-50%); }
 #cadeira-topo { top: 40px; left: 50%; transform: translateX(-50%); }
 #cadeira-direita { top: 50%; right: 40px; transform: translateY(-50%); }
+
 #cadeira-base {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
+    position: absolute; bottom: 20px; left: 50%; z-index: 20; width: 100%;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
     transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px; 
-    z-index: 20;
-    width: 100%; 
 }
 
 /* ==========================================
-   PERFIS E ANIMAÇÕES (OPONENTES)
+   PERFIS E ANIMAÇÕES DOS OPONENTES
    ========================================== */
 .perfil-jogador {
-    background: #0f172a; 
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 18px 30px; 
-    min-width: 210px;   
-    text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
+    position: relative; min-width: 210px; padding: 18px 30px;
+    display: flex; flex-direction: column; align-items: center;
+    background: #0f172a; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+    text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); transition: all 0.3s ease;
 }
 
 .avatar-imagem {
-    width: 65px; height: 65px; border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.2); object-fit: cover;
-    margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    background-color: #1e293b; transition: all 0.3s ease;
+    width: 65px; height: 65px; margin-bottom: 10px; object-fit: cover;
+    background: #1e293b; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: all 0.3s ease;
 }
 
-.perfil-jogador h3 { font-size: 1.15rem; color: #f3f4f6; margin-bottom: 5px; }
-.perfil-jogador .status { font-size: 1.05rem; color: #e2e8f0; font-weight: 600; }
+.perfil-jogador h3 { margin-bottom: 5px; color: #f3f4f6; font-size: 1.15rem; }
+.perfil-jogador .status { color: #e2e8f0; font-size: 1.05rem; font-weight: 600; }
 
-.perfil-jogador.sua-vez { border-color: transparent; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); overflow: hidden; background: transparent; }
-.perfil-jogador.sua-vez .avatar-imagem { border-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.6); }
-.perfil-jogador.sua-vez::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(#065f46, #34d399, #10b981, #064e3b, #065f46); animation: giro-rgb 2.5s linear infinite; z-index: -2; }
-.perfil-jogador.sua-vez::after { content: ''; position: absolute; inset: 3px; background: #0f172a; border-radius: 13px; z-index: -1; }
-.perfil-jogador.sua-vez h3, .perfil-jogador.sua-vez .status, .perfil-jogador.sua-vez .avatar-imagem { position: relative; z-index: 1; }
+.perfil-jogador.sua-vez {
+    overflow: hidden; background: transparent; border-color: transparent;
+    box-shadow: 0 0 30px rgba(16,185,129,0.2);
+}
 
-@keyframes giro-rgb { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.perfil-jogador.sua-vez .avatar-imagem { border-color: #34d399; box-shadow: 0 0 15px rgba(52,211,153,0.6); }
+
+.perfil-jogador.sua-vez::before {
+    content: ''; position: absolute; top: -50%; left: -50%; z-index: -2;
+    width: 200%; height: 200%;
+    background: conic-gradient(#065f46, #34d399, #10b981, #064e3b, #065f46);
+    animation: giro-rgb 2.5s linear infinite;
+}
+
+.perfil-jogador.sua-vez::after {
+    content: ''; position: absolute; inset: 3px; z-index: -1;
+    background: #0f172a; border-radius: 13px;
+}
+
+.perfil-jogador.sua-vez h3,
+.perfil-jogador.sua-vez .status,
+.perfil-jogador.sua-vez .avatar-imagem { position: relative; z-index: 1; }
+
+@keyframes giro-rgb { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 .pontinhos { display: inline-block; width: 1.2em; text-align: left; }
 .pontinhos::after { content: ''; animation: animar-pontinhos 1.5s infinite step-start; }
-@keyframes animar-pontinhos { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
 
-/* --- MARCADOR DE JOGADOR MORTO --- */
+@keyframes animar-pontinhos {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+}
+
 .perfil-jogador.morto { opacity: 0.6; filter: grayscale(80%); }
 .perfil-jogador.morto .avatar-imagem { border-color: #ef4444; }
+
 .marcador-morte {
-    position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-    font-size: 3.5rem; z-index: 10; pointer-events: none;
-    text-shadow: 0 0 10px rgba(0,0,0,0.8);
+    position: absolute; top: 15px; left: 50%; z-index: 10;
+    transform: translateX(-50%); font-size: 3.5rem;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8); pointer-events: none;
 }
 
 /* ==========================================
    CARTAS DOS OPONENTES E BASES DE VERSO
    ========================================== */
-.mao-oponente { display: flex; justify-content: center; margin-top: -15px; position: relative; z-index: 10; }
+.mao-oponente { position: relative; z-index: 10; margin-top: -15px; display: flex; justify-content: center; }
 
-.carta-verso, .verso-grande, .minha-carta-cega, .baralho-visual::before, .baralho-visual::after { background-color: #1e3a8a; }
+.carta-verso,
+.verso-grande,
+.minha-carta-cega,
+.baralho-visual::before,
+.baralho-visual::after { background-color: #1e3a8a; }
 
-.carta-verso { width: 55px; height: 82px; border: 2px solid #f8fafc; border-radius: 6px; box-shadow: -3px 3px 8px rgba(0, 0, 0, 0.5); transform-origin: bottom center; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px)); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); outline: 1px solid transparent; }
+.carta-verso {
+    width: 55px; height: 82px;
+    border: 2px solid #f8fafc; border-radius: 6px;
+    box-shadow: -3px 3px 8px rgba(0,0,0,0.5);
+    transform-origin: bottom center;
+    transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px));
+    transition: all 0.3s cubic-bezier(0.25,1,0.5,1); outline: 1px solid transparent;
+}
+
 .carta-verso:not(:first-child) { margin-left: -35px; }
-.mao-oponente:hover .carta-verso { margin-left: -20px; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(calc(var(--transY-oponente, 0px) - 15px)); }
 
-.mini-carta { width: 55px; height: 82px; background: transparent; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6); margin-top: 15px; cursor: pointer; position: relative; transform-origin: bottom center; transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px)); transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.2s ease; outline: 1px solid transparent; }
+.mao-oponente:hover .carta-verso {
+    margin-left: -20px;
+    transform: rotate(var(--rotacao-oponente, 0deg)) translateY(calc(var(--transY-oponente, 0px) - 15px));
+}
+
+.mini-carta {
+    position: relative; width: 55px; height: 82px; margin-top: 15px;
+    background: transparent; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    transform-origin: bottom center;
+    transform: rotate(var(--rotacao-oponente, 0deg)) translateY(var(--transY-oponente, 0px));
+    transition: transform 0.2s cubic-bezier(0.25,1,0.5,1), box-shadow 0.2s ease;
+    outline: 1px solid transparent;
+}
+
 .mao-oponente .mini-carta:not(:first-child) { margin-left: -35px; }
 .mao-oponente:hover .mini-carta { margin-left: -20px; }
-.mini-carta:hover { transform: rotate(0deg) scale(2) translateY(-10px) !important; z-index: 100; box-shadow: 0 15px 30px rgba(0,0,0,0.8); }
+
+.mini-carta:hover {
+    z-index: 100; transform: rotate(0deg) scale(2) translateY(-10px) !important;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.8);
+}
 
 /* ==========================================
    ÁREA CENTRAL E MESA
    ========================================== */
-.centro-da-mesa { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center; gap: 60px; background: rgba(0, 0, 0, 0.15); border-radius: 100px; padding: 40px 60px; border: 1px solid rgba(255, 255, 255, 0.03); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.3); z-index: 5; }
-.painel-vira, .vaza-atual { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-.centro-da-mesa h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; color: #9ca3af; opacity: 0.8; }
-.linhas-cartas { display: flex; gap: 12px; min-width: 140px; justify-content: flex-start; align-items: center; }
+.centro-da-mesa {
+    position: absolute; top: 50%; left: 50%; z-index: 5;
+    padding: 40px 60px; display: flex; justify-content: center; align-items: center; gap: 60px;
+    transform: translate(-50%,-50%);
+    background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.03); border-radius: 100px;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.3);
+}
 
-#cartas-na-mesa .carta { animation: surgirNaMesa 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; box-shadow: 0 6px 15px rgba(0,0,0,0.4); transform: rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px)); outline: 1px solid transparent; }
-@keyframes surgirNaMesa { 0% { opacity: 0; transform: scale(0.7) rotate(0deg); } 100% { opacity: 1; transform: scale(1) rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px)); } }
+.painel-vira, .vaza-atual { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+
+.centro-da-mesa h3 {
+    color: #9ca3af; opacity: 0.8; font-size: 0.8rem;
+    letter-spacing: 2px; text-transform: uppercase;
+}
+
+.linhas-cartas { min-width: 140px; display: flex; justify-content: flex-start; align-items: center; gap: 12px; }
+
+#cartas-na-mesa .carta {
+    animation: surgirNaMesa 0.35s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+    transform: rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px));
+    outline: 1px solid transparent;
+}
+
+@keyframes surgirNaMesa {
+    from { opacity: 0; transform: scale(0.7) rotate(0deg); }
+    to { opacity: 1; transform: scale(1) rotate(var(--rotacao-mesa, 0deg)) translateY(var(--transY-mesa, 0px)); }
+}
 
 /* ==========================================
-   ESTRUTURA BASE DAS CARTAS (FRENTE)
+   ESTRUTURA BASE DAS CARTAS
    ========================================== */
 .carta {
-    width: 90px; height: 135px;
-    background: transparent; 
-    border-radius: 12px;
+    position: relative; width: 90px; height: 135px;
     display: flex; justify-content: center; align-items: center;
-    position: relative; user-select: none;
-    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-    /* Correções de Serrilhado / Anti-aliasing */
+    background: transparent; border-radius: 12px; user-select: none;
+    transition: transform 0.3s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s cubic-bezier(0.25,1,0.5,1);
     will-change: transform; transform-style: preserve-3d; backface-visibility: hidden;
     outline: 1px solid transparent; -webkit-font-smoothing: antialiased;
 }
 
 .carta-sprite { width: 100%; height: 100%; object-fit: contain; pointer-events: none; border-radius: 12px; }
+#carta-vira { transform: rotate(12deg); box-shadow: -3px 5px 15px rgba(0,0,0,0.4); }
 
-#carta-vira { transform: rotate(12deg); box-shadow: -3px 5px 15px rgba(0, 0, 0, 0.4); }
+.mao-jogador {
+    margin-bottom: 5px; padding: 10px;
+    display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+}
 
-.mao-jogador { display: flex; justify-content: center; gap: 0; padding: 10px; margin-bottom: 5px; flex-wrap: wrap; }
-.mao-jogador .carta { cursor: pointer; margin: 0 -12px; transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px)); transform-origin: bottom center; }
-.mao-jogador .carta:hover { transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08) !important; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 15px 20px rgba(0, 0, 0, 0.4); }
+.mao-jogador .carta {
+    margin: 0 -12px; cursor: pointer; transform-origin: bottom center;
+    transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px));
+}
+
+.mao-jogador .carta:hover {
+    z-index: 100;
+    transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08) !important;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 15px 20px rgba(0,0,0,0.4);
+}
 
 /* ==========================================
-   ESTILOS DO BARALHO PADRÃO (CSS PURO)
+   BARALHO PADRÃO
    ========================================== */
 .padrao-css {
-    background: #ffffff; color: #000; padding: 10px; font-weight: 700; font-size: 1.4rem;
-    flex-direction: column; justify-content: flex-start; align-items: flex-start;
+    padding: 10px; flex-direction: column; justify-content: flex-start; align-items: flex-start;
+    background: #fff; color: #000; font-size: 1.4rem; font-weight: 700;
 }
+
 .padrao-css span { position: relative; z-index: 2; }
-.padrao-css::after { content: attr(data-naipe-simbolo); position: absolute; bottom: 8px; right: 10px; font-size: 1.6rem; opacity: 0.9; }
+
+.padrao-css::after {
+    content: attr(data-naipe-simbolo); position: absolute; right: 10px; bottom: 8px;
+    font-size: 1.6rem; opacity: 0.9;
+}
+
 .padrao-css.paus, .padrao-css.espadas { color: #1f2937; }
 .padrao-css.copas, .padrao-css.ouros { color: #dc2626; }
-.naipe-central { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3.5rem; opacity: 0.8; pointer-events: none; }
 
-.mini-carta.padrao-css { padding: 4px; font-size: 1.2rem; background: #ffffff; }
-.mini-carta.padrao-css::after { font-size: 1.3rem; bottom: 4px; right: 6px; }
+.naipe-central {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%); font-size: 3.5rem; opacity: 0.8; pointer-events: none;
+}
+
+.mini-carta.padrao-css { padding: 4px; background: #fff; font-size: 1.2rem; }
+.mini-carta.padrao-css::after { right: 6px; bottom: 4px; font-size: 1.3rem; }
 .mini-carta.padrao-css .naipe-central { font-size: 2rem; }
 
 /* ==========================================
-   SUA ÁREA DE JOGADOR E HUD DINÂMICA
+   ÁREA DO JOGADOR E HUD
    ========================================== */
-.status-box { 
-    position: relative; background: #111827; border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px 35px; border-radius: 50px; 
-    display: flex; justify-content: space-between; align-items: center; 
-    /* Permitindo a HUD crescer e quebrar linha para não vazar a tela */
-    width: auto; min-width: 680px; max-width: 95vw; flex-wrap: wrap; gap: 15px;
+.status-box {
+    position: relative; width: auto; min-width: 680px; max-width: 95vw;
+    padding: 12px 35px; display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 15px;
+    background: #111827; border: 1px solid rgba(255,255,255,0.05); border-radius: 50px;
     box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: all 0.3s ease;
 }
 
-.status-box.sua-vez { border-color: transparent; box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); overflow: hidden; background: transparent; }
-.status-box.sua-vez::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(#065f46, #34d399, #10b981, #064e3b, #065f46); animation: giro-rgb 2.5s linear infinite; z-index: -2; }
-.status-box.sua-vez::after { content: ''; position: absolute; inset: 3px; background: #111827; border-radius: 47px; z-index: -1; }
-.status-box.sua-vez > * { position: relative; z-index: 1; }
-.status-box.sua-vez .local-avatar { border-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.6); }
+.status-box.sua-vez {
+    overflow: hidden; background: transparent; border-color: transparent;
+    box-shadow: 0 0 30px rgba(16,185,129,0.2);
+}
 
-/* Se VOCÊ Morrer: */
+.status-box.sua-vez::before {
+    content: ''; position: absolute; top: -50%; left: -50%; z-index: -2;
+    width: 200%; height: 200%;
+    background: conic-gradient(#065f46,#34d399,#10b981,#064e3b,#065f46);
+    animation: giro-rgb 2.5s linear infinite;
+}
+
+.status-box.sua-vez::after {
+    content: ''; position: absolute; inset: 3px; z-index: -1;
+    background: #111827; border-radius: 47px;
+}
+
+.status-box.sua-vez > * { position: relative; z-index: 1; }
+.status-box.sua-vez .local-avatar { border-color: #34d399; box-shadow: 0 0 15px rgba(52,211,153,0.6); }
+
 .status-box.morto { opacity: 0.7; filter: grayscale(50%); border: 1px solid #ef4444; }
 .status-box.morto .local-avatar { border-color: #ef4444; filter: grayscale(100%); }
 
 .info-local { display: flex; align-items: center; gap: 15px; }
 .local-avatar { width: 45px; height: 45px; margin-bottom: 0; border-width: 1.5px; }
-.info-local h2 { font-size: 1.15rem; font-weight: 700; color: #4ade80; margin: 0; }
+.info-local h2 { margin: 0; color: #4ade80; font-size: 1.15rem; font-weight: 700; }
+
 .dados-local { display: flex; gap: 20px; }
-.dados-local p { font-size: 0.95rem; color: #9ca3af; margin: 0; font-weight: 500; }
-.dados-local strong { color: #f3f4f6; font-weight: 600; margin-left: 2px; }
+.dados-local p { margin: 0; color: #9ca3af; font-size: 0.95rem; font-weight: 500; }
+.dados-local strong { margin-left: 2px; color: #f3f4f6; font-weight: 600; }
+
 .escondido { display: none !important; }
 
-#painel-apostas { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: flex-end; }
-.titulo-aposta { font-size: 0.85rem !important; color: #9ca3af !important; font-weight: 600; margin: 0 !important; }
-.botoes-aposta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-.btn-aposta { background: #2563eb; color: white; border: none; width: 42px; height: 42px; border-radius: 50%; font-size: 1.2rem; font-weight: 700; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); transition: all 0.2s ease; flex-shrink: 0; }
-.btn-aposta:hover { transform: translateY(-2px) scale(1.05); background: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+#painel-apostas { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 15px; }
+
+.titulo-aposta {
+    margin: 0 !important; color: #9ca3af !important;
+    font-size: 0.85rem !important; font-weight: 600;
+}
+
+.botoes-aposta { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+
+.btn-aposta {
+    width: 42px; height: 42px; flex-shrink: 0;
+    display: flex; justify-content: center; align-items: center;
+    background: #2563eb; color: #fff; border: none; border-radius: 50%;
+    font-size: 1.2rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 0 15px rgba(37,99,235,0.4); transition: all 0.2s ease;
+}
+
+.btn-aposta:hover {
+    transform: translateY(-2px) scale(1.05); background: #3b82f6;
+    box-shadow: 0 0 20px rgba(59,130,246,0.6);
+}
+
 .btn-aposta.proibido { background: #374151; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
 
 /* ==========================================
-   MODAIS, TEMAS E BARALHO CENTRAL
+   MODAIS
    ========================================== */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 100000; transition: opacity 0.3s ease, visibility 0.3s ease; }
+.modal-overlay {
+    position: fixed; inset: 0; z-index: 100000;
+    display: flex; justify-content: center; align-items: center;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
 .modal-oculto { opacity: 0; visibility: hidden; pointer-events: none; }
-.modal-conteudo { background: #1e293b; border: 2px solid #334155; padding: 30px; border-radius: 20px; text-align: center; color: #f8fafc; width: 90%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); transform: scale(1); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+.modal-conteudo {
+    width: 90%; max-width: 500px; padding: 30px;
+    background: #1e293b; border: 2px solid #334155; border-radius: 20px;
+    color: #f8fafc; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    transform: scale(1); transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+
 .modal-oculto .modal-conteudo { transform: scale(0.5); }
 .modal-conteudo h2 { margin-bottom: 25px; color: #4ade80; }
-.modal-conteudo h3 { font-size: 1rem; color: #cbd5e1; margin-top: 20px; margin-bottom: 15px; }
-.avatares-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
-.avatar-opcao { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 3px solid transparent; cursor: pointer; transition: 0.2s; }
+.modal-conteudo h3 { margin: 20px 0 15px; color: #cbd5e1; font-size: 1rem; }
+
+.avatares-container { margin-bottom: 20px; display: flex; justify-content: center; gap: 15px; }
+
+.avatar-opcao {
+    width: 60px; height: 60px; object-fit: cover;
+    border: 3px solid transparent; border-radius: 50%; cursor: pointer; transition: 0.2s;
+}
+
 .avatar-opcao:hover { transform: scale(1.1); }
-.avatar-opcao.selecionado { border-color: #4ade80; box-shadow: 0 0 15px rgba(74, 222, 128, 0.5); }
-.opcoes-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
-.btn-tema { background: #334155; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+.avatar-opcao.selecionado { border-color: #4ade80; box-shadow: 0 0 15px rgba(74,222,128,0.5); }
+
+.opcoes-container { margin-bottom: 10px; display: flex; justify-content: center; gap: 10px; }
+
+.btn-tema {
+    padding: 10px 20px; background: #334155; color: #fff;
+    border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s;
+}
+
 .btn-tema:hover { background: #475569; }
-.btn-fechar { background: #10b981; color: white; border: none; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 25px; width: 100%; transition: 0.2s; }
+
+.btn-fechar {
+    width: 100%; margin-top: 25px; padding: 12px 25px;
+    background: #10b981; color: #fff; border: none; border-radius: 8px;
+    font-weight: bold; cursor: pointer; transition: 0.2s;
+}
+
 .btn-fechar:hover { background: #059669; }
 
+/* ==========================================
+   BARALHO CENTRAL E ANIMAÇÕES
+   ========================================== */
 .baralho-visual { position: relative; width: 90px; height: 135px; margin-right: 30px; cursor: pointer; }
-.baralho-visual::before, .baralho-visual::after { content: ""; position: absolute; top: 0; left: 0; width: 90px; height: 135px; border-radius: 12px; border: 5px solid #f8fafc; box-shadow: -2px 2px 6px rgba(0, 0, 0, 0.4); opacity: 0; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease, box-shadow 0.35s ease; }
-.baralho-visual::before { z-index: 1; } .baralho-visual::after { z-index: 0; }
-.verso-grande { position: relative; width: 90px; height: 135px; border: 5px solid #f8fafc; border-radius: 12px; box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6); z-index: 2; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.35s ease; outline: 1px solid transparent; }
-.baralho-visual:hover .verso-grande { transform: translate(12px, -8px) rotate(6deg); box-shadow: -6px 10px 20px rgba(0, 0, 0, 0.5); }
-.baralho-visual:hover::before { opacity: 1; transform: translate(0px, 0px) rotate(0deg); }
-.baralho-visual:hover::after { opacity: 1; transform: translate(-12px, 8px) rotate(-6deg); box-shadow: -3px 5px 10px rgba(0, 0, 0, 0.3); }
+
+.baralho-visual::before,
+.baralho-visual::after {
+    content: ""; position: absolute; top: 0; left: 0;
+    width: 90px; height: 135px;
+    border: 5px solid #f8fafc; border-radius: 12px;
+    box-shadow: -2px 2px 6px rgba(0,0,0,0.4); opacity: 0;
+    transition: transform 0.35s cubic-bezier(0.25,1,0.5,1), opacity 0.25s ease, box-shadow 0.35s ease;
+}
+
+.baralho-visual::before { z-index: 1; }
+.baralho-visual::after { z-index: 0; }
+
+.verso-grande {
+    position: relative; z-index: 2;
+    width: 90px; height: 135px;
+    border: 5px solid #f8fafc; border-radius: 12px;
+    box-shadow: -4px 4px 12px rgba(0,0,0,0.6); outline: 1px solid transparent;
+    transition: transform 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.35s ease;
+}
+
+.baralho-visual:hover .verso-grande {
+    transform: translate(12px,-8px) rotate(6deg);
+    box-shadow: -6px 10px 20px rgba(0,0,0,0.5);
+}
+
+.baralho-visual:hover::before { opacity: 1; transform: translate(0,0) rotate(0deg); }
+
+.baralho-visual:hover::after {
+    opacity: 1; transform: translate(-12px,8px) rotate(-6deg);
+    box-shadow: -3px 5px 10px rgba(0,0,0,0.3);
+}
+
 .empilhada { position: absolute; margin: 0 !important; }
-.carta-animada { position: fixed; z-index: 9999; transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
 
-.minha-carta-cega { width: 90px; height: 135px; border: 5px solid #f8fafc; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); cursor: pointer; margin: 0 -12px; transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px)); transform-origin: bottom center; outline: 1px solid transparent; }
-.minha-carta-cega:hover { transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08) !important; z-index: 100; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 15px 20px rgba(0, 0, 0, 0.4); }
+.carta-animada {
+    position: fixed; z-index: 9999;
+    transition: all 0.5s cubic-bezier(0.2,0.8,0.2,1); pointer-events: none;
+}
 
-/* --- A MÁGICA DOS TEMAS DE VERSO --- */
-.tema-verso-verso1 .carta-verso, .tema-verso-verso1 .verso-grande, .tema-verso-verso1 .minha-carta-cega, .tema-verso-verso1 .baralho-visual::before, .tema-verso-verso1 .baralho-visual::after { background-image: url('../assets/verso_padrao.png'); background-size: cover; background-position: center; }
-.tema-verso-verso2 .carta-verso, .tema-verso-verso2 .verso-grande, .tema-verso-verso2 .minha-carta-cega, .tema-verso-verso2 .baralho-visual::before, .tema-verso-verso2 .baralho-visual::after { background-image: url('../assets/verso_dark.png'); background-size: cover; background-position: center; }
-.tema-verso-verso3 .carta-verso, .tema-verso-verso3 .verso-grande, .tema-verso-verso3 .minha-carta-cega, .tema-verso-verso3 .baralho-visual::before, .tema-verso-verso3 .baralho-visual::after { background-image: linear-gradient(135deg, #2563eb 25%, transparent 25%), linear-gradient(225deg, #2563eb 25%, transparent 25%), linear-gradient(45deg, #2563eb 25%, transparent 25%), linear-gradient(315deg, #2563eb 25%, #1e3a8a 25%); background-position: 8px 0, 8px 0, 0 0, 0 0; background-size: 16px 16px; background-repeat: repeat; }
+.minha-carta-cega {
+    width: 90px; height: 135px; margin: 0 -12px;
+    border: 5px solid #f8fafc; border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
+    transform-origin: bottom center;
+    transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0px));
+    transition: all 0.3s cubic-bezier(0.25,1,0.5,1); outline: 1px solid transparent;
+}
 
-.btn-config { position: fixed; top: 20px; right: 20px; width: 65px; height: 65px; background: #1e293b; border: 3px solid #475569; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 99990; font-size: 1.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s ease, background 0.2s ease; }
+.minha-carta-cega:hover {
+    z-index: 100;
+    transform: rotate(var(--rotacao, 0deg)) translateY(calc(var(--transY, 0px) - 35px)) scale(1.08) !important;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6), 0 15px 20px rgba(0,0,0,0.4);
+}
+
+/* ==========================================
+   TEMAS DE VERSO
+   ========================================== */
+.tema-verso-verso1 .carta-verso,
+.tema-verso-verso1 .verso-grande,
+.tema-verso-verso1 .minha-carta-cega,
+.tema-verso-verso1 .baralho-visual::before,
+.tema-verso-verso1 .baralho-visual::after {
+    background-image: url('../assets/verso_padrao.png');
+    background-size: cover; background-position: center;
+}
+
+.tema-verso-verso2 .carta-verso,
+.tema-verso-verso2 .verso-grande,
+.tema-verso-verso2 .minha-carta-cega,
+.tema-verso-verso2 .baralho-visual::before,
+.tema-verso-verso2 .baralho-visual::after {
+    background-image: url('../assets/verso_dark.png');
+    background-size: cover; background-position: center;
+}
+
+.tema-verso-verso3 .carta-verso,
+.tema-verso-verso3 .verso-grande,
+.tema-verso-verso3 .minha-carta-cega,
+.tema-verso-verso3 .baralho-visual::before,
+.tema-verso-verso3 .baralho-visual::after {
+    background-image:
+        linear-gradient(135deg, #2563eb 25%, transparent 25%),
+        linear-gradient(225deg, #2563eb 25%, transparent 25%),
+        linear-gradient(45deg, #2563eb 25%, transparent 25%),
+        linear-gradient(315deg, #2563eb 25%, #1e3a8a 25%);
+    background-position: 8px 0, 8px 0, 0 0, 0 0;
+    background-size: 16px 16px; background-repeat: repeat;
+}
+
+/* ==========================================
+   BOTÃO DE CONFIGURAÇÃO
+   ========================================== */
+.btn-config {
+    position: fixed; top: 20px; right: 20px; z-index: 99990;
+    width: 65px; height: 65px;
+    display: flex; justify-content: center; align-items: center;
+    background: #1e293b; border: 3px solid #475569; border-radius: 50%;
+    font-size: 1.8rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
 .btn-config:hover { transform: scale(1.1); background: #334155; border-color: #64748b; }
+
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
+@media (max-width: 900px) {
+    .painel-conexao { top: 20px; left: 25px; width: 185px; padding: 10px 13px; font-size: 12px; }
+    .perfil-jogador { min-width: 170px; padding: 14px 18px; }
+    .centro-da-mesa { gap: 30px; padding: 30px 40px; }
+    .status-box { min-width: 560px; }
+}
+
+@media (max-width: 700px) {
+    .painel-conexao { top: 15px; left: 18px; width: 165px; padding: 9px 11px; font-size: 11px; }
+    .painel-conexao strong { font-size: 12px; }
+}

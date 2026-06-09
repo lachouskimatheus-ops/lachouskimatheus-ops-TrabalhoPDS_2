@@ -4,8 +4,8 @@
 
 #include "coreAPI/JsonConversor.hpp"
 
-#include "Jogos/Paciencia/include/paciencia.h"
-#include "Jogos/Paciencia/include/regras.h"
+#include "Jogos/Paciencia/include/Paciencia.hpp"
+#include "Jogos/Paciencia/include/Regras.hpp"
 
 #include <iostream>
 #include <mutex>
