@@ -215,7 +215,17 @@ function atualizarInterface(dados) {
         || (euAnterior && eu && eu.mao.length > euAnterior.mao.length);
     window.estadoTrucoAnterior = dados;
 
-    // Placar
+    // Placar — no 1v1 usa nomes, no 2v2 usa "Equipe X"
+    const modo1v1 = dados.max_jogadores === 2;
+    if (modo1v1 && dados.jogadores && dados.jogadores.length === 2) {
+        const jog1 = dados.jogadores.find(j => j.equipe === 1);
+        const jog2 = dados.jogadores.find(j => j.equipe === 2);
+        document.querySelector('.placar-equipe:first-child .placar-label').innerText = jog1 ? jog1.nome : 'Jogador 1';
+        document.querySelector('.placar-equipe:last-child .placar-label').innerText  = jog2 ? jog2.nome : 'Jogador 2';
+    } else {
+        document.querySelector('.placar-equipe:first-child .placar-label').innerText = 'Equipe 1';
+        document.querySelector('.placar-equipe:last-child .placar-label').innerText  = 'Equipe 2';
+    }
     document.getElementById('pontos-eq1').innerText = dados.pontos_equipe1 ?? 0;
     document.getElementById('pontos-eq2').innerText = dados.pontos_equipe2 ?? 0;
 
@@ -223,6 +233,16 @@ function atualizarInterface(dados) {
     document.getElementById('valor-mao').innerText = dados.valor_mao ?? 1;
     const quedaTextos = ["", "1ª Queda", "2ª Queda", "3ª Queda"];
     document.getElementById('queda-atual').innerText = quedaTextos[dados.queda_atual] || "";
+
+    // Indica regra dos 11
+    const valorMaoEl = document.getElementById('valor-mao');
+    if (dados.mao_travada) {
+        valorMaoEl.title = "Regra dos 11: mão vale 3 pontos, sem truco";
+        valorMaoEl.style.color = '#f87171';
+    } else {
+        valorMaoEl.title = '';
+        valorMaoEl.style.color = '';
+    }
 
     // Vira
     const viraDiv = document.getElementById('carta-vira');
@@ -279,11 +299,12 @@ function atualizarInterface(dados) {
             const suaVez = dados.jogador_da_vez === j.id;
             const maoHtml = Array.from({ length: j.cartas_na_mao || 0 })
                 .map(() => '<div class="carta-verso"></div>').join('');
+            const tagEquipe = modo1v1 ? '' : `<span class="tag-equipe tag-equipe-${equipe}">Equipe ${equipe}</span>`;
 
             document.getElementById(idCadeira).innerHTML = `
                 <div class="perfil-jogador ${suaVez ? 'sua-vez' : ''}">
                     <h3>${j.nome || 'Jogador ' + j.id}</h3>
-                    <span class="tag-equipe tag-equipe-${equipe}">Equipe ${equipe}</span>
+                    ${tagEquipe}
                 </div>
                 <div class="mao-oponente">${maoHtml}</div>
             `;
@@ -292,6 +313,11 @@ function atualizarInterface(dados) {
         // Minha mão
         if (eu) {
             document.getElementById('nome-local').innerText = eu.nome || meuNome;
+            // No 1v1 oculta a tag de equipe
+            const dadosLocaisEl = document.querySelector('.dados-local');
+            if (dadosLocaisEl) {
+                dadosLocaisEl.style.display = modo1v1 ? 'none' : '';
+            }
             document.getElementById('local-equipe').innerText = eu.equipe;
             document.getElementById('local-quedas').innerText =
                 eu.equipe === 1 ? (dados.vitoriasEq1 || 0) : (dados.vitoriasEq2 || 0);
@@ -358,7 +384,7 @@ function atualizarPainelAcoes(dados) {
             const btnAumentar = criarBotao(nomes[dados.nivel_truco + 1] + '!', 'aumentar', () => responderTruco('AUMENTAR'));
             botoes.appendChild(btnAumentar);
         }
-    } else if (ehMinhaVez && !dados.aguardando_resposta_truco && dados.nivel_truco < 4) {
+    } else if (ehMinhaVez && !dados.aguardando_resposta_truco && dados.nivel_truco < 4 && !dados.mao_travada) {
         titulo.innerText = 'Sua vez:';
         painel.classList.remove('escondido');
         painel.style.display = '';
@@ -378,23 +404,36 @@ function criarBotao(texto, classe, acao) {
     return btn;
 }
 
+function nomeEquipe(dados, equipe) {
+    // No 1v1 usa o nome do jogador, no 2v2 usa "Equipe X"
+    if (dados.max_jogadores === 2 && dados.jogadores) {
+        const jog = dados.jogadores.find(j => j.equipe === equipe);
+        return jog ? jog.nome : ('Jogador ' + equipe);
+    }
+    return 'Equipe ' + equipe;
+}
+
 function tratarEvento(evento, dados) {
     switch (evento) {
-        case 'TRUCO_PEDIDO':
-            mostrarModal(`<h2 style="color:#f0c040;">🃏 ${dados.nome_pedidor || 'Alguém'} pediu ${dados.nome_nivel_truco}!</h2><p>Mão pode valer ${dados.valor_se_aceito} pontos</p>`, 2000);
+        case 'TRUCO_PEDIDO': {
+            // Mostra o valor correto: o que está sendo pedido agora
+            const valoresPedido = { 'Truco': 3, 'Seis': 6, 'Nove': 9, 'Doze': 12 };
+            const valorPedido = valoresPedido[dados.nome_nivel_truco] || dados.valor_se_aceito;
+            mostrarModal(`<h2 style="color:#f0c040;">🃏 ${dados.nome_pedidor || 'Alguém'} pediu ${dados.nome_nivel_truco}!</h2><p>Se aceito, a mão passa a valer ${valorPedido} ponto(s)</p>`, 2000);
             tocarSom('click.mp3');
             break;
+        }
         case 'TRUCO_ACEITO':
-            mostrarModal(`<h2 style="color:#4ade80;">✅ Truco aceito!</h2><p>Mão vale ${dados.valor_mao} pontos</p>`, 2000);
+            mostrarModal(`<h2 style="color:#4ade80;">✅ ${dados.nome_nivel_truco} aceito!</h2><p>Mão vale ${dados.valor_mao} ponto(s)</p>`, 2000);
             break;
         case 'TRUCO_RECUSADO':
-            mostrarModal(`<h2 style="color:#f87171;">❌ Truco recusado!</h2><p>Equipe ${dados.equipe_vencedora} ganha ${dados.pontos_ganhos} ponto(s)</p>`, 2500);
+            mostrarModal(`<h2 style="color:#f87171;">❌ ${dados.nome_nivel_truco} recusado!</h2><p>${nomeEquipe(dados, dados.equipe_vencedora)} ganha ${dados.pontos_ganhos} ponto(s)</p>`, 2500);
             break;
         case 'FIM_QUEDA':
             if (dados.vencedor_queda === 0) {
                 mostrarModal(`<h2 style="color:#60a5fa;">🤝 Queda empatou!</h2>`, 1800);
             } else {
-                mostrarModal(`<h2 style="color:#4ade80;">⚔️ Equipe ${dados.vencedor_queda} venceu a queda!</h2>`, 1800);
+                mostrarModal(`<h2 style="color:#4ade80;">⚔️ ${nomeEquipe(dados, dados.vencedor_queda)} venceu a queda!</h2>`, 1800);
             }
             tocarSom('jogar_carta.ogg');
             break;
@@ -402,13 +441,13 @@ function tratarEvento(evento, dados) {
             if (dados.vencedor_mao === 0) {
                 mostrarModal(`<h2 style="color:#9ca3af;">🤝 Mão empatada! Ninguém pontua.</h2>`, 2500);
             } else {
-                mostrarModal(`<h2 style="color:#f0c040;">🏆 Equipe ${dados.vencedor_mao} venceu a mão! +${dados.valor_mao}pt</h2>`, 2500);
+                mostrarModal(`<h2 style="color:#f0c040;">🏆 ${nomeEquipe(dados, dados.vencedor_mao)} venceu a mão! +${dados.pontos_ganhos}pt</h2>`, 2500);
                 tocarSom('victory_6.mp3');
             }
             break;
         case 'FIM_PARTIDA':
             mostrarModal(`
-                <h2 style="color:#f0c040;">🥇 EQUIPE ${dados.equipe_vencedora} VENCEU!</h2>
+                <h2 style="color:#f0c040;">🥇 ${nomeEquipe(dados, dados.equipe_vencedora)} VENCEU!</h2>
                 <p>Placar final: ${dados.pontos_equipe1} × ${dados.pontos_equipe2}</p>
                 <p style="margin-top:20px;"><a href="/pages/menu.html" style="color:#60a5fa;">Voltar ao Menu</a></p>
             `, 0);

@@ -57,11 +57,14 @@ struct EstadoTruco {
     bool aguardandoRespostaTruco = false;
     int equipeRespondendo = 0;
     int equipePedindo = 0;
- 
+    int valorAntesDoPedido = 1;
+    bool maoTravada = false;
+    std::string nomePedidor = "";
+
     // Vez
-    int jogadorDaVez = 0; // índice no vetor jogadores
+    int jogadorDaVez = 0;
     int inicioRodada = 0;
- 
+
     bool partidaEncerrada = false;
     std::string ultimoEvento = "";
     int vencedorQueda = 0;
@@ -112,10 +115,15 @@ json construirEstado(const EstadoTruco& estado) {
     j["valor_mao"]      = estado.valorMao;
     j["queda_atual"]    = estado.quedaAtual;
     j["nivel_truco"]    = estado.nivelTruco;
+    j["mao_travada"]    = estado.maoTravada;
     j["aguardando_resposta_truco"] = estado.aguardandoRespostaTruco;
     j["equipe_respondendo"] = estado.equipeRespondendo;
-    j["nome_nivel_truco"]   = nomesNivel[estado.nivelTruco < 4 ? estado.nivelTruco + 1 : 4];
-    j["valor_se_aceito"]    = valoresNivel[estado.nivelTruco < 4 ? estado.nivelTruco + 1 : 4];
+    // Se há pedido pendente, o nome e valor são do nível atual (já incrementado)
+    // Se não há pedido, mostra o próximo nível possível (para o botão)
+    int nivelDisplay = estado.aguardandoRespostaTruco ? estado.nivelTruco : (estado.nivelTruco < 4 ? estado.nivelTruco + 1 : 4);
+    j["nome_nivel_truco"] = nomesNivel[nivelDisplay];
+    j["valor_se_aceito"]  = valoresNivel[nivelDisplay];
+    j["nome_pedidor"]       = estado.nomePedidor;
  
     // Vira
     if (estado.vira) j["vira"] = cartaParaJson(estado.vira);
@@ -153,7 +161,7 @@ json construirEstado(const EstadoTruco& estado) {
     j["vencedor_queda"] = estado.vencedorQueda;
     j["vencedor_mao"]   = estado.vencedorMao;
     j["equipe_vencedora"] = estado.equipeVencedora;
-    j["pontos_ganhos"]    = estado.valorMao;
+    j["pontos_ganhos"]    = estado.valorAntesDoPedido;
  
     return j;
 }
@@ -170,24 +178,32 @@ void broadcast(EstadoTruco& estado, const std::string& msg) {
  
 void prepararRodada(EstadoTruco& estado) {
     estado.cartasNaMesa.clear();
-    estado.valorMao   = 1;
     estado.nivelTruco = 0;
     estado.quedaAtual = 1;
     estado.vitoriasEq1 = 0;
     estado.vitoriasEq2 = 0;
     estado.vencedorPrimeira = 0;
     estado.aguardandoRespostaTruco = false;
- 
+    estado.valorAntesDoPedido = 1;
+    estado.nomePedidor = "";
+
+    // Regra dos 11
+    if (estado.pontosEq1 == 11 || estado.pontosEq2 == 11) {
+        estado.valorMao = 3;
+        estado.maoTravada = true;
+    } else {
+        estado.valorMao = 1;
+        estado.maoTravada = false;
+    }
+
     estado.baralho->inicializar();
     estado.baralho->embaralhar();
- 
     estado.vira = estado.baralho->puxarCarta();
- 
+
     for (auto& jog : estado.jogadores) {
         jog.mao.clear();
         for (int i = 0; i < 3; i++) jog.mao.push_back(estado.baralho->puxarCarta());
     }
- 
     estado.jogadorDaVez = estado.inicioRodada;
 }
  
@@ -445,22 +461,21 @@ int main() {
                     else if (acao == "PEDIR_TRUCO") {
                         if (estado.aguardandoRespostaTruco) return;
                         if (estado.nivelTruco >= 4) return;
- 
+                        if (estado.maoTravada) return;
+
                         int idxJogador = -1;
                         for (int i = 0; i < (int)estado.jogadores.size(); i++) {
                             if (estado.jogadores[i].id == jogadorId) { idxJogador = i; break; }
                         }
                         if (idxJogador != estado.jogadorDaVez) return;
- 
+
+                        estado.valorAntesDoPedido = estado.valorMao;
                         estado.nivelTruco++;
-                        estado.equipePedindo   = getEquipe(idxJogador);
+                        estado.equipePedindo     = getEquipe(idxJogador);
                         estado.equipeRespondendo = (estado.equipePedindo == 1) ? 2 : 1;
                         estado.aguardandoRespostaTruco = true;
+                        estado.nomePedidor = estado.jogadores[idxJogador].nome;
                         estado.ultimoEvento = "TRUCO_PEDIDO";
- 
-                        // Quem pediu entra no nome
-                        json extra;
-                        extra["nome_pedidor"] = estado.jogadores[idxJogador].nome;
                     }
  
                     // --- RESPONDER TRUCO ---
@@ -479,19 +494,17 @@ int main() {
                             estado.valorMao = valoresNivel[estado.nivelTruco];
                             estado.aguardandoRespostaTruco = false;
                             estado.ultimoEvento = "TRUCO_ACEITO";
- 
+
                         } else if (resposta == "RECUSAR") {
-                            // Quem pediu ganha valendo o nível anterior
-                            int pontosGanhos = valoresNivel[estado.nivelTruco - 1];
+                            int pontosGanhos = estado.valorAntesDoPedido;
                             if (estado.equipePedindo == 1) estado.pontosEq1 += pontosGanhos;
                             else estado.pontosEq2 += pontosGanhos;
- 
+
                             estado.aguardandoRespostaTruco = false;
                             estado.ultimoEvento = "TRUCO_RECUSADO";
                             estado.equipeVencedora = estado.equipePedindo;
                             estado.vencedorMao = estado.equipePedindo;
- 
-                            // Verifica fim de partida
+
                             if (estado.pontosEq1 >= 12 || estado.pontosEq2 >= 12) {
                                 estado.equipeVencedora = (estado.pontosEq1 >= 12) ? 1 : 2;
                                 estado.ultimoEvento = "FIM_PARTIDA";
@@ -500,12 +513,18 @@ int main() {
                                 estado.inicioRodada = (estado.inicioRodada + 1) % (int)estado.jogadores.size();
                                 prepararRodada(estado);
                             }
- 
+
                         } else if (resposta == "AUMENTAR") {
                             if (estado.nivelTruco >= 4) return;
-                            // Inverte: agora a equipe que pediu precisa responder
+                            estado.valorAntesDoPedido = valoresNivel[estado.nivelTruco];
                             std::swap(estado.equipePedindo, estado.equipeRespondendo);
                             estado.nivelTruco++;
+                            // Atualiza nome de quem está pedindo agora
+                            for (int i = 0; i < (int)estado.jogadores.size(); i++) {
+                                if (getEquipe(i) == estado.equipePedindo) {
+                                    estado.nomePedidor = estado.jogadores[i].nome; break;
+                                }
+                            }
                             estado.ultimoEvento = "TRUCO_PEDIDO";
                         }
                     }
