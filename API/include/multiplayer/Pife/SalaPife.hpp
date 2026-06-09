@@ -17,25 +17,62 @@ struct ConexaoPife {
 class SalaPife : public SalaBase {
 private:
     Pife jogo_;
+
     std::vector<ConexaoPife> conexoes_;
+
     bool partidaIniciada_;
 
+    ConexaoPife* buscarConexaoDoJogador(
+        int idJogador
+    );
+
+    const ConexaoPife* buscarConexaoDoJogador(
+        int idJogador
+    ) const;
+
 public:
-    SalaPife(const std::string& idSala, int maxJogadores);
+    SalaPife(
+        const std::string& idSala,
+        int maxJogadores
+    );
 
-    int adicionarJogador(crow::websocket::connection* conexao);
+    int adicionarJogador(
+        crow::websocket::connection* conexao,
+        const std::string& tokenReconexao
+    );
 
-    bool removerConexao(crow::websocket::connection* conexao);
+    int reconectarJogador(
+        crow::websocket::connection* conexao,
+        const std::string& tokenReconexao
+    );
 
-    int obterIdJogador(crow::websocket::connection* conexao) const;
+    bool removerConexao(
+        crow::websocket::connection* conexao
+    );
 
-    bool estaCheia() const;
+    int obterIdJogador(
+        crow::websocket::connection* conexao
+    ) const;
+
+    crow::websocket::connection*
+    obterConexaoJogador(int idJogador) const;
+
+    bool possuiConexao(
+        crow::websocket::connection* conexao
+    ) const;
+
     bool partidaIniciada() const;
-    bool podeReceberJogador() const;
+
+    bool podeReceberNovoJogador() const;
+
+    bool podeReconectar(
+        const std::string& tokenReconexao
+    ) const;
 
     void iniciarPartida();
 
     Pife& jogo();
+
     const Pife& jogo() const;
 
     std::vector<ConexaoPife>& conexoes();

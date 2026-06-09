@@ -3,8 +3,6 @@
 
 #include <string>
 
-//Verifica a situação do jogador
-
 struct JogadorConectado {
     int idJogador;
     bool conectado;

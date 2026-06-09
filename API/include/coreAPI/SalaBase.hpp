@@ -11,23 +11,53 @@ protected:
     std::string idSala_;
     int maxJogadores_;
     int jogadoresConectados_;
+
     std::vector<JogadorConectado> jogadores_;
 
 public:
-    SalaBase(const std::string& idSala, int maxJogadores);
+    SalaBase(
+        const std::string& idSala,
+        int maxJogadores
+    );
 
     virtual ~SalaBase() = default;
 
-    virtual int adicionarJogador();
+    int adicionarJogador(
+        const std::string& tokenReconexao
+    );
 
-    virtual bool removerJogador(int idJogador);
+    int reconectarJogador(
+        const std::string& tokenReconexao
+    );
+
+    bool desconectarJogador(int idJogador);
+
+    int buscarJogadorPorToken(
+        const std::string& tokenReconexao
+    ) const;
+
+    bool tokenExiste(
+        const std::string& tokenReconexao
+    ) const;
+
+    bool jogadorEstaConectado(
+        int idJogador
+    ) const;
+
+    bool podeAdicionarNovoJogador() const;
 
     std::string idSala() const;
 
     int maxJogadores() const;
+
     int jogadoresConectados() const;
 
-    bool estaCheia() const;
+    int jogadoresRegistrados() const;
+
+    bool estaLotada() const;
+
+    bool todosConectados() const;
+
     bool estaVazia() const;
 
     const std::vector<JogadorConectado>&

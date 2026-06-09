@@ -6,39 +6,67 @@
 
 #include <crow_all.h>
 
+#include "coreAPI/SessaoWebSocket.hpp"
 #include "multiplayer/Pife/SalaPife.hpp"
-#include "coreAPI/JogadorConectado.hpp"
-
-struct SessaoPife {
-    std::string idSala;
-    int idJogador;
-};
 
 class PifeWebSocket {
 private:
     static std::map<
         crow::websocket::connection*,
-        SessaoPife
+        SessaoWebSocket
     > sessoes_;
 
-    static void entrarNaSala(crow::websocket::connection& conn,const crow::json::rvalue& dados);
+    static void entrarNaSala(
+        crow::websocket::connection& conn,
+        const crow::json::rvalue& dados
+    );
 
-    static void processarAcao(crow::websocket::connection& conn, const crow::json::rvalue& dados);
+    static void processarAcao(
+        crow::websocket::connection& conn,
+        const crow::json::rvalue& dados
+    );
 
-    static void enviarMensagem(crow::websocket::connection& conn, const crow::json::wvalue& mensagem);
+    static void processarPing(
+        crow::websocket::connection& conn
+    );
 
-    static void enviarErro(crow::websocket::connection& conn,const std::string& mensagem);
+    static void enviarMensagem(
+        crow::websocket::connection& conn,
+        const crow::json::wvalue& mensagem
+    );
 
-    static void enviarEstadoSala(SalaPife* sala);
+    static void enviarErro(
+        crow::websocket::connection& conn,
+        const std::string& mensagem
+    );
 
-    static void enviarEstadoJogador(SalaPife* sala, int idJogador, crow::websocket::connection& conn);
+    static void enviarEstadoSala(
+        SalaPife* sala
+    );
 
-    static void adicionarCartaAoJson( crow::json::wvalue& destino,const Carta& carta);
+    static void enviarEstadoJogador(
+        SalaPife* sala,
+        int idJogador,
+        crow::websocket::connection& conn
+    );
 
-    static void removerConexao(crow::websocket::connection& conn);
+    static void adicionarCartaAoJson(
+        crow::json::wvalue& destino,
+        const Carta& carta
+    );
+
+    static void removerConexao(
+        crow::websocket::connection& conn
+    );
+
+    static bool tokenValido(
+        const std::string& tokenReconexao
+    );
 
 public:
-    static void registrar(crow::SimpleApp& app);
+    static void registrar(
+        crow::SimpleApp& app
+    );
 };
 
 #endif

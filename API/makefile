@@ -1,6 +1,6 @@
 CXX = g++
 
-CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
+CXXFLAGS = -std=c++17 -Wall -Wextra -pthread -MMD -MP \
            -DASIO_STANDALONE \
            -I. \
            -I./include \
@@ -39,6 +39,12 @@ FDP_OBJECTS = \
 ../Jogos/FDP/obj/MesaFDP.o \
 ../Jogos/FDP/obj/Placar.o
 
+EXTERNAL_OBJECTS = \
+$(CORE_OBJECTS) \
+$(PIFE_OBJECTS) \
+$(PACIENCIA_OBJECTS) \
+$(FDP_OBJECTS)
+
 SOURCES = \
 $(SRC_DIR)/TesteAPI.cpp \
 $(SRC_DIR)/coreAPI/Server.cpp \
@@ -56,8 +62,9 @@ $(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp \
 $(SRC_DIR)/multiplayer/FDP/SalaFDP.cpp
 
 OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+DEPFILES = $(OBJECTS:.o=.d)
 
-all: dependencias $(TARGET)
+all: $(TARGET)
 
 dependencias:
 	$(MAKE) -C ../Jogos/Core
@@ -65,7 +72,9 @@ dependencias:
 	$(MAKE) -C ../Jogos/Paciencia
 	$(MAKE) -C ../Jogos/FDP
 
-$(TARGET): $(CORE_OBJECTS) $(PIFE_OBJECTS) $(PACIENCIA_OBJECTS) $(FDP_OBJECTS) $(OBJECTS)
+$(EXTERNAL_OBJECTS): | dependencias
+
+$(TARGET): $(EXTERNAL_OBJECTS) $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
@@ -79,5 +88,7 @@ rebuild: clean all
 
 run: all
 	./$(TARGET)
+
+-include $(DEPFILES)
 
 .PHONY: all dependencias clean rebuild run

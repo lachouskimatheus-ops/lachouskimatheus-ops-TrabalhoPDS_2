@@ -126,11 +126,7 @@ body {
     height: 88px;
     border: 3px solid #e8e8e8;
     border-radius: 7px;
-    background:
-        repeating-conic-gradient(
-            #005be0 0 25%,
-            #002f90 0 50%
-        ) 50% / 16px 16px;
+    background: repeating-conic-gradient(#005be0 0 25%, #002f90 0 50%) 50% / 16px 16px;
     box-shadow: 0 8px 12px #0009;
 }
 
@@ -169,11 +165,7 @@ body {
     height: 140px;
     border: 4px solid #ededed;
     border-radius: 9px;
-    background:
-        repeating-conic-gradient(
-            #005be0 0 25%,
-            #002f90 0 50%
-        ) 50% / 18px 18px;
+    background: repeating-conic-gradient(#005be0 0 25%, #002f90 0 50%) 50% / 18px 18px;
     box-shadow: 0 10px 18px #0009;
 }
 
@@ -306,15 +298,24 @@ body {
 }
 
 .status-box {
-    min-width: 520px;
+    min-width: 620px;
     min-height: 58px;
     padding: 10px 35px;
     align-items: center;
     justify-content: center;
-    gap: 35px;
+    gap: 30px;
     border: 1px solid #ffffff14;
     border-radius: 999px;
     background: #101827;
+}
+
+.status-conexao {
+    padding-right: 25px;
+    border-right: 1px solid #ffffff1f;
+    color: #43ff8d;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .info-local {
@@ -429,5 +430,11 @@ body {
 
     .indicador-turno {
         min-width: 210px;
+    }
+
+    .status-box {
+        min-width: 560px;
+        gap: 20px;
+        padding: 10px 20px;
     }
 }

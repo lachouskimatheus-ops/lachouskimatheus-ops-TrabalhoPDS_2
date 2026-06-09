@@ -1,20 +1,16 @@
 #include "multiplayer/Pife/PifeWebSocket.hpp"
-
 #include "multiplayer/Pife/GerenciadorSalasPife.hpp"
 
-std::map<crow::websocket::connection*, SessaoPife> PifeWebSocket::sessoes_;
+std::map<crow::websocket::connection*, SessaoWebSocket> PifeWebSocket::sessoes_;
 
 void PifeWebSocket::registrar(crow::SimpleApp& app) {
     CROW_WEBSOCKET_ROUTE(app, "/ws/pife")
-
     .onopen([](crow::websocket::connection& conn) {
         crow::json::wvalue resposta;
         resposta["tipo"] = "conectado";
         resposta["mensagem"] = "Conectado ao servidor do Pife";
-
         enviarMensagem(conn, resposta);
     })
-
     .onmessage([](crow::websocket::connection& conn, const std::string& data, bool isBinary) {
         if (isBinary) {
             enviarErro(conn, "Mensagens binárias não são aceitas");
@@ -37,15 +33,11 @@ void PifeWebSocket::registrar(crow::SimpleApp& app) {
 
         if (tipo == "entrar_sala") {
             entrarNaSala(conn, dados);
-            return;
-        }
-
-        if (tipo == "acao_jogo") {
+        } else if (tipo == "acao_jogo") {
             processarAcao(conn, dados);
-            return;
-        }
-
-        if (tipo == "obter_estado") {
+        } else if (tipo == "ping") {
+            processarPing(conn);
+        } else if (tipo == "obter_estado") {
             auto sessaoIt = sessoes_.find(&conn);
 
             if (sessaoIt == sessoes_.end()) {
@@ -61,16 +53,13 @@ void PifeWebSocket::registrar(crow::SimpleApp& app) {
             }
 
             enviarEstadoJogador(sala, sessaoIt->second.idJogador, conn);
-            return;
+        } else {
+            enviarErro(conn, "Tipo de mensagem não reconhecido");
         }
-
-        enviarErro(conn, "Tipo de mensagem não reconhecido");
     })
-
     .onclose([](crow::websocket::connection& conn, const std::string& reason, uint16_t code) {
         (void)reason;
         (void)code;
-
         removerConexao(conn);
     });
 }
@@ -86,10 +75,21 @@ void PifeWebSocket::entrarNaSala(crow::websocket::connection& conn, const crow::
         return;
     }
 
+    if (!dados.has("token")) {
+        enviarErro(conn, "Informe o token de reconexão");
+        return;
+    }
+
     std::string idSala = dados["sala"].s();
+    std::string tokenReconexao = dados["token"].s();
 
     if (idSala.empty()) {
         enviarErro(conn, "O código da sala é inválido");
+        return;
+    }
+
+    if (!tokenValido(tokenReconexao)) {
+        enviarErro(conn, "O token de reconexão é inválido");
         return;
     }
 
@@ -100,32 +100,47 @@ void PifeWebSocket::entrarNaSala(crow::websocket::connection& conn, const crow::
         return;
     }
 
-    if (sala->partidaIniciada()) {
+    bool reconexao = sala->podeReconectar(tokenReconexao);
+
+    if (sala->partidaIniciada() && !reconexao) {
         enviarErro(conn, "A partida desta sala já foi iniciada");
         return;
     }
 
-    if (sala->estaCheia()) {
+    if (!reconexao && !sala->podeReceberNovoJogador()) {
         enviarErro(conn, "A sala está cheia");
         return;
     }
 
-    int idJogador = sala->adicionarJogador(&conn);
+    crow::websocket::connection* conexaoAnterior = nullptr;
+
+    if (reconexao) {
+        int idAnterior = sala->buscarJogadorPorToken(tokenReconexao);
+        conexaoAnterior = sala->obterConexaoJogador(idAnterior);
+    }
+
+    int idJogador = sala->adicionarJogador(&conn, tokenReconexao);
 
     if (idJogador == -1) {
-        enviarErro(conn, "Não foi possível entrar na sala");
+        enviarErro(conn, reconexao ? "Não foi possível reconectar o jogador" : "Não foi possível entrar na sala");
         return;
     }
 
-    sessoes_[&conn] = {idSala, idJogador};
+    if (conexaoAnterior != nullptr && conexaoAnterior != &conn) {
+        sessoes_.erase(conexaoAnterior);
+    }
+
+    sessoes_[&conn] = {idSala, idJogador, tokenReconexao};
 
     crow::json::wvalue resposta;
-    resposta["tipo"] = "entrada_confirmada";
+    resposta["tipo"] = reconexao ? "reconexao_confirmada" : "entrada_confirmada";
     resposta["sala"] = idSala;
     resposta["idJogador"] = idJogador;
     resposta["maxJogadores"] = sala->maxJogadores();
     resposta["jogadoresConectados"] = sala->jogadoresConectados();
+    resposta["jogadoresRegistrados"] = sala->jogadoresRegistrados();
     resposta["partidaIniciada"] = sala->partidaIniciada();
+    resposta["reconectado"] = reconexao;
 
     enviarMensagem(conn, resposta);
     enviarEstadoSala(sala);
@@ -144,8 +159,7 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
         return;
     }
 
-    const SessaoPife& sessao = sessaoIt->second;
-
+    const SessaoWebSocket& sessao = sessaoIt->second;
     SalaPife* sala = GerenciadorSalasPife::obterSala(sessao.idSala);
 
     if (sala == nullptr) {
@@ -167,7 +181,6 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
 
     int idJogador = sessao.idJogador;
     std::string acao = dados["acao"].s();
-
     bool sucesso = false;
     std::string mensagemErro;
 
@@ -177,43 +190,36 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
         if (!sucesso) {
             mensagemErro = "Não é possível comprar do baralho agora";
         }
-    }
-    else if (acao == "COMPRAR_MESA") {
+    } else if (acao == "COMPRAR_MESA") {
         sucesso = jogo.comprarMesa(idJogador);
 
         if (!sucesso) {
             mensagemErro = "Não é possível comprar da mesa agora";
         }
-    }
-    else if (acao == "DESCARTAR") {
+    } else if (acao == "DESCARTAR") {
         if (!dados.has("indice")) {
             enviarErro(conn, "Informe o índice da carta");
             return;
         }
 
-        int indice = dados["indice"].i();
-
-        sucesso = jogo.colocarNaMesa(idJogador, indice);
+        sucesso = jogo.colocarNaMesa(idJogador, dados["indice"].i());
 
         if (!sucesso) {
             mensagemErro = "Não é possível descartar esta carta agora";
         }
-    }
-    else if (acao == "ORGANIZAR") {
+    } else if (acao == "ORGANIZAR") {
         sucesso = jogo.organizarMao(idJogador);
 
         if (!sucesso) {
             mensagemErro = "Não foi possível organizar a mão";
         }
-    }
-    else if (acao == "BATER") {
+    } else if (acao == "BATER") {
         sucesso = jogo.bati(idJogador);
 
         if (!sucesso) {
             mensagemErro = "Sua mão ainda não forma uma combinação vencedora";
         }
-    }
-    else {
+    } else {
         enviarErro(conn, "Ação do Pife não reconhecida");
         return;
     }
@@ -227,18 +233,26 @@ void PifeWebSocket::processarAcao(crow::websocket::connection& conn, const crow:
     enviarEstadoSala(sala);
 }
 
+void PifeWebSocket::processarPing(crow::websocket::connection& conn) {
+    crow::json::wvalue resposta;
+    resposta["tipo"] = "pong";
+    enviarMensagem(conn, resposta);
+}
+
 void PifeWebSocket::enviarMensagem(crow::websocket::connection& conn, const crow::json::wvalue& mensagem) {
     conn.send_text(mensagem.dump());
 }
 
 void PifeWebSocket::enviarErro(crow::websocket::connection& conn, const std::string& mensagem) {
     crow::json::wvalue erro;
-
     erro["tipo"] = "erro";
     erro["erro"] = mensagem;
     erro["mensagem"] = mensagem;
-
     enviarMensagem(conn, erro);
+}
+
+bool PifeWebSocket::tokenValido(const std::string& tokenReconexao) {
+    return tokenReconexao.size() >= 8 && tokenReconexao.size() <= 100;
 }
 
 void PifeWebSocket::adicionarCartaAoJson(crow::json::wvalue& destino, const Carta& carta) {
@@ -252,7 +266,6 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     }
 
     Pife& jogo = sala->jogo();
-
     crow::json::wvalue estado;
 
     estado["tipo"] = "estado_jogo";
@@ -260,6 +273,7 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     estado["meu_id"] = idJogador;
     estado["max_jogadores"] = sala->maxJogadores();
     estado["jogadores_conectados"] = sala->jogadoresConectados();
+    estado["jogadores_registrados"] = sala->jogadoresRegistrados();
     estado["partida_iniciada"] = sala->partidaIniciada();
     estado["jogador_atual"] = jogo.consultarIndiceJogadorAtual();
     estado["jogo_finalizado"] = jogo.jogoFinalizado();
@@ -270,11 +284,9 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
 
     if (fase == FaseTurno::AguardandoCompra) {
         estado["fase"] = "AGUARDANDO_COMPRA";
-    }
-    else if (fase == FaseTurno::AguardandoDescarte) {
+    } else if (fase == FaseTurno::AguardandoDescarte) {
         estado["fase"] = "AGUARDANDO_DESCARTE";
-    }
-    else {
+    } else {
         estado["fase"] = "FINALIZADO";
     }
 
@@ -286,7 +298,6 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     estado["pode_bater"] = partidaDisponivel && jogo.podeBater(idJogador);
 
     const std::vector<Carta>& mao = jogo.consultarMao(idJogador);
-
     estado["minha_mao"] = crow::json::wvalue::list();
 
     for (std::size_t i = 0; i < mao.size(); i++) {
@@ -294,16 +305,13 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
     }
 
     const std::vector<Carta>& mesa = jogo.consultarMesa();
-
     estado["mesa"] = crow::json::wvalue::list();
 
     for (std::size_t i = 0; i < mesa.size(); i++) {
         adicionarCartaAoJson(estado["mesa"][i], mesa[i]);
     }
 
-    const Carta& vira = jogo.consultarVira();
-
-    adicionarCartaAoJson(estado["vira"], vira);
+    adicionarCartaAoJson(estado["vira"], jogo.consultarVira());
 
     estado["jogadores"] = crow::json::wvalue::list();
 
@@ -311,14 +319,7 @@ void PifeWebSocket::enviarEstadoJogador(SalaPife* sala, int idJogador, crow::web
         estado["jogadores"][i]["id"] = i;
         estado["jogadores"][i]["quantidade_cartas"] = jogo.consultarJogador(i).tmnhMao();
         estado["jogadores"][i]["sou_eu"] = i == idJogador;
-        estado["jogadores"][i]["conectado"] = false;
-
-        for (const JogadorConectado& jogador : sala->jogadores()) {
-            if (jogador.idJogador == i) {
-                estado["jogadores"][i]["conectado"] = jogador.conectado;
-                break;
-            }
-        }
+        estado["jogadores"][i]["conectado"] = sala->jogadorEstaConectado(i);
     }
 
     enviarMensagem(conn, estado);
@@ -329,12 +330,10 @@ void PifeWebSocket::enviarEstadoSala(SalaPife* sala) {
         return;
     }
 
-    for (const ConexaoPife& conexao : sala->conexoes()) {
-        if (conexao.conexao == nullptr) {
-            continue;
+    for (const ConexaoPife& registro : sala->conexoes()) {
+        if (registro.conexao != nullptr) {
+            enviarEstadoJogador(sala, registro.idJogador, *registro.conexao);
         }
-
-        enviarEstadoJogador(sala, conexao.idJogador, *conexao.conexao);
     }
 }
 
@@ -346,7 +345,6 @@ void PifeWebSocket::removerConexao(crow::websocket::connection& conn) {
     }
 
     std::string idSala = sessaoIt->second.idSala;
-
     sessoes_.erase(sessaoIt);
 
     SalaPife* sala = GerenciadorSalasPife::obterSala(idSala);
@@ -356,11 +354,5 @@ void PifeWebSocket::removerConexao(crow::websocket::connection& conn) {
     }
 
     sala->removerConexao(&conn);
-
-    if (sala->estaVazia()) {
-        GerenciadorSalasPife::removerSala(idSala);
-        return;
-    }
-
     enviarEstadoSala(sala);
 }

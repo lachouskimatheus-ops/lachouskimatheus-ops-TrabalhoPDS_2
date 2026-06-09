@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Pife</title>
+
     <link rel="stylesheet" href="/css/pife_style.css">
 </head>
 
@@ -11,8 +14,14 @@
     <div class="mesa-de-pano-verde">
 
         <div id="indicador-turno" class="indicador-turno aguardando">
-            <span class="indicador-turno-rotulo">Turno atual</span>
-            <strong id="indicador-turno-texto">Aguardando jogadores</strong>
+            <span class="indicador-turno-rotulo">
+                Turno atual
+            </span>
+
+            <strong id="indicador-turno-texto">
+                Aguardando jogadores
+            </strong>
+
             <span id="indicador-turno-fase" class="indicador-turno-fase">
                 A partida ainda não começou
             </span>
@@ -40,9 +49,20 @@
                 <h3>Monte</h3>
 
                 <div id="monte-compra" class="baralho-visual">
-                    <div class="verso-grande empilhada" style="bottom: 8px; right: 8px;"></div>
-                    <div class="verso-grande empilhada" style="bottom: 4px; right: 4px;"></div>
-                    <div class="verso-grande empilhada" style="bottom: 0; right: 0;"></div>
+                    <div
+                        class="verso-grande empilhada"
+                        style="bottom: 8px; right: 8px;">
+                    </div>
+
+                    <div
+                        class="verso-grande empilhada"
+                        style="bottom: 4px; right: 4px;">
+                    </div>
+
+                    <div
+                        class="verso-grande empilhada"
+                        style="bottom: 0; right: 0;">
+                    </div>
                 </div>
             </div>
 
@@ -50,11 +70,16 @@
                 <h3>Vira</h3>
 
                 <div id="carta-vira" class="area-vira">
-                    <div class="carta carta-vazia">Vira</div>
+                    <div class="carta carta-vazia">
+                        Vira
+                    </div>
                 </div>
 
                 <p class="texto-coringa">
-                    Coringa: <strong id="carta-coringa">aguardando</strong>
+                    Coringa:
+                    <strong id="texto-coringa">
+                        aguardando
+                    </strong>
                 </p>
             </div>
 
@@ -62,47 +87,73 @@
                 <h3>Mesa / Descarte</h3>
 
                 <div id="mesa-descarte" class="area-descarte">
-                    <div class="carta carta-vazia">Descarte</div>
+                    <div class="carta carta-vazia">
+                        Descarte
+                    </div>
                 </div>
             </div>
 
             <div class="acoes-jogo">
-                <button id="btn-comprar-monte" type="button" disabled>
+                <button
+                    id="btn-comprar-monte"
+                    type="button"
+                    disabled>
                     Comprar do Monte
                 </button>
 
-                <button id="btn-comprar-mesa" type="button" disabled>
+                <button
+                    id="btn-comprar-mesa"
+                    type="button"
+                    disabled>
                     Comprar da Mesa
                 </button>
 
-                <button id="btn-bater" type="button" disabled>
+                <button
+                    id="btn-bater"
+                    type="button"
+                    disabled>
                     Bater
                 </button>
 
-                <button id="btn-organizar" type="button" disabled>
+                <button
+                    id="btn-organizar"
+                    type="button"
+                    disabled>
                     Organizar
                 </button>
             </div>
+
         </div>
 
         <div id="area-jogador-local" class="area-jogador-local">
-            <h3 class="titulo-mao">Minha mão</h3>
+            <h3 class="titulo-mao">
+                Minha mão
+            </h3>
 
             <div id="minha-mao" class="mao-jogador"></div>
 
             <div class="status-box">
+
+                <div id="status-conexao" class="status-conexao">
+                    Conectando...
+                </div>
+
                 <div class="info-local">
                     <h2>Você</h2>
 
                     <div class="dados-local">
                         <p>
                             Cartas na mão:
-                            <strong id="qtd-cartas">0</strong>
+                            <strong id="qtd-cartas">
+                                0
+                            </strong>
                         </p>
 
                         <p>
                             Turno:
-                            <strong id="jogador-atual">Aguardando</strong>
+                            <strong id="jogador-atual">
+                                Aguardando
+                            </strong>
                         </p>
                     </div>
                 </div>
@@ -112,6 +163,7 @@
                         Aguardando o início da partida.
                     </p>
                 </div>
+
             </div>
         </div>
 
@@ -119,19 +171,24 @@
 
     <div id="modal-notificacao" class="modal-overlay modal-oculto">
         <div class="modal-conteudo">
-            <div id="modal-titulo" class="modal-titulo">Aviso</div>
+
+            <div id="modal-titulo" class="modal-titulo">
+                Aviso
+            </div>
+
             <div id="modal-texto" class="modal-texto"></div>
 
             <button
                 id="modal-botao"
                 class="modal-botao modal-botao-oculto"
-                type="button"
-            >
+                type="button">
                 Voltar ao menu
             </button>
+
         </div>
     </div>
 
     <script src="/js/pife_app.js"></script>
 </body>
+
 </html>
