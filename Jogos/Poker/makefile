@@ -1,19 +1,24 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Iinclude -I../Core/include -I../../API/dependencias
+CXX := g++
 
-SRC = \
-	src/poker.cpp \
-	test/teste_poker.cpp \
-	../Core/src/Baralho.cpp \
-	../Core/src/Carta.cpp
+CXXFLAGS := -std=c++17 -Wall -Wextra \
+	-Iinclude \
+	-I../Core/include
 
-EXEC = teste_poker
+SRC_DIR := src
+OBJ_DIR := obj
 
-all:
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC)
+SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
+OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 
-run: all
-	./$(EXEC)
+all: $(OBJECTS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(OBJ_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(EXEC)
+	rm -rf $(OBJ_DIR)
+
+rebuild: clean all
+
+.PHONY: all clean rebuild

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker - Lobby e Regras</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    background: #0a0a0a;
+    font-family: 'Cinzel', serif;
+}
+
+.bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-image: url('../assets/fundo.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.25);
+}
+
+.container {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 700px;
+    padding: 40px;
+    border: 1px solid rgba(255, 200, 50, 0.3);
+    border-radius: 12px;
+    background: rgba(15, 15, 20, 0.78);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.6s ease;
+}
+
+h1 {
+    margin-bottom: 5px;
+    color: #fff;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 34px;
+    text-align: center;
+    text-shadow: 0 0 15px rgba(255, 200, 50, 0.5);
+}
+
+h1 span {
+    color: #f0c040;
+}
+
+.saudacao {
+    margin-bottom: 28px;
+    color: #aaa;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.config-box,
+.regras-box,
+.bloco-link-sala {
+    width: 100%;
+    margin-bottom: 25px;
+    padding: 20px 25px;
+    border-left: 4px solid #f0c040;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.config-box h3,
+.regras-box h3,
+.bloco-link-sala h3 {
+    margin-bottom: 15px;
+    color: #f0c040;
+    letter-spacing: 2px;
+}
+
+.botoes-opcoes {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-opcao {
+    flex: 1;
+    padding: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-opcao:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-opcao.selecionado {
+    border-color: rgba(240, 192, 64, 0.8);
+    background: linear-gradient(135deg, rgba(240, 192, 64, 0.4), rgba(240, 192, 64, 0.15));
+    color: #f0c040;
+    box-shadow: 0 0 16px rgba(240, 192, 64, 0.25);
+}
+
+.descricao-modo {
+    margin-top: 14px;
+    color: #aaa;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.regras-lista {
+    list-style: none;
+    color: #ddd;
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.regras-lista li {
+    position: relative;
+    margin-bottom: 12px;
+    padding-left: 20px;
+}
+
+.regras-lista li::before {
+    content: "♦";
+    position: absolute;
+    left: 0;
+    color: #f0c040;
+}
+
+.acoes {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+}
+
+.btn {
+    flex: 1;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-voltar {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+}
+
+.btn-voltar:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-jogar {
+    border: 1px solid rgba(240, 192, 64, 0.6);
+    background: linear-gradient(135deg, rgba(240, 192, 64, 0.3), rgba(240, 192, 64, 0.1));
+    color: #f0c040;
+}
+
+.btn-jogar:hover {
+    background: linear-gradient(135deg, rgba(240, 192, 64, 0.5), rgba(240, 192, 64, 0.2));
+    color: #fff;
+    box-shadow: 0 0 20px rgba(240, 192, 64, 0.4);
+}
+
+.btn-jogar:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.oculto {
+    display: none;
+}
+
+.codigo-sala,
+.detalhes-sala {
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.codigo-sala span,
+.detalhes-sala span {
+    color: #f0c040;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.instrucao-link {
+    margin: 18px 0 10px;
+    color: #bbb;
+    font-size: 14px;
+}
+
+.linha-link {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.linha-link input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid rgba(240, 192, 64, 0.5);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+.btn-copiar {
+    padding: 12px 18px;
+    border: 1px solid rgba(240, 192, 64, 0.6);
+    border-radius: 6px;
+    background: rgba(240, 192, 64, 0.15);
+    color: #f0c040;
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-copiar:hover {
+    background: rgba(240, 192, 64, 0.3);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 650px) {
+    body {
+        align-items: flex-start;
+        padding: 15px;
+    }
+
+    .container {
+        padding: 25px 18px;
+    }
+
+    h1 {
+        font-size: 27px;
+    }
+
+    .botoes-opcoes,
+    .acoes,
+    .linha-link {
+        flex-direction: column;
+    }
+
+    .btn-copiar {
+        width: 100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg"></div>
+
+<div class="container">
+    <h1>LOBBY <span>POKER</span></h1>
+
+    <div class="saudacao" id="texto-saudacao">
+        Configure sua partida
+    </div>
+
+    <div id="configuracao-partida">
+        <div class="config-box">
+            <h3>MODO DE JOGO</h3>
+
+            <div class="botoes-opcoes">
+                <button type="button" class="btn-opcao btn-modo selecionado" data-modo="MULTIPLAYER">
+                    MULTIPLAYER
+                </button>
+
+                <button type="button" class="btn-opcao btn-modo" data-modo="COMPUTADOR">
+                    COMPUTADOR
+                </button>
+            </div>
+
+            <p class="descricao-modo" id="descricao-modo">
+                Crie uma sala e compartilhe o link com outros jogadores.
+            </p>
+        </div>
+
+        <div class="config-box" id="configuracao-jogadores">
+            <h3>QUANTIDADE DE JOGADORES</h3>
+
+            <div class="botoes-opcoes">
+                <button type="button" class="btn-opcao btn-jogador selecionado" data-jogadores="2">
+                    2
+                </button>
+
+                <button type="button" class="btn-opcao btn-jogador" data-jogadores="3">
+                    3
+                </button>
+
+                <button type="button" class="btn-opcao btn-jogador" data-jogadores="4">
+                    4
+                </button>
+            </div>
+        </div>
+
+        <div class="regras-box">
+            <h3>COMO JOGAR</h3>
+
+            <ul class="regras-lista">
+                <li><strong>Cartas:</strong> Cada jogador recebe cinco cartas no início da rodada.</li>
+                <li><strong>Troca:</strong> Cada jogador pode trocar até três cartas da sua mão.</li>
+                <li><strong>Confirmação:</strong> A troca é realizada depois que todos os jogadores confirmarem.</li>
+                <li><strong>Resultado:</strong> Após as trocas, todas as mãos são reveladas e comparadas.</li>
+                <li><strong>Combinações:</strong> A força vai de carta alta até Royal Flush.</li>
+                <li><strong>Pontuação:</strong> O vencedor da rodada recebe um ponto.</li>
+                <li><strong>Empate:</strong> Rodadas empatadas são registradas sem conceder ponto.</li>
+            </ul>
+        </div>
+
+        <div class="acoes">
+            <a href="/pages/menu.html" class="btn btn-voltar">
+                VOLTAR
+            </a>
+
+            <button type="button" id="btn-iniciar" class="btn btn-jogar">
+                CRIAR SALA
+            </button>
+        </div>
+    </div>
+
+    <div id="bloco-link-sala" class="bloco-link-sala oculto">
+        <h3 id="titulo-sala-criada">SALA CRIADA</h3>
+
+        <p class="codigo-sala">
+            Código:
+            <span id="codigo-sala"></span>
+        </p>
+
+        <p class="detalhes-sala">
+            Modo:
+            <span id="modo-sala"></span>
+        </p>
+
+        <p class="detalhes-sala">
+            Jogadores:
+            <span id="quantidade-sala"></span>
+        </p>
+
+        <p class="instrucao-link" id="instrucao-link">
+            Envie este link para os outros jogadores:
+        </p>
+
+        <div class="linha-link">
+            <input id="link-sala" type="text" readonly>
+
+            <button type="button" id="btn-copiar-link" class="btn-copiar">
+                COPIAR
+            </button>
+        </div>
+
+        <div class="acoes">
+            <a href="/pages/menu.html" class="btn btn-voltar">
+                CANCELAR
+            </a>
+
+            <a id="btn-entrar-sala" class="btn btn-jogar">
+                ENTRAR NA SALA
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+let modo = "MULTIPLAYER";
+let quantidadeJogadores = 2;
+
+const botoesModo = document.querySelectorAll(".btn-modo");
+const botoesJogadores = document.querySelectorAll(".btn-jogador");
+const btnIniciar = document.getElementById("btn-iniciar");
+const textoSaudacao = document.getElementById("texto-saudacao");
+const descricaoModo = document.getElementById("descricao-modo");
+const configuracaoJogadores = document.getElementById("configuracao-jogadores");
+const configuracaoPartida = document.getElementById("configuracao-partida");
+const blocoLinkSala = document.getElementById("bloco-link-sala");
+const tituloSalaCriada = document.getElementById("titulo-sala-criada");
+const codigoSala = document.getElementById("codigo-sala");
+const modoSala = document.getElementById("modo-sala");
+const quantidadeSala = document.getElementById("quantidade-sala");
+const instrucaoLink = document.getElementById("instrucao-link");
+const linkSala = document.getElementById("link-sala");
+const btnCopiarLink = document.getElementById("btn-copiar-link");
+const btnEntrarSala = document.getElementById("btn-entrar-sala");
+
+botoesModo.forEach(botao => {
+    botao.addEventListener("click", () => {
+        botoesModo.forEach(item => item.classList.remove("selecionado"));
+        botao.classList.add("selecionado");
+        modo = botao.dataset.modo;
+
+        const contraComputador = modo === "COMPUTADOR";
+        configuracaoJogadores.classList.toggle("oculto", contraComputador);
+
+        descricaoModo.textContent = contraComputador
+            ? "Jogue uma partida individual contra o computador."
+            : "Crie uma sala e compartilhe o link com outros jogadores.";
+
+        btnIniciar.textContent = contraComputador
+            ? "INICIAR PARTIDA"
+            : "CRIAR SALA";
+    });
+});
+
+botoesJogadores.forEach(botao => {
+    botao.addEventListener("click", () => {
+        botoesJogadores.forEach(item => item.classList.remove("selecionado"));
+        botao.classList.add("selecionado");
+        quantidadeJogadores = Number(botao.dataset.jogadores);
+    });
+});
+
+btnIniciar.addEventListener("click", criarSala);
+
+async function criarSala() {
+    btnIniciar.disabled = true;
+    btnIniciar.textContent = modo === "COMPUTADOR"
+        ? "INICIANDO..."
+        : "CRIANDO SALA...";
+
+    try {
+        const resposta = await fetch("/api/poker/salas", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                modo,
+                quantidade_jogadores: quantidadeJogadores
+            })
+        });
+
+        const dados = await resposta.json();
+        const resultado = dados.data || dados;
+        const sucesso = dados.sucesso ?? dados.success ?? dados.sucess ?? resposta.ok;
+
+        if (!resposta.ok || !sucesso) {
+            throw new Error(
+                dados.mensagem ||
+                dados.message ||
+                "Não foi possível criar a sala"
+            );
+        }
+
+        mostrarLinkSala(
+            resultado.sala,
+            resultado.modo || modo,
+            resultado.quantidade_jogadores
+        );
+    }
+    catch (erro) {
+        console.error("Erro ao criar sala:", erro);
+        alert(erro.message);
+
+        btnIniciar.disabled = false;
+        btnIniciar.textContent = modo === "COMPUTADOR"
+            ? "INICIAR PARTIDA"
+            : "CRIAR SALA";
+    }
+}
+
+function mostrarLinkSala(idSala, modoCriado, quantidadeCriada) {
+    const linkCompleto =
+        `${window.location.origin}/pages/poker.html` +
+        `?sala=${encodeURIComponent(idSala)}`;
+
+    const contraComputador =
+        modoCriado === "COMPUTADOR" ||
+        modoCriado === "ContraComputador";
+
+    configuracaoPartida.classList.add("oculto");
+    blocoLinkSala.classList.remove("oculto");
+
+    textoSaudacao.textContent = contraComputador
+        ? "Sua partida está pronta"
+        : "Compartilhe o link da partida";
+
+    tituloSalaCriada.textContent = contraComputador
+        ? "PARTIDA CRIADA"
+        : "SALA CRIADA";
+
+    codigoSala.textContent = idSala;
+    modoSala.textContent = contraComputador
+        ? "CONTRA O COMPUTADOR"
+        : "MULTIPLAYER";
+
+    quantidadeSala.textContent = contraComputador
+        ? "1 JOGADOR + COMPUTADOR"
+        : quantidadeCriada || quantidadeJogadores;
+
+    instrucaoLink.textContent = contraComputador
+        ? "Use este link para entrar na partida:"
+        : "Envie este link para os outros jogadores:";
+
+    linkSala.value = linkCompleto;
+    btnEntrarSala.href = linkCompleto;
+}
+
+btnCopiarLink.addEventListener("click", async () => {
+    try {
+        await navigator.clipboard.writeText(linkSala.value);
+    }
+    catch {
+        linkSala.select();
+        document.execCommand("copy");
+    }
+
+    btnCopiarLink.textContent = "COPIADO";
+
+    setTimeout(() => {
+        btnCopiarLink.textContent = "COPIAR";
+    }, 1500);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const meuNome = localStorage.getItem("jogador_nickname");
+
+    if (meuNome && meuNome !== "Anônimo") {
+        textoSaudacao.textContent = `Bem-vindo à mesa, ${meuNome}!`;
+    }
+});
+</script>
+
+</body>
+</html>
