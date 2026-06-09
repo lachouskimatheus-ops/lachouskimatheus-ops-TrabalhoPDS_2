@@ -25,9 +25,9 @@ PIFE_OBJECTS = \
 ../Jogos/Pife/obj/RegrasPife.o
 
 PACIENCIA_OBJECTS = \
-../Jogos/Paciencia/obj/paciencia.o \
-../Jogos/Paciencia/obj/regras.o \
-../Jogos/Paciencia/obj/pontuacao.o
+../Jogos/Paciencia/obj/Paciencia.o \
+../Jogos/Paciencia/obj/Regras.o \
+../Jogos/Paciencia/obj/Pontuacao.o
 
 FDP_OBJECTS = \
 ../Jogos/FDP/obj/BaralhoSujo.o \
@@ -55,14 +55,20 @@ $(SRC_DIR)/multiplayer/Pife/GerenciadorSalasPife.cpp \
 $(SRC_DIR)/multiplayer/Pife/PifeWebSocket.cpp \
 $(SRC_DIR)/multiplayer/FDP/SalaFDP.cpp
 
-OBJECTS = $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+OBJECTS = $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
 
-all: $(TARGET)
+all: dependencias $(TARGET)
+
+dependencias:
+	$(MAKE) -C ../Jogos/Core
+	$(MAKE) -C ../Jogos/Pife
+	$(MAKE) -C ../Jogos/Paciencia
+	$(MAKE) -C ../Jogos/FDP
 
 $(TARGET): $(CORE_OBJECTS) $(PIFE_OBJECTS) $(PACIENCIA_OBJECTS) $(FDP_OBJECTS) $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(OBJ_DIR)/%.o: %.cpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
@@ -74,4 +80,4 @@ rebuild: clean all
 run: all
 	./$(TARGET)
 
-.PHONY: all clean rebuild run
+.PHONY: all dependencias clean rebuild run
