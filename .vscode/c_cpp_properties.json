@@ -4,12 +4,14 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/API",
+                "${workspaceFolder}/API/include",
+                "${workspaceFolder}/API/dependencias",
                 "${workspaceFolder}/Jogos/Core/include",
                 "${workspaceFolder}/Jogos/Pife/include",
                 "${workspaceFolder}/Jogos/Paciencia/include",
                 "${workspaceFolder}/Jogos/FDP/include",
-                "${workspaceFolder}/API/include",
-                "${workspaceFolder}/API/dependencias"
+                "${workspaceFolder}/Jogos/Truco/include"
             ],
             "defines": [
                 "ASIO_STANDALONE"
