@@ -12,7 +12,7 @@ void Jogador_Truco::receberCarta(Carta* novacarta) {
 void Jogador_Truco::mostrarmao() {
     for (int i = 0; i < (int)mao.size(); i++) {
         std::cout << "[" << i << "] ";
-        mao[i]->imprimir(); 
+        std::cout << mao[i]->toString() << std::endl;
     }
 }
 

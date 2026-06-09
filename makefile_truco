@@ -3,7 +3,8 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pthread \
 	-I./API \
 	-I./API/dependencias \
-	-I./Jogos/Truco/include
+	-I./Jogos/Truco/include \
+	-I./Jogos/Core/include
 
 LIBS =
 
@@ -12,14 +13,14 @@ ifeq ($(OS),Windows_NT)
 endif
 
 TRUCO_SRCS = servidor_truco.cpp \
-	Jogos/Truco/src/Baralho.cpp \
 	Jogos/Truco/src/BaralhoSujo.cpp \
-	Jogos/Truco/src/Carta.cpp \
 	Jogos/Truco/src/Jogador_Truco.cpp \
 	Jogos/Truco/src/Juiz.cpp \
 	Jogos/Truco/src/JuizMineiro.cpp \
 	Jogos/Truco/src/JuizPaulista.cpp \
-	Jogos/Truco/src/Mesa.cpp
+	Jogos/Truco/src/Mesa.cpp \
+	Jogos/Core/src/Baralho.cpp \
+	Jogos/Core/src/Carta.cpp
 
 TARGET = servidor_truco
 

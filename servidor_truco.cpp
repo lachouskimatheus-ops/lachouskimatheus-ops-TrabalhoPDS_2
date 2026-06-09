@@ -70,6 +70,7 @@ struct EstadoTruco {
     int vencedorQueda = 0;
     int vencedorMao = 0;
     int equipeVencedora = 0;
+    int pontosGanhosMao = 1;
 };
  
 // ==========================================
@@ -161,7 +162,7 @@ json construirEstado(const EstadoTruco& estado) {
     j["vencedor_queda"] = estado.vencedorQueda;
     j["vencedor_mao"]   = estado.vencedorMao;
     j["equipe_vencedora"] = estado.equipeVencedora;
-    j["pontos_ganhos"]    = estado.valorAntesDoPedido;
+    j["pontos_ganhos"]    = estado.pontosGanhosMao;
  
     return j;
 }
@@ -247,7 +248,8 @@ void processarFimQueda(EstadoTruco& estado) {
     if (fimMao) {
         estado.vencedorMao = vencedorMao;
         estado.ultimoEvento = "FIM_MAO";
- 
+        estado.pontosGanhosMao = estado.valorMao;
+
         if (vencedorMao == 1) estado.pontosEq1 += estado.valorMao;
         else if (vencedorMao == 2) estado.pontosEq2 += estado.valorMao;
  
@@ -500,6 +502,7 @@ int main() {
                             if (estado.equipePedindo == 1) estado.pontosEq1 += pontosGanhos;
                             else estado.pontosEq2 += pontosGanhos;
 
+                            estado.pontosGanhosMao = pontosGanhos;
                             estado.aguardandoRespostaTruco = false;
                             estado.ultimoEvento = "TRUCO_RECUSADO";
                             estado.equipeVencedora = estado.equipePedindo;

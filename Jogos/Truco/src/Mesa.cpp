@@ -49,7 +49,7 @@ void Mesa::exibirMesa() const {
     std::cout << "Mao vale: " << valorAtualMao << " ponto(s)" << std::endl;
     if (this->vira != nullptr) {
         std::cout << "VIRA: ";
-        this->vira->imprimir(); 
+        std::cout << this->vira->toString() << std::endl; 
     }
     std::cout << "=========================" << std::endl;
 }

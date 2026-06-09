@@ -1,57 +1,86 @@
 #include "JuizPaulista.hpp"
 
+// Força base das cartas no Truco (sem manilha)
+// Ordem da mais fraca para mais forte: 4, 5, 6, 7, Q(12), J(11), K(13), A(1), 2, 3
+static int forcaBase(int valor) {
+    switch (valor) {
+        case 4:  return 1;
+        case 5:  return 2;
+        case 6:  return 3;
+        case 7:  return 4;
+        case 12: return 5; // Q
+        case 11: return 6; // J
+        case 13: return 7; // K
+        case 1:  return 8; // A
+        case 2:  return 9;
+        case 3:  return 10;
+        default: return 0;
+    }
+}
+
+// Força do naipe (do mais fraco para o mais forte): ouros, espadas, copas, paus
+static int forcaNaipe(Naipe n) {
+    switch (n) {
+        case Naipe::ouros:   return 1;
+        case Naipe::espadas: return 2;
+        case Naipe::copas:   return 3;
+        case Naipe::paus:    return 4;
+        default:             return 0;
+    }
+}
+
 int JuizPaulista::decidirVencedor(std::vector<Carta*> cartasNaMesa, Carta vira, bool forcarVencedor) {
 
+    // Define a manilha: carta diretamente superior à vira na ordem base
+    int cVira = vira.getValor();
+    int valorManilha;
+    switch (cVira) {
+        case 4:  valorManilha = 5;  break;
+        case 5:  valorManilha = 6;  break;
+        case 6:  valorManilha = 7;  break;
+        case 7:  valorManilha = 12; break; // 7 -> Q
+        case 12: valorManilha = 11; break; // Q -> J
+        case 11: valorManilha = 13; break; // J -> K
+        case 13: valorManilha = 1;  break; // K -> A
+        case 1:  valorManilha = 2;  break; // A -> 2
+        case 2:  valorManilha = 3;  break; // 2 -> 3
+        case 3:  valorManilha = 4;  break; // 3 -> 4
+        default: valorManilha = -1; break;
+    }
+
+    // Calcula a força de cada carta
+    // Manilhas valem 100+ (ordenadas por naipe)
+    // Não-manilhas valem pela tabela base
+    auto calcForca = [&](const Carta* c) -> int {
+        if (c->getValor() == valorManilha) {
+            return 100 + forcaNaipe(c->getNaipe()); // 101-104
+        }
+        return forcaBase(c->getValor());
+    };
+
     int indiceVencedor = -1;
-    int maiorForcaTotal = -1;
+    int maiorForca = -1;
     bool empate = false;
 
-    for (int i=0; i < cartasNaMesa.size(); i++){
-        int forcaDaCarta;
-        int v = cartasNaMesa[i]->getValor();
-        Naipe n = cartasNaMesa[i]->getNaipe();
-        int cVira = vira.getValor();
-        int manilha;
+    for (int i = 0; i < (int)cartasNaMesa.size(); i++) {
+        int forca = calcForca(cartasNaMesa[i]);
 
-            //Definicao Manilha
-        switch (cVira){
-            case 1: manilha = 2; break;
-            case 2: manilha = 3; break;
-            case 3: manilha = 4; break;
-            case 4: manilha = 5; break;
-            case 5: manilha = 6; break;
-            case 6: manilha = 7; break;
-            case 7: manilha = 12; break;
-            case 12: manilha = 11; break;
-            case 11: manilha = 13; break;
-            case 13: manilha = 1; break;
-            default: manilha = -1; break;
-        }
-            //Forca Manilhas
-        if (v == manilha && n == Naipe::paus)          {forcaDaCarta = 100;}
-        else if (v == manilha && n == Naipe::copas)    {forcaDaCarta = 99;}
-        else if (v == manilha && n == Naipe::espadas)  {forcaDaCarta = 98;}
-        else if (v == manilha && n == Naipe::ouros)    {forcaDaCarta = 97;}
-        else{
-            forcaDaCarta = cartasNaMesa[i]->forca();//Forca Normal
-        }
-
-        //Comparacao Forcas
-        if(forcaDaCarta > maiorForcaTotal) {
-            maiorForcaTotal = forcaDaCarta;
+        if (forca > maiorForca) {
+            maiorForca = forca;
             indiceVencedor = i;
             empate = false;
-        }else if (forcaDaCarta == maiorForcaTotal){
-            if(forcarVencedor){//Caso empate 2 primeiras
-                if(cartasNaMesa[i]->getForcaNaipe() > cartasNaMesa[indiceVencedor]->getForcaNaipe()){
+        } else if (forca == maiorForca) {
+            if (forcarVencedor) {
+                // Desempata pelo naipe
+                if (forcaNaipe(cartasNaMesa[i]->getNaipe()) > forcaNaipe(cartasNaMesa[indiceVencedor]->getNaipe())) {
                     indiceVencedor = i;
                     empate = false;
                 }
-            }else {
+            } else {
                 empate = true;
             }
-        }       
+        }
     }
-if(empate == true) return -1;
-return indiceVencedor;
+
+    return empate ? -1 : indiceVencedor;
 }
