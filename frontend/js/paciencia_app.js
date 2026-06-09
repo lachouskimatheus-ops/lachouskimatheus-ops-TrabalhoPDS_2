@@ -83,6 +83,8 @@ window.jogarNovamenteModal = function() {
     socket.send(JSON.stringify({ acao: 'NOVO_JOGO' }));
     document.getElementById('modal-notificacao').classList.add('modal-oculto');
     cartaSelecionada = null;
+    vitoriaJaProcessada = false;
+    zerarCronometro();
     iniciarCronometro();
 };
 
@@ -104,9 +106,10 @@ function ehMovimentoValido(origem, tipoDestino, indiceDestino) {
     if (tipoDestino === 'fundacao') {
         const fundacaoDestino = estado.fundacoes[indiceDestino];
         
-        // Se a fundação está vazia, só aceita Ás (valor 1)
+        // Se a fundação está vazia, só aceita Ás do naipe correto
+        // (fundação 0 = paus, 1 = copas, 2 = espadas, 3 = ouros)
         if (!fundacaoDestino || fundacaoDestino.length === 0) {
-            return cartaSendoMovida.valor === 1; 
+            return cartaSendoMovida.valor === 1 && cartaSendoMovida.naipe === indiceDestino;
         }
         
         // Se já tem carta, precisa ser o mesmo naipe e valor superior (n+1)
@@ -148,6 +151,7 @@ function tocarSom(nomeArquivo) {
 let cartaSelecionada = null; // { tipo: "coluna"|"descarte"|"fundacao", indice: int, cartaIdx: int }
 let jogoPausado = false;
 let autoCompletarDisponivel = false;
+let vitoriaJaProcessada = false;
 // ==========================================
 // ATUALIZAR INTERFACE COM BASE NO ESTADO
 // ==========================================
@@ -162,10 +166,12 @@ if (containerAuto) {
     // Verifica se todas as cartas ocultas foram reveladas (total = 0)
     const totalEscondidas = estado.cartas_escondidas.reduce((a, b) => a + b, 0);
     
+    // Mostra o botão quando todas as cartas das colunas estão visíveis,
+    // independente de ainda haver cartas no cava
     if (totalEscondidas === 0 && !estado.vitoria) {
-        containerAuto.style.display = 'block'; // Mostra o botão
+        containerAuto.style.display = 'block';
     } else {
-        containerAuto.style.display = 'none';  // Esconde o botão
+        containerAuto.style.display = 'none';
     }
 }
     // 2. Lógica de Vitória (Única e consolidada)
@@ -173,27 +179,34 @@ if (containerAuto) {
         const modal = document.getElementById('modal-notificacao');
         
         // Verifica se já não está visível para não repetir o som/modal
-        if (modal.classList.contains('modal-oculto')) {
-            tocarSom('victory_6.ogg');
+        if (!vitoriaJaProcessada) {
+            vitoriaJaProcessada = true;
+            tocarSom('victory_6.mp3');
             pararCronometro();
             
             const tempoFinal = document.getElementById('cronometro-visor')?.innerText || "00:00";
             const pontos = estado.pontuacao || 0;
             const recorde = estado.recorde || 0;
             
+            const novoRecorde = pontos > recorde;
+            const recordeExibido = novoRecorde ? pontos : recorde;
+
             const modalHtml = `
                 <div style="text-align: center; padding: 10px;">
                     <h2 style="color:#4ade80; margin-bottom: 10px; font-size: 2em; font-family: 'Cinzel Decorative', serif;">🏆 PARABÉNS!</h2>
                     <p style="margin-bottom: 15px; font-size: 1.2em; color: #fff;">Você completou o Paciência!</p>
                     
+                    ${novoRecorde ? '<p style="color:#f0c040; font-size:1.1em; margin-bottom:10px;">⭐ Novo recorde!</p>' : ''}
+
                     <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 200, 50, 0.2); border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #fff;">
                         <p style="margin: 5px 0;">Tempo: <strong style="color: #f0c040;">${tempoFinal}</strong></p>
                         <p style="margin: 5px 0;">Pontuação Final: <strong style="color: #f0c040;">${pontos}</strong></p>
-                        <p style="margin: 5px 0;">Recorde Atual: <strong style="color: #f0c040;">${recorde}</strong></p>
+                        <p style="margin: 5px 0;">Recorde: <strong style="color: #f0c040;">${recordeExibido}</strong></p>
                     </div>
 
                     <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                         <button onclick="window.location.href='menu.html'" style="padding: 12px 20px; cursor: pointer; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; font-family: 'Cinzel', serif;">VOLTAR AO MENU</button>
+                        <button onclick="mostrarRecordeModal()" style="padding: 12px 20px; cursor: pointer; background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.4); border-radius: 5px; font-family: 'Cinzel', serif;">VER RECORDE</button>
                         <button onclick="jogarNovamenteModal()" style="padding: 12px 20px; cursor: pointer; background: rgba(240,192,64,0.2); color: #f0c040; border: 1px solid rgba(240,192,64,0.5); border-radius: 5px; font-weight: bold; font-family: 'Cinzel', serif;">JOGAR NOVAMENTE</button>
                     </div>
                 </div>
@@ -500,6 +513,7 @@ document.getElementById('btn-novo-jogo').onclick = () => {
     tocarSom('click.mp3');
     socket.send(JSON.stringify({ acao: 'NOVO_JOGO' }));
     cartaSelecionada = null;
+    vitoriaJaProcessada = false;
     zerarCronometro();
     iniciarCronometro();
 };
@@ -633,6 +647,40 @@ function mostrarPontuacao() {
     document.getElementById('modal-notificacao').classList.remove('modal-oculto');
 }
 
+function mostrarRecordeModal() {
+    const estado = window.estadoAtual;
+    const recorde = estado ? (estado.recorde || 0) : 0;
+    const pontos  = estado ? (estado.pontuacao || 0) : 0;
+
+    document.getElementById('modal-texto').innerHTML = `
+        <div style="text-align: center; padding: 10px;">
+            <h2 style="color:#4ade80; margin-bottom: 15px; font-family: 'Cinzel Decorative', serif;">🏅 RECORDE</h2>
+            <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,200,50,0.2); border-radius: 8px; padding: 20px; margin-bottom: 20px; color: #fff;">
+                <p style="font-size: 2em; margin: 0; color: #f0c040; font-weight: bold;">${recorde}</p>
+                <p style="color: #9ca3af; margin-top: 5px; font-size: 0.9em;">pontos</p>
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 15px 0;">
+                <p style="margin: 5px 0;">Pontuação desta partida: <strong style="color: #4ade80;">${pontos}</strong></p>
+                ${pontos >= recorde ? '<p style="color:#f0c040; margin-top:10px;">⭐ Você bateu o recorde!</p>' : ''}
+            </div>
+            <button onclick="fecharRecordeModal()" style="padding: 10px 25px; cursor: pointer; background: rgba(240,192,64,0.2); color: #f0c040; border: 1px solid rgba(240,192,64,0.5); border-radius: 5px; font-family: 'Cinzel', serif;">FECHAR</button>
+        </div>
+    `;
+    document.getElementById('modal-notificacao').classList.remove('modal-oculto');
+}
+
+function fecharRecordeModal() {
+    // Volta para o modal de vitória se o jogo terminou, senão fecha
+    if (window.estadoAtual && window.estadoAtual.vitoria) {
+        // Re-exibe o modal de vitória chamando atualizarInterface com forçar re-exibição
+        document.getElementById('modal-notificacao').classList.add('modal-oculto');
+        // Força re-abertura do modal de vitória
+        setTimeout(() => atualizarInterface(window.estadoAtual), 50);
+    } else {
+        document.getElementById('modal-notificacao').classList.add('modal-oculto');
+    }
+}
+
+
 function fecharModal() {
     document.getElementById('modal-notificacao').classList.add('modal-oculto');
     if (!jogoPausado) iniciarCronometro();
@@ -642,6 +690,8 @@ window.jogarNovamenteModal = function() {
     socket.send(JSON.stringify({ acao: 'NOVO_JOGO' }));
     document.getElementById('modal-notificacao').classList.add('modal-oculto');
     cartaSelecionada = null;
+    vitoriaJaProcessada = false;
+    zerarCronometro();
     iniciarCronometro();
 };
 
@@ -652,15 +702,59 @@ function solicitarAutoCompletar() {
     document.getElementById('container-auto').style.display = 'none';
     estaProcessando = true;
 
+    // Contador de tentativas sem progresso (para evitar loop infinito)
+    let tentativasSemProgresso = 0;
+    const MAX_TENTATIVAS = 60; // 52 cartas + margem para passadas no cava
+
     intervaloAnimacao = setInterval(() => {
-        // Se o jogo acabou, limpa e para
+        // Se o jogo acabou, para
         if (window.estadoAtual && window.estadoAtual.vitoria) {
             pararAutoCompletar();
             return;
         }
 
+        // Se travou sem conseguir progredir, para
+        if (tentativasSemProgresso >= MAX_TENTATIVAS) {
+            pararAutoCompletar();
+            return;
+        }
+
         socket.send(JSON.stringify({ acao: 'MOVER_UMA_PARA_FUNDACAO' }));
-    }, 500); 
+    }, 300);
+
+    // Monitora o resultado: se movimento_realizado for false, compra carta do cava
+    const onMensagemAutoCompletar = (event) => {
+        const estado = JSON.parse(event.data);
+
+        if (estado.movimento_realizado === false) {
+            // Não conseguiu mover para fundação — tenta comprar do cava
+            if (estado.cava_tamanho > 0 || (window.estadoAtual && window.estadoAtual.descarte && window.estadoAtual.descarte.length > 0)) {
+                tentativasSemProgresso++;
+                socket.send(JSON.stringify({ acao: 'COMPRAR_CARTA' }));
+            } else {
+                // Cava e descarte vazios e sem movimento: para
+                pararAutoCompletar();
+                socket.removeEventListener('message', onMensagemAutoCompletar);
+            }
+        } else {
+            tentativasSemProgresso = 0; // Progresso feito, reseta contador
+        }
+
+        if (estado.vitoria) {
+            pararAutoCompletar();
+            socket.removeEventListener('message', onMensagemAutoCompletar);
+        }
+    };
+
+    socket.addEventListener('message', onMensagemAutoCompletar);
+
+    // Limpa o listener quando o auto completar parar
+    const originalParar = pararAutoCompletar;
+    pararAutoCompletar = function() {
+        originalParar();
+        socket.removeEventListener('message', onMensagemAutoCompletar);
+        pararAutoCompletar = originalParar; // Restaura a função original
+    };
 }
 
 function pararAutoCompletar() {

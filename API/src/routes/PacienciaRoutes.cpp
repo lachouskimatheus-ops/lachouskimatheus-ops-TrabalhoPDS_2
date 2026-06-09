@@ -21,7 +21,7 @@ json estadoParaJson(Paciencia& jogo) {
     json j;
 
     j["pontuacao"]    = jogo.getPontuacao();
-    j["recorde"]      = 0;
+    j["recorde"]      = jogo.getRecord();
     j["cava_tamanho"] = jogo.getCavaTamanho();
     j["vitoria"]      = jogo.getVitoria();
 
@@ -229,6 +229,11 @@ void PacienciaRoutes::registrar(crow::SimpleApp& app) {
                     bool moveu =
                         jogo.moverUmaParaFundacao();
 
+                    // Salva recorde se o jogo terminou com vitória
+                    if (jogo.getVitoria()) {
+                        jogo.salvarRecord();
+                    }
+
                     json resposta =
                         estadoParaJson(jogo);
 
@@ -240,6 +245,11 @@ void PacienciaRoutes::registrar(crow::SimpleApp& app) {
                     );
 
                     return;
+                }
+
+                // Salva recorde se o jogo terminou com vitória
+                if (jogo.getVitoria()) {
+                    jogo.salvarRecord();
                 }
 
                 broadcast(
