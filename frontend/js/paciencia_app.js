@@ -166,10 +166,12 @@ if (containerAuto) {
     // Verifica se todas as cartas ocultas foram reveladas (total = 0)
     const totalEscondidas = estado.cartas_escondidas.reduce((a, b) => a + b, 0);
     
+    // Mostra o botão quando todas as cartas das colunas estão visíveis,
+    // independente de ainda haver cartas no cava
     if (totalEscondidas === 0 && !estado.vitoria) {
-        containerAuto.style.display = 'block'; // Mostra o botão
+        containerAuto.style.display = 'block';
     } else {
-        containerAuto.style.display = 'none';  // Esconde o botão
+        containerAuto.style.display = 'none';
     }
 }
     // 2. Lógica de Vitória (Única e consolidada)
@@ -700,15 +702,59 @@ function solicitarAutoCompletar() {
     document.getElementById('container-auto').style.display = 'none';
     estaProcessando = true;
 
+    // Contador de tentativas sem progresso (para evitar loop infinito)
+    let tentativasSemProgresso = 0;
+    const MAX_TENTATIVAS = 60; // 52 cartas + margem para passadas no cava
+
     intervaloAnimacao = setInterval(() => {
-        // Se o jogo acabou, limpa e para
+        // Se o jogo acabou, para
         if (window.estadoAtual && window.estadoAtual.vitoria) {
             pararAutoCompletar();
             return;
         }
 
+        // Se travou sem conseguir progredir, para
+        if (tentativasSemProgresso >= MAX_TENTATIVAS) {
+            pararAutoCompletar();
+            return;
+        }
+
         socket.send(JSON.stringify({ acao: 'MOVER_UMA_PARA_FUNDACAO' }));
-    }, 500); 
+    }, 300);
+
+    // Monitora o resultado: se movimento_realizado for false, compra carta do cava
+    const onMensagemAutoCompletar = (event) => {
+        const estado = JSON.parse(event.data);
+
+        if (estado.movimento_realizado === false) {
+            // Não conseguiu mover para fundação — tenta comprar do cava
+            if (estado.cava_tamanho > 0 || (window.estadoAtual && window.estadoAtual.descarte && window.estadoAtual.descarte.length > 0)) {
+                tentativasSemProgresso++;
+                socket.send(JSON.stringify({ acao: 'COMPRAR_CARTA' }));
+            } else {
+                // Cava e descarte vazios e sem movimento: para
+                pararAutoCompletar();
+                socket.removeEventListener('message', onMensagemAutoCompletar);
+            }
+        } else {
+            tentativasSemProgresso = 0; // Progresso feito, reseta contador
+        }
+
+        if (estado.vitoria) {
+            pararAutoCompletar();
+            socket.removeEventListener('message', onMensagemAutoCompletar);
+        }
+    };
+
+    socket.addEventListener('message', onMensagemAutoCompletar);
+
+    // Limpa o listener quando o auto completar parar
+    const originalParar = pararAutoCompletar;
+    pararAutoCompletar = function() {
+        originalParar();
+        socket.removeEventListener('message', onMensagemAutoCompletar);
+        pararAutoCompletar = originalParar; // Restaura a função original
+    };
 }
 
 function pararAutoCompletar() {
