@@ -98,6 +98,32 @@
     <div class="modal-conteudo" id="modal-texto"></div>
 </div>
 
+<!-- Botão de Personalização -->
+<button class="btn-config-pac" onclick="abrirConfig()" title="Personalização">🖌️</button>
+
+<!-- Modal de Personalização -->
+<div id="modal-config" class="modal-overlay modal-oculto">
+    <div class="modal-conteudo">
+        <h2 style="color:#4ade80; font-family:'Cinzel Decorative',serif; margin-bottom:20px;">🎨 Personalização</h2>
+
+        <h3 style="color:#9ca3af; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:12px;">Verso das Cartas</h3>
+        <div class="opcoes-config">
+            <button class="btn-verso btn-tema-pac" id="btn-verso-verso1" onclick="mudarVerso('verso1')">Padrão</button>
+            <button class="btn-verso btn-tema-pac" id="btn-verso-verso2" onclick="mudarVerso('verso2')">Dark</button>
+            <button class="btn-verso btn-tema-pac" id="btn-verso-verso3" onclick="mudarVerso('verso3')">Minimal</button>
+        </div>
+
+        <h3 style="color:#9ca3af; font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin:20px 0 12px;">Frente das Cartas (Baralho)</h3>
+        <div class="opcoes-config">
+            <button class="btn-baralho btn-tema-pac" id="btn-baralho-padrao" onclick="mudarBaralho('padrao')">Padrão</button>
+            <button class="btn-baralho btn-tema-pac" id="btn-baralho-classico" onclick="mudarBaralho('classico')">Clássico</button>
+            <button class="btn-baralho btn-tema-pac" id="btn-baralho-medieval" onclick="mudarBaralho('medieval')">Medieval</button>
+        </div>
+
+        <button onclick="fecharConfig()" style="width:100%; margin-top:25px; padding:13px; background:#4ade80; color:#000; border:none; border-radius:8px; font-weight:bold; font-size:1rem; cursor:pointer; font-family:'Cinzel',serif; transition:background 0.2s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#4ade80'">Confirmar e Fechar</button>
+    </div>
+</div>
+
 <script src="../js/paciencia_app.js"></script>
 </body>
 </html>
