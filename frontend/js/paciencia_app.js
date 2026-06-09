@@ -151,6 +151,61 @@ function tocarSom(nomeArquivo) {
 let cartaSelecionada = null; // { tipo: "coluna"|"descarte"|"fundacao", indice: int, cartaIdx: int }
 let jogoPausado = false;
 let autoCompletarDisponivel = false;
+
+// ==========================================
+// PERSONALIZAÇÃO
+// ==========================================
+let configJogo = {
+    verso: localStorage.getItem('pac_verso') || 'verso1',
+    baralho: localStorage.getItem('pac_baralho') || 'padrao'
+};
+
+function aplicarConfiguracoes() {
+    document.body.className = `tema-verso-${configJogo.verso}`;
+}
+
+function mudarVerso(tipo) {
+    configJogo.verso = tipo;
+    localStorage.setItem('pac_verso', tipo);
+    aplicarConfiguracoes();
+    // Atualiza visual dos botões
+    document.querySelectorAll('.btn-verso').forEach(b => b.classList.remove('selecionado'));
+    const btn = document.getElementById('btn-verso-' + tipo);
+    if (btn) btn.classList.add('selecionado');
+}
+
+function mudarBaralho(tipo) {
+    configJogo.baralho = tipo;
+    localStorage.setItem('pac_baralho', tipo);
+    // Atualiza visual dos botões
+    document.querySelectorAll('.btn-baralho').forEach(b => b.classList.remove('selecionado'));
+    const btn = document.getElementById('btn-baralho-' + tipo);
+    if (btn) btn.classList.add('selecionado');
+    // Re-renderiza se houver estado
+    if (window.estadoAtual) atualizarInterface(window.estadoAtual);
+}
+
+function abrirConfig() {
+    tocarSom('click.mp3');
+    pararCronometro();
+    // Marca botões com seleção atual
+    document.querySelectorAll('.btn-verso').forEach(b => b.classList.remove('selecionado'));
+    document.querySelectorAll('.btn-baralho').forEach(b => b.classList.remove('selecionado'));
+    const bv = document.getElementById('btn-verso-' + configJogo.verso);
+    if (bv) bv.classList.add('selecionado');
+    const bb = document.getElementById('btn-baralho-' + configJogo.baralho);
+    if (bb) bb.classList.add('selecionado');
+
+    document.getElementById('modal-config').classList.remove('modal-oculto');
+}
+
+function fecharConfig() {
+    document.getElementById('modal-config').classList.add('modal-oculto');
+    if (!jogoPausado) iniciarCronometro();
+}
+
+// Aplica ao carregar
+aplicarConfiguracoes();
 let vitoriaJaProcessada = false;
 // ==========================================
 // ATUALIZAR INTERFACE COM BASE NO ESTADO
@@ -246,8 +301,16 @@ function renderizarDescarte(descarte) {
     }
 
     const carta = descarte[descarte.length - 1];
-    const el    = criarElementoCarta(carta, 'descarte');
-    el.classList.add('carta-descarte');
+    let el;
+    if (configJogo.baralho !== 'padrao') {
+        el = document.createElement('div');
+        const naipe = obterNomeNaipe(carta.naipe);
+        el.classList.add('carta-descarte', 'carta-imagem');
+        el.innerHTML = `<img src="/assets/baralhos/${configJogo.baralho}/${carta.valor}_${naipe}.png" class="carta-sprite">`;
+    } else {
+        el = criarElementoCarta(carta, 'descarte');
+        el.classList.add('carta-descarte');
+    }
 
     // Lógica Drag and Drop
     el.draggable = true;
@@ -285,6 +348,11 @@ function renderizarFundacoes(fundacoes) {
             const el    = criarElementoCarta(carta, 'fundacao');
             el.classList.add('carta-coluna', 'frente');
             el.style.position = 'relative';
+            if (configJogo.baralho !== 'padrao') {
+                const naipe = obterNomeNaipe(carta.naipe);
+                el.classList.add('carta-imagem');
+                el.innerHTML = `<img src="/assets/baralhos/${configJogo.baralho}/${carta.valor}_${naipe}.png" class="carta-sprite">`;
+            }
             
             // Permite puxar da fundação
             el.draggable = true;
@@ -338,9 +406,14 @@ function renderizarColunas(colunas, cartasEscondidas) {
                 const simbolo = obterSimboloNaipe(carta.naipe);
                 const valor   = traduzirValor(carta.valor);
 
-                el.classList.add('frente', naipe);
-                el.setAttribute('data-naipe-simbolo', simbolo);
-                el.innerText = valor;
+                if (configJogo.baralho !== 'padrao') {
+                    el.classList.add('frente', 'carta-imagem');
+                    el.innerHTML = `<img src="/assets/baralhos/${configJogo.baralho}/${carta.valor}_${naipe}.png" class="carta-sprite">`;
+                } else {
+                    el.classList.add('frente', naipe);
+                    el.setAttribute('data-naipe-simbolo', simbolo);
+                    el.innerText = valor;
+                }
 
                 // Transforma cada carta virada para cima em "arrastável"
                 el.draggable = true;

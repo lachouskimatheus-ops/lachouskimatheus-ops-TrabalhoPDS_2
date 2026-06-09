@@ -392,3 +392,112 @@
 .regras-box h3 { color: #4ade80; margin-bottom: 15px; }
 .regras-lista { text-align: left; margin: 15px 0; list-style: none; }
 .regras-lista li { margin-bottom: 10px; font-size: 0.9em; }
+/* ==========================================
+   BOTÃO DE PERSONALIZAÇÃO
+   ========================================== */
+.btn-config-pac {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 45px;
+    height: 45px;
+    background: #f0c040;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-config-pac:hover {
+    transform: scale(1.1);
+    background: #d4ac0d;
+}
+
+/* ==========================================
+   MODAL DE PERSONALIZAÇÃO
+   ========================================== */
+.opcoes-config {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-tema-pac {
+    padding: 10px 22px;
+    background: rgba(255,255,255,0.07);
+    color: #f3f4f6;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: 'Cinzel', serif;
+    transition: all 0.2s ease;
+}
+
+.btn-tema-pac:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateY(-1px);
+}
+
+.btn-tema-pac.selecionado {
+    background: rgba(74,222,128,0.2);
+    border-color: #4ade80;
+    color: #4ade80;
+    box-shadow: 0 0 10px rgba(74,222,128,0.2);
+}
+
+/* ==========================================
+   TEMAS DE VERSO DAS CARTAS
+   ========================================== */
+
+/* Verso Padrão */
+.tema-verso-verso1 .verso-grande,
+.tema-verso-verso1 .carta-coluna.verso {
+    background-image: url('../assets/verso_padrao.png');
+    background-size: cover;
+    background-position: center;
+    background-color: transparent;
+}
+
+/* Verso Dark */
+.tema-verso-verso2 .verso-grande,
+.tema-verso-verso2 .carta-coluna.verso {
+    background-image: url('../assets/verso_dark.png');
+    background-size: cover;
+    background-position: center;
+    background-color: transparent;
+}
+
+/* Verso Minimal (padrão xadrez azul já existente no CSS) */
+.tema-verso-verso3 .verso-grande,
+.tema-verso-verso3 .carta-coluna.verso {
+    background-image:
+        linear-gradient(135deg, #2563eb 25%, transparent 25%),
+        linear-gradient(225deg, #2563eb 25%, transparent 25%),
+        linear-gradient(45deg,  #2563eb 25%, transparent 25%),
+        linear-gradient(315deg, #2563eb 25%, #1e3a8a 25%);
+    background-position: 8px 0, 8px 0, 0 0, 0 0;
+    background-size: 16px 16px;
+    background-repeat: repeat;
+}
+
+/* ==========================================
+   CARTA COM IMAGEM (BARALHO CLÁSSICO/MEDIEVAL)
+   ========================================== */
+.carta-coluna.carta-imagem,
+.carta-descarte.carta-imagem {
+    background: transparent;
+    padding: 0;
+}
+
+.carta-coluna.carta-imagem::after,
+.carta-descarte.carta-imagem::after {
+    display: none;
+}
