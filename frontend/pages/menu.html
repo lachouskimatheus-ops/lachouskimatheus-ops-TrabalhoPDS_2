@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jogos</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -24,16 +24,12 @@
   .bg {
     position: fixed;
     inset: 0;
-<<<<<<< HEAD:frontend/menu.html
     background-image: url('../assets/fundo.jpg');
-=======
-    background-image: url('../assets/fundo.jpg');
->>>>>>> a9a553c01a1cf36edf254bee6a3688161bf404af:frontend/pages/menu.html
     background-size: cover;
     background-position: center;
     filter: brightness(0.35);
     z-index: 0;
-  }
+}
 
   .overlay {
     position: fixed;
@@ -56,12 +52,12 @@
 
   h1 {
     font-family: 'Cinzel Decorative', serif;
-    font-size: 28px;
+    font-size: 38px;
     color: #fff;
     text-align: center;
-    letter-spacing: 4px;
+    letter-spacing: 6px;
     text-shadow: 0 0 20px rgba(255,200,50,0.5);
-    margin-bottom: 10px;
+    margin-bottom: 5px;
   }
 
   h1 span { color: #f0c040; }
@@ -124,30 +120,35 @@
     text-transform: uppercase;
   }
 
-  .btn-sair {
+  /* --- BOTÃO DE CRÉDITOS DESTACADO --- */
+  .btn-creditos {
     width: 100%;
-    background: rgba(180, 30, 30, 0.3);
-    border: 1.5px solid rgba(220,50,50,0.4);
+    background: linear-gradient(135deg, rgba(240,192,64,0.2) 0%, rgba(240,192,64,0.05) 100%);
+    border: 1px solid rgba(240,192,64,0.5);
     border-radius: 8px 20px 8px 20px;
-    padding: 14px;
+    padding: 16px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     font-family: 'Cinzel', serif;
-    font-size: 14px;
-    font-weight: 600;
-    color: #ff8080;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f0c040;
     letter-spacing: 4px;
     text-transform: uppercase;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(240,192,64,0.1);
   }
 
-  .btn-sair:hover {
-    background: rgba(220, 50, 50, 0.4);
-    border-color: #ff5555;
+  .btn-creditos:hover {
+    background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%);
+    border-color: #f0c040;
     color: #fff;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(240,192,64,0.35);
   }
 
-  .btn-sair:active { transform: translateY(0); }
+  .btn-creditos:active { transform: translateY(0); }
 
   .naipes {
     font-size: 18px;
@@ -177,7 +178,7 @@
 
   <div class="naipes">♠ ♥ ♦ ♣</div>
 
-  <h1>ESCOLHA UM <span>JOGO</span></h1>
+  <h1>CARTA<span>RALHO</span></h1>
 
   
   <div class="grid">
@@ -217,7 +218,7 @@
   </div>
 
  
-  <button class="btn-sair" onclick="window.location.href='menu_inicial.html'">x &nbsp; VOLTAR</button>
+  <a href="/pages/creditos.html" class="btn-creditos">CRÉDITOS</a>
  
 </div>
 
