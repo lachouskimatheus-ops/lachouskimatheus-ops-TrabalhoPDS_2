@@ -1,18 +1,32 @@
 # Compilação
 *.o
+*.d
 *.exe
 *.out
 build/
+# Garante que o binário gerado pelo Makefile no Linux/WSL seja ignorado
+API/servidor_api
+# Ignora todas as pastas de objetos geradas pelos Makefiles dos subprojetos
+**/obj/
 
 # Doxygen
 docs/
+html/
+latex/
 
-# Editor
+# Editor e IDEs
 .vscode/
+.idea/
 
 # Windows
 Thumbs.db
 desktop.ini
 
-# Downloads temporários
+# Downloads e arquivos locais
 *.zip
+*.txt
+!CMakeLists.txt
+
+# Ignora o arquivo de recordes local para não sobrescrever o dos seus colegas
+API/record.txt
+Jogos/Paciência/src/record.txt
