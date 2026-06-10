@@ -52,3 +52,11 @@ Carta JogadorPife::descartarCarta(int indice) {
 const std::vector<Carta>& JogadorPife::verMao() const {
     return mao_;
 }
+
+void JogadorPife::definirNome(const std::string& nome) {
+    nome_ = nome;
+}
+
+const std::string& JogadorPife::nome() const {
+    return nome_;
+}
