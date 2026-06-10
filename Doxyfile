@@ -119,7 +119,7 @@ ALLOW_UNICODE_NAMES    = NO
 # Swedish, Turkish, Ukrainian and Vietnamese.
 # The default value is: English.
 
-OUTPUT_LANGUAGE        = English
+OUTPUT_LANGUAGE        = Brazilian
 
 # If the BRIEF_MEMBER_DESC tag is set to YES, Doxygen will include brief member
 # descriptions after the members that are listed in the file and class
@@ -248,13 +248,6 @@ QT_AUTOBRIEF           = NO
 
 MULTILINE_CPP_IS_BRIEF = NO
 
-# By default Python docstrings are displayed as preformatted text and Doxygen's
-# special commands cannot be used. By setting PYTHON_DOCSTRING to NO the
-# Doxygen's special commands can be used and the contents of the docstring
-# documentation blocks is shown as Doxygen documentation.
-# The default value is: YES.
-
-PYTHON_DOCSTRING       = YES
 
 # If the INHERIT_DOCS tag is set to YES then an undocumented member inherits the
 # documentation from any documented member that it re-implements.
@@ -349,7 +342,7 @@ OPTIMIZE_OUTPUT_SLICE  = NO
 #
 # Note see also the list of default file extension mappings.
 
-EXTENSION_MAPPING      =
+EXTENSION_MAPPING      =  hpp=c++
 
 # If the MARKDOWN_SUPPORT tag is enabled then Doxygen pre-processes all comments
 # according to the Markdown format, which allows for more readable
@@ -548,7 +541,7 @@ TIMESTAMP              = NO
 # normally produced when WARNINGS is set to YES.
 # The default value is: NO.
 
-EXTRACT_ALL            = YES
+EXTRACT_ALL            = NO
 
 # If the EXTRACT_PRIVATE tag is set to YES, all private members of a class will
 # be included in the documentation.
@@ -1231,14 +1224,7 @@ USE_MDFILE_AS_MAINPAGE =
 
 IMPLICIT_DIR_DOCS      = YES
 
-# The Fortran standard specifies that for fixed formatted Fortran code all
-# characters from position 72 are to be considered as comment. A common
-# extension is to allow longer lines before the automatic comment starts. The
-# setting FORTRAN_COMMENT_AFTER will also make it possible that longer lines can
-# be processed before the automatic comment starts.
-# Minimum value: 7, maximum value: 10000, default value: 72.
 
-FORTRAN_COMMENT_AFTER  = 72
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
@@ -2738,7 +2724,7 @@ GROUP_GRAPHS           = YES
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-UML_LOOK               = NO
+UML_LOOK               = YES
 
 # If the UML_LOOK tag is enabled, the fields and methods are shown inside the
 # class node. If there are many fields or methods and many nodes the graph may
@@ -2822,10 +2808,10 @@ INCLUDED_BY_GRAPH      = YES
 # So in most cases it will be better to enable call graphs for selected
 # functions only using the \callgraph command. Disabling a call graph can be
 # accomplished by means of the command \hidecallgraph.
-# The default value is: NO.
+# The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-CALL_GRAPH             = NO
+CALL_GRAPH             = YEs
 
 # If the CALLER_GRAPH tag is set to YES then Doxygen will generate a caller
 # dependency graph for every global function or class method.
@@ -2834,10 +2820,10 @@ CALL_GRAPH             = NO
 # So in most cases it will be better to enable caller graphs for selected
 # functions only using the \callergraph command. Disabling a caller graph can be
 # accomplished by means of the command \hidecallergraph.
-# The default value is: NO.
+# The default value is: YES.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-CALLER_GRAPH           = NO
+CALLER_GRAPH           = YEs
 
 # If the GRAPHICAL_HIERARCHY tag is set to YES then Doxygen will graphical
 # hierarchy of all classes instead of a textual one.
