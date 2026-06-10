@@ -1,0 +1,18 @@
+# Compilação
+*.o
+*.exe
+*.out
+build/
+
+# Doxygen
+docs/
+
+# Editor
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Downloads temporários
+*.zip
