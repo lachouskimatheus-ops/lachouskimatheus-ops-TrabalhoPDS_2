@@ -2,31 +2,86 @@
 #include <string>
 #include <vector>
 
-class Carta; //Declaração antecipada que evita uma porrada de problema de compilação
+class Carta; ///< Declaração antecipada para evitar inclusão circular
 
+/**
+ * @brief Classe base que representa um jogador genérico na coletânea de jogos.
+ *
+ * Define a interface comum a todos os jogadores: identidade, mão de cartas
+ * e operações básicas. Serve como base para especializações como JogadorFDP.
+ * Utiliza vetor de ponteiros para garantir unicidade das cartas e melhor
+ * performance no acesso.
+ */
 class Jogador {
 protected:
-	//O protected é tipo um private que as classes filhas podem acessar
-	int id_; //Aqui eu vou começar a usar essa convenção que o próprio Thiago usa de colocar _ em atributos
-	std::string nome_;
-	std::vector<Carta*> mao_; //Usando um vetor de ponteiros, a gente garante que cada carta vai ser única e vai ser muito mais rápido o processamento
+    int id_;                    ///< Identificador único do jogador
+    std::string nome_;          ///< Nome do jogador
+    std::vector<Carta*> mao_;   ///< Cartas na mão do jogador (ponteiros para cartas únicas)
 
 public:
-	Jogador(int id, std::string nome);
-	void receberCarta(Carta* novaCarta);
-	virtual ~Jogador(); //Esse virtual basicamente garante que a interação entre as classes mãe e filha não vai ignorar nenhum atributo ou método
-	virtual Carta* jogarCarta(int posicao); //Devolve um ponteiro de carta pq o vetor é formado de ponteiros de cartas 
-	const std::vector<Carta*>& getMao() const { 
-        return mao_; 
-    }
+    /**
+     * @brief Construtor.
+     * @param id   Identificador único do jogador.
+     * @param nome Nome do jogador.
+     */
+    Jogador(int id, std::string nome);
+
+    /**
+     * @brief Destrutor virtual. Garante destruição correta em hierarquias de herança.
+     */
+    virtual ~Jogador();
+
+    /**
+     * @brief Adiciona uma carta à mão do jogador.
+     * @param novaCarta Ponteiro para a carta a ser recebida.
+     */
+    void receberCarta(Carta* novaCarta);
+
+    /**
+     * @brief Remove e retorna uma carta da mão do jogador.
+     *
+     * Método virtual para permitir comportamentos específicos em subclasses.
+     * @param posicao Índice da carta na mão (0-based).
+     * @return Ponteiro para a carta jogada.
+     */
+    virtual Carta* jogarCarta(int posicao);
+
+    // =========================================================
+    /// @name Getters
+    // =========================================================
+    ///@{
+
+    /** @return Referência constante para o vetor de cartas na mão. */
+    const std::vector<Carta*>& getMao() const { return mao_; }
+
+    /**
+     * @brief Retorna uma carta específica da mão pelo índice.
+     * @param indice Índice da carta (0-based).
+     * @return Ponteiro para a carta na posição indicada.
+     */
     Carta* getCartaMao(int indice) { return mao_[indice]; }
-	//Getters:
-	std::string getNome() const;
-	int getId() const;
+
+    /** @return Nome do jogador. */
+    std::string getNome() const;
+
+    /** @return Identificador único do jogador. */
+    int getId() const;
+
+    /** @return Quantidade de cartas atualmente na mão. */
     int getQtdCartasMao() const;
+
+    ///@}
+
+    // =========================================================
+    /// @name Setters
+    // =========================================================
+    ///@{
+
+    /**
+     * @brief Define o nome do jogador.
+     * @param novoNome Novo nome a ser atribuído.
+     */
     void setNome(std::string novoNome);
 
-	//Esses métodos ainda podem mudar ou podem ter outros métodos aqui, à medida que a gente for programando os outros jogos
-	//Não vou colocar nada envolvendo os servidores ainda, até a gente ter os jogos rodando
-
+    ///@}
 };
