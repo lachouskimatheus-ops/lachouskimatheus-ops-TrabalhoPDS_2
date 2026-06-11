@@ -4,134 +4,186 @@
 #include <algorithm>
 #include <random>
 #include <stdexcept>
+#include <cassert>
+#include <set>
 
-// 1. Construtor
+// ==============================================================================
+// EXCEÇÕES PERSONALIZADAS DO PACIÊNCIA
+// ==============================================================================
+
+/**
+ * Exceção lançada quando um índice (coluna, fundação, carta) está fora dos limites.
+ */
+class IndiceInvalidoException : public std::out_of_range {
+public:
+    explicit IndiceInvalidoException(const std::string& msg)
+        : std::out_of_range("[Paciencia] IndiceInvalido: " + msg) {}
+};
+
+/**
+ * Exceção lançada quando uma operação é tentada em uma pilha vazia.
+ */
+class PilhaVaziaException : public std::runtime_error {
+public:
+    explicit PilhaVaziaException(const std::string& msg)
+        : std::runtime_error("[Paciencia] PilhaVazia: " + msg) {}
+};
+
+/**
+ * Exceção lançada quando um movimento viola as regras do jogo.
+ */
+class MovimentoInvalidoException : public std::logic_error {
+public:
+    explicit MovimentoInvalidoException(const std::string& msg)
+        : std::logic_error("[Paciencia] MovimentoInvalido: " + msg) {}
+};
+
+/**
+ * Exceção lançada quando a geração do jogo produz um estado inconsistente.
+ */
+class EstadoInvalidoException : public std::runtime_error {
+public:
+    explicit EstadoInvalidoException(const std::string& msg)
+        : std::runtime_error("[Paciencia] EstadoInvalido: " + msg) {}
+};
+
+// ==============================================================================
+// CICLO DE VIDA
+// ==============================================================================
+
+// Inicializa o jogo ao criar o objeto
 Paciencia::Paciencia() : vitoria(false), pontuacao() {
     iniciarJogo();
 }
 
-// 2. Destrutor
+// Destrutor — memória gerenciada pelos contêineres STL
 Paciencia::~Paciencia() {
-    // Como utilizamos std::vector e std::stack, a memória é liberada automaticamente.
-    // Não é necessária limpeza manual, garantindo segurança de memória.
+    // Memória liberada automaticamente pelos contêineres STL.
 }
 
-// 3. Iniciar Jogo (Reset Total)
+// Reseta completamente o estado do jogo e distribui as cartas
 void Paciencia::iniciarJogo() {
-    // Limpar estados anteriores com segurança
     colunas.assign(7, std::vector<Carta>());
     fundacoes.assign(4, std::vector<Carta>());
     descarte.clear();
-    
-    // Esvaziar histórico
-    while(!historico.empty()) historico.pop();
-    
-    // Reiniciar baralho
+
+    while (!historico.empty()) historico.pop();
+
     cava = Baralho();
     cava.embaralhar();
-    
-    // Distribuir cartas nas colunas (lógica original preservada e otimizada)
+
     for (int i = 0; i < 7; ++i) {
         colunas[i].clear();
-        cartasEscondidas[i] = i; // Define quantas cartas estão de costas
+        cartasEscondidas[i] = i;
         for (int j = 0; j <= i; ++j) {
             Carta c = cava.retirarCarta();
             colunas[i].push_back(c);
         }
     }
-    
+
     pontuacao.resetar();
     vitoria = false;
 }
 
-// 4. Virar para Cima
-// Método defensivo: valida os índices antes de manipular o estado.
+// ==============================================================================
+// VISIBILIDADE
+// ==============================================================================
+
+// Revela a carta do topo de uma coluna, decrementando as cartas escondidas
 void Paciencia::virarParaCima(int coluna) {
-    if (coluna < 0 || coluna >= 7) return; 
-    
+    // Barricada: valida entrada pública antes de qualquer operação
+    if (coluna < 0 || coluna >= 7)
+        throw IndiceInvalidoException("virarParaCima: coluna " + std::to_string(coluna) + " fora do intervalo [0,6].");
+
     if (cartasEscondidas[coluna] > 0 && !colunas[coluna].empty()) {
         cartasEscondidas[coluna]--;
         pontuacao.aplicar(EventoPontuacao::VirarCarta);
     }
 }
 
-// 5. Carta Visível (Consulta se a carta está aberta)
+// Retorna true se a carta na posição (coluna, linha) está virada para cima
 bool Paciencia::cartaVisivel(int coluna, int linha) const {
-    // Defensivo: Verifica limites antes de acessar
+    // Barricada: retorna false para índices inválidos (não lança — método const de consulta)
     if (coluna < 0 || coluna >= 7) return false;
     return (linha >= cartasEscondidas[coluna]);
 }
 
+// ==============================================================================
+// HISTÓRICO (DESFAZER)
+// ==============================================================================
+
+// Faz um snapshot do estado atual e empilha no histórico
 void Paciencia::salvarEstadoNoHistorico() {
     EstadoJogo estado;
-    estado.colunas = colunas;
-    estado.fundacoes = fundacoes;
-    estado.descarte = descarte;
-    estado.cava = cava;
-    estado.pontos = pontuacao.getPontos();
+    estado.colunas      = colunas;
+    estado.fundacoes    = fundacoes;
+    estado.descarte     = descarte;
+    estado.cava         = cava;
+    estado.pontos       = pontuacao.getPontos();
     estado.passadasCava = pontuacao.getPassadasCava();
-    
-    for (int i = 0; i < 7; ++i) {
+
+    for (int i = 0; i < 7; ++i)
         estado.cartasEscondidas[i] = cartasEscondidas[i];
-    }
-    
+
     historico.push(estado);
 }
 
-
+// Restaura o estado anterior a partir do histórico
 bool Paciencia::desfazer() {
+    // Barricada: não lança exceção — retorna false para indicar que não há o que desfazer
     if (historico.empty()) return false;
 
     EstadoJogo anterior = historico.top();
     historico.pop();
 
-    colunas = anterior.colunas;
+    colunas   = anterior.colunas;
     fundacoes = anterior.fundacoes;
-    descarte = anterior.descarte;
-    cava = anterior.cava;
-    
-    // Restaurando pontuação
+    descarte  = anterior.descarte;
+    cava      = anterior.cava;
+
     pontuacao.setPontos(anterior.pontos);
     pontuacao.setPassadasCava(anterior.passadasCava);
-    
-    // Restaurando visibilidade
-    for (int i = 0; i < 7; ++i) {
+
+    for (int i = 0; i < 7; ++i)
         cartasEscondidas[i] = anterior.cartasEscondidas[i];
-    }
 
     return true;
 }
 
-// 8. Comprar Carta
-// Gerencia a compra da cava, a reciclagem do descarte quando a cava esvazia
-// e a pontuação associada.
+// ==============================================================================
+// COMPRAR CARTA
+// ==============================================================================
+
+// Move uma carta da cava para o descarte; recicla o descarte se a cava estiver vazia
 void Paciencia::comprarCarta() {
-    salvarEstadoNoHistorico(); // Utilizando o wrapper que chama o salvamento interno
-    
+    salvarEstadoNoHistorico();
+
     if (cava.estaVazio()) {
+        // Barricada: sem cartas disponíveis em lugar nenhum — operação ignorada silenciosamente
         if (descarte.empty()) return;
-        
-        // Reciclagem: reverte o descarte para inserir novamente na cava
+
         std::reverse(descarte.begin(), descarte.end());
-        for(const auto& c : descarte) {
+        for (const auto& c : descarte)
             cava.inserirCarta(c);
-        }
         descarte.clear();
 
-        // Regra de pontuação: penalização ou contagem de passadas
         pontuacao.setPassadasCava(pontuacao.getPassadasCava() + 1);
         pontuacao.aplicar(EventoPontuacao::PassarBaralho);
     } else {
-        // Movimentação normal
         Carta c = cava.retirarCarta();
         descarte.push_back(c);
     }
 }
-// --- 10. Mover (Geral) ---
+
+// ==============================================================================
+// MOVER (GERAL)
+// ==============================================================================
+
+// Valida e executa o movimento de uma carta entre duas pilhas
 bool Paciencia::mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoTipo, int destinoIndice) {
-    if (!podeMover(origemTipo, origemIndice, destinoTipo, destinoIndice)) {
+    // Barricada: valida o movimento antes de alterar qualquer estado
+    if (!podeMover(origemTipo, origemIndice, destinoTipo, destinoIndice))
         return false;
-    }
 
     salvarEstadoNoHistorico();
     executarMovimento(origemTipo, origemIndice, destinoTipo, destinoIndice);
@@ -139,136 +191,112 @@ bool Paciencia::mover(TipoPilha origemTipo, int origemIndice, TipoPilha destinoT
     return true;
 }
 
-
-
-bool Paciencia::podeMover(
-    TipoPilha origemTipo,
-    int origemIdx,
-    TipoPilha destinoTipo,
-    int destinoIdx
-) const {
+// Verifica se um movimento simples é permitido pelas regras
+bool Paciencia::podeMover(TipoPilha origemTipo, int origemIdx, TipoPilha destinoTipo, int destinoIdx) const {
     const Carta* carta = nullptr;
 
-    // Descobre qual carta será movida
     if (origemTipo == TipoPilha::Descarte) {
-        if (descarte.empty()) {
-            return false;
-        }
-
+        if (descarte.empty()) return false;
         carta = &descarte.back();
     }
     else if (origemTipo == TipoPilha::Coluna) {
-        if (origemIdx < 0 || origemIdx >= 7) {
-            return false;
-        }
+        if (origemIdx < 0 || origemIdx >= 7) return false;
+        if (colunas[origemIdx].empty()) return false;
 
-        if (colunas[origemIdx].empty()) {
-            return false;
-        }
-
-        int indiceTopo =
-            static_cast<int>(colunas[origemIdx].size()) - 1;
-
-        if (!cartaVisivel(origemIdx, indiceTopo)) {
-            return false;
-        }
+        int indiceTopo = static_cast<int>(colunas[origemIdx].size()) - 1;
+        if (!cartaVisivel(origemIdx, indiceTopo)) return false;
 
         carta = &colunas[origemIdx].back();
     }
     else {
-        // Movimento vindo da fundação é tratado por
-        // moverDaFundacao()
-        return false;
+        return false; // Fundação tratada por moverDaFundacao()
     }
 
-    // Valida o destino
     if (destinoTipo == TipoPilha::Coluna) {
-        if (destinoIdx < 0 || destinoIdx >= 7) {
-            return false;
-        }
+        if (destinoIdx < 0 || destinoIdx >= 7) return false;
+        if (origemTipo == TipoPilha::Coluna && origemIdx == destinoIdx) return false;
 
-        if (
-            origemTipo == TipoPilha::Coluna &&
-            origemIdx == destinoIdx
-        ) {
-            return false;
-        }
-
-        if (colunas[destinoIdx].empty()) {
+        if (colunas[destinoIdx].empty())
             return Regras::podeMoverParaColunaVazia(*carta);
-        }
 
-        return Regras::podeMoverParaColuna(
-            *carta,
-            colunas[destinoIdx].back()
-        );
+        return Regras::podeMoverParaColuna(*carta, colunas[destinoIdx].back());
     }
 
     if (destinoTipo == TipoPilha::Fundacao) {
-        if (destinoIdx < 0 || destinoIdx >= 4) {
-            return false;
-        }
-
-        return Regras::podeMoverParaFundacao(
-            *carta,
-            fundacoes[destinoIdx]
-        );
+        if (destinoIdx < 0 || destinoIdx >= 4) return false;
+        return Regras::podeMoverParaFundacao(*carta, fundacoes[destinoIdx]);
     }
 
     return false;
 }
 
-void Paciencia::executarMovimento(
-    TipoPilha origemTipo,
-    int origemIdx,
-    TipoPilha destinoTipo,
-    int destinoIdx
-) {
+// Executa o movimento após validação, atualizando pontuação e visibilidade
+void Paciencia::executarMovimento(TipoPilha origemTipo, int origemIdx, TipoPilha destinoTipo, int destinoIdx) {
+    // Asserções: pré-condições internas — só chegam aqui após podeMover() retornar true
+    assert((origemTipo == TipoPilha::Descarte || origemTipo == TipoPilha::Coluna) &&
+           "executarMovimento: tipo de origem inválido.");
+
     Carta carta;
 
-    // Retira a carta da origem
-    if (origemTipo == TipoPilha::Descarte) {
-        carta = descarte.back();
-        descarte.pop_back();
+    try {
+        if (origemTipo == TipoPilha::Descarte) {
+            if (descarte.empty())
+                throw PilhaVaziaException("executarMovimento: descarte vazio ao tentar retirar carta.");
+            carta = descarte.back();
+            descarte.pop_back();
+        }
+        else {
+            if (origemIdx < 0 || origemIdx >= 7)
+                throw IndiceInvalidoException("executarMovimento: coluna origem " + std::to_string(origemIdx) + " inválida.");
+            if (colunas[origemIdx].empty())
+                throw PilhaVaziaException("executarMovimento: coluna " + std::to_string(origemIdx) + " vazia.");
+            carta = colunas[origemIdx].back();
+            colunas[origemIdx].pop_back();
+        }
+
+        if (destinoTipo == TipoPilha::Coluna) {
+            if (destinoIdx < 0 || destinoIdx >= 7)
+                throw IndiceInvalidoException("executarMovimento: coluna destino " + std::to_string(destinoIdx) + " inválida.");
+            colunas[destinoIdx].push_back(carta);
+        }
+        else if (destinoTipo == TipoPilha::Fundacao) {
+            if (destinoIdx < 0 || destinoIdx >= 4)
+                throw IndiceInvalidoException("executarMovimento: fundação destino " + std::to_string(destinoIdx) + " inválida.");
+            fundacoes[destinoIdx].push_back(carta);
+        }
+        else {
+            throw MovimentoInvalidoException("executarMovimento: tipo de destino inválido.");
+        }
     }
-    else if (origemTipo == TipoPilha::Coluna) {
-        carta = colunas[origemIdx].back();
-        colunas[origemIdx].pop_back();
-    }
-    else {
+    catch (const std::exception& e) {
+        std::cerr << "[EXCEÇÃO] " << e.what() << "\n";
         return;
     }
 
-    // Coloca a carta no destino
-    if (destinoTipo == TipoPilha::Coluna) {
-        colunas[destinoIdx].push_back(carta);
-    }
-    else if (destinoTipo == TipoPilha::Fundacao) {
-        fundacoes[destinoIdx].push_back(carta);
-    }
+    pontuacao.aplicar(definirEvento(origemTipo, destinoTipo));
 
-    // Aplica a pontuação correspondente
-    pontuacao.aplicar(
-        definirEvento(origemTipo, destinoTipo)
-    );
-
-    // Se a retirada expôs uma carta escondida, vira essa carta
-    if (
-        origemTipo == TipoPilha::Coluna &&
+    if (origemTipo == TipoPilha::Coluna &&
         !colunas[origemIdx].empty() &&
         cartasEscondidas[origemIdx] > 0 &&
-        static_cast<int>(colunas[origemIdx].size()) ==
-            cartasEscondidas[origemIdx]
-    ) {
-        virarParaCima(origemIdx);
+        static_cast<int>(colunas[origemIdx].size()) == cartasEscondidas[origemIdx])
+    {
+        try {
+            virarParaCima(origemIdx);
+        }
+        catch (const std::exception& e) {
+            std::cerr << "[EXCEÇÃO] " << e.what() << "\n";
+        }
     }
 }
 
-// --- 11. Mover Bloco ---
+// ==============================================================================
+// MOVER BLOCO
+// ==============================================================================
+
+// Valida e executa o movimento de um bloco de cartas entre colunas
 bool Paciencia::moverBloco(int origemColuna, int cartaIdx, int destinoColuna) {
-    if (!podeMoverBloco(origemColuna, cartaIdx, destinoColuna)) {
+    if (!podeMoverBloco(origemColuna, cartaIdx, destinoColuna))
         return false;
-    }
 
     salvarEstadoNoHistorico();
     executarMovimentoBloco(origemColuna, cartaIdx, destinoColuna);
@@ -276,86 +304,127 @@ bool Paciencia::moverBloco(int origemColuna, int cartaIdx, int destinoColuna) {
     return true;
 }
 
-// --- 12. Mover da Fundação ---
-bool Paciencia::moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int destinoIndice) {
-    // Validação específica: mover da fundação só vai para coluna
-    if (destinoTipo != TipoPilha::Coluna || !podeMoverDaFundacao(fundacaoIndice, destinoIndice)) {
-        return false;
+// Verifica se um bloco pode ser movido entre colunas
+bool Paciencia::podeMoverBloco(int origemCol, int cartaIdx, int destinoCol) const {
+    if (origemCol < 0 || origemCol >= 7 || destinoCol < 0 || destinoCol >= 7) return false;
+    if (origemCol == destinoCol) return false;
+    if (colunas[origemCol].empty()) return false;
+    if (cartaIdx < 0 || cartaIdx >= (int)colunas[origemCol].size()) return false;
+    if (!cartaVisivel(origemCol, cartaIdx)) return false;
+
+    const Carta& baseBloco = colunas[origemCol][cartaIdx];
+
+    if (colunas[destinoCol].empty())
+        return Regras::podeMoverParaColunaVazia(baseBloco);
+
+    return Regras::podeMoverParaColuna(baseBloco, colunas[destinoCol].back());
+}
+
+// Transfere o bloco de cartas e revela carta escondida se necessário
+void Paciencia::executarMovimentoBloco(int origemCol, int cartaIdx, int destinoCol) {
+    // Asserções: pré-condições internas garantidas por podeMoverBloco()
+    assert(origemCol >= 0 && origemCol < 7 && "executarMovimentoBloco: origemCol fora dos limites.");
+    assert(destinoCol >= 0 && destinoCol < 7 && "executarMovimentoBloco: destinoCol fora dos limites.");
+    assert(cartaIdx >= 0 && cartaIdx < (int)colunas[origemCol].size() &&
+           "executarMovimentoBloco: cartaIdx fora dos limites.");
+
+    try {
+        auto& colOrigem  = colunas[origemCol];
+        auto& colDestino = colunas[destinoCol];
+
+        colDestino.insert(colDestino.end(), colOrigem.begin() + cartaIdx, colOrigem.end());
+        colOrigem.erase(colOrigem.begin() + cartaIdx, colOrigem.end());
+
+        if (!colOrigem.empty() &&
+            (int)colOrigem.size() == cartasEscondidas[origemCol] &&
+            cartasEscondidas[origemCol] > 0)
+        {
+            virarParaCima(origemCol);
+        }
     }
+    catch (const std::exception& e) {
+        std::cerr << "[EXCEÇÃO] executarMovimentoBloco: " << e.what() << "\n";
+        return;
+    }
+
+    pontuacao.aplicar(EventoPontuacao::ColunaParaColuna);
+}
+
+// ==============================================================================
+// MOVER DA FUNDAÇÃO
+// ==============================================================================
+
+// Valida e executa o retorno de uma carta da fundação para uma coluna
+bool Paciencia::moverDaFundacao(int fundacaoIndice, TipoPilha destinoTipo, int destinoIndice) {
+    // Barricada: destino deve ser coluna
+    if (destinoTipo != TipoPilha::Coluna)
+        throw MovimentoInvalidoException("moverDaFundacao: destino deve ser do tipo Coluna.");
+
+    if (!podeMoverDaFundacao(fundacaoIndice, destinoIndice))
+        return false;
 
     salvarEstadoNoHistorico();
     executarMovimentoDaFundacao(fundacaoIndice, destinoIndice);
     return true;
 }
 
-// ==============================================================================
-// LÓGICA PRIVADA: BLOCOS E FUNDAÇÃO
-// ==============================================================================
-
-bool Paciencia::podeMoverBloco(int origemCol, int cartaIdx, int destinoCol) const {
-    if (origemCol < 0 || origemCol >= 7 || destinoCol < 0 || destinoCol >= 7) return false;
-    if (origemCol == destinoCol) return false;
-    if (colunas[origemCol].empty() || cartaIdx < 0 || cartaIdx >= (int)colunas[origemCol].size()) return false;
-    if (!cartaVisivel(origemCol, cartaIdx)) return false;
-
-    const Carta& baseBloco = colunas[origemCol][cartaIdx];
-    
-    if (colunas[destinoCol].empty()) {
-        return Regras::podeMoverParaColunaVazia(baseBloco);
-    } else {
-        return Regras::podeMoverParaColuna(baseBloco, colunas[destinoCol].back());
-    }
-}
-
-void Paciencia::executarMovimentoBloco(int origemCol, int cartaIdx, int destinoCol) {
-    auto& colOrigem = colunas[origemCol];
-    auto& colDestino = colunas[destinoCol];
-
-    // Transfere o bloco
-    colDestino.insert(colDestino.end(), colOrigem.begin() + cartaIdx, colOrigem.end());
-    colOrigem.erase(colOrigem.begin() + cartaIdx, colOrigem.end());
-
-    // Se liberou cartas escondidas, vira a nova carta do topo
-    if (!colOrigem.empty() && (int)colOrigem.size() == cartasEscondidas[origemCol] && cartasEscondidas[origemCol] > 0) {
-        virarParaCima(origemCol);
-    }
-
-    pontuacao.aplicar(EventoPontuacao::ColunaParaColuna);
-    // Nota: O evento exato depende do seu sistema de pontuação (ex: mover bloco pode ter pontuação diferente)
-}
-
+// Verifica se a carta do topo da fundação pode ir para a coluna destino
 bool Paciencia::podeMoverDaFundacao(int fundacaoIdx, int destinoCol) const {
     if (fundacaoIdx < 0 || fundacaoIdx >= 4 || destinoCol < 0 || destinoCol >= 7) return false;
     if (fundacoes[fundacaoIdx].empty()) return false;
 
     const Carta& cartaParaMover = fundacoes[fundacaoIdx].back();
-    
-    if (colunas[destinoCol].empty()) {
+
+    if (colunas[destinoCol].empty())
         return Regras::podeMoverParaColunaVazia(cartaParaMover);
-    } else {
-        return Regras::podeMoverParaColuna(cartaParaMover, colunas[destinoCol].back());
+
+    return Regras::podeMoverParaColuna(cartaParaMover, colunas[destinoCol].back());
+}
+
+// Move a carta do topo da fundação para a coluna destino
+void Paciencia::executarMovimentoDaFundacao(int fundacaoIdx, int destinoCol) {
+    // Asserções: garantidas por podeMoverDaFundacao()
+    assert(fundacaoIdx >= 0 && fundacaoIdx < 4 &&
+           "executarMovimentoDaFundacao: índice de fundação fora dos limites.");
+    assert(destinoCol >= 0 && destinoCol < 7 &&
+           "executarMovimentoDaFundacao: índice de coluna fora dos limites.");
+    assert(!fundacoes[fundacaoIdx].empty() &&
+           "executarMovimentoDaFundacao: fundação vazia.");
+
+    try {
+        Carta c = fundacoes[fundacaoIdx].back();
+        fundacoes[fundacaoIdx].pop_back();
+        colunas[destinoCol].push_back(c);
+        pontuacao.aplicar(EventoPontuacao::FundacaoParaColuna);
+    }
+    catch (const std::exception& e) {
+        std::cerr << "[EXCEÇÃO] executarMovimentoDaFundacao: " << e.what() << "\n";
     }
 }
 
-void Paciencia::executarMovimentoDaFundacao(int fundacaoIdx, int destinoCol) {
-    Carta c = fundacoes[fundacaoIdx].back();
-    fundacoes[fundacaoIdx].pop_back();
-    colunas[destinoCol].push_back(c);
+// ==============================================================================
+// PONTUAÇÃO / EVENTO
+// ==============================================================================
 
-    pontuacao.aplicar(EventoPontuacao::FundacaoParaColuna);
-}
-
+// Mapeia a combinação origem/destino para o evento de pontuação correto
 EventoPontuacao Paciencia::definirEvento(TipoPilha origem, TipoPilha destino) const {
     if (origem == TipoPilha::Descarte && destino == TipoPilha::Fundacao) return EventoPontuacao::CavaParaFundacao;
-    if (origem == TipoPilha::Coluna && destino == TipoPilha::Fundacao) return EventoPontuacao::ColunaParaFundacao;
-    if (origem == TipoPilha::Descarte && destino == TipoPilha::Coluna) return EventoPontuacao::CavaParaColuna;
-    if (origem == TipoPilha::Coluna && destino == TipoPilha::Coluna) return EventoPontuacao::ColunaParaColuna;
-    return EventoPontuacao::CavaParaColuna; // Default
+    if (origem == TipoPilha::Coluna  && destino == TipoPilha::Fundacao) return EventoPontuacao::ColunaParaFundacao;
+    if (origem == TipoPilha::Descarte && destino == TipoPilha::Coluna)  return EventoPontuacao::CavaParaColuna;
+    if (origem == TipoPilha::Coluna  && destino == TipoPilha::Coluna)   return EventoPontuacao::ColunaParaColuna;
+    return EventoPontuacao::CavaParaColuna;
 }
 
-// 13. Verificar Vitória
-// Verifica se todas as cartas estão nas fundações.
-// É uma boa prática chamar isso após cada movimento bem-sucedido.
+// Retorna a pontuação atual da partida
+int Paciencia::getPontuacao() const {
+    return pontuacao.getPontos();
+}
+
+// ==============================================================================
+// VERIFICAÇÃO DE VITÓRIA E JOGADAS POSSÍVEIS
+// ==============================================================================
+
+// Verifica se todas as fundações estão completas (13 cartas cada)
 bool Paciencia::verificarVitoria() {
     for (int i = 0; i < 4; ++i) {
         if (fundacoes[i].size() < 13) {
@@ -366,23 +435,18 @@ bool Paciencia::verificarVitoria() {
     vitoria = true;
     return true;
 }
-// 14. Existe Jogada Possível
-// Verifica se o jogo ainda tem movimentos válidos. 
-// Útil para detectar Game Over.
+
+// Verifica se ainda há algum movimento válido disponível no estado atual
 bool Paciencia::existeJogadaPossivel() const {
-    // 1. Verifica jogadas das Colunas para as Fundações
     for (int i = 0; i < 7; ++i) {
         if (!colunas[i].empty()) {
             const Carta& c = colunas[i].back();
             if (Regras::podeMoverParaFundacao(c, fundacoes[static_cast<int>(c.mostraNaipe())])) return true;
         }
     }
-
-    // 2. Verifica jogadas de Coluna para Coluna
     for (int i = 0; i < 7; ++i) {
         if (colunas[i].empty()) continue;
         const Carta& base = colunas[i].back();
-        
         for (int j = 0; j < 7; ++j) {
             if (i == j) continue;
             if (colunas[j].empty()) {
@@ -392,13 +456,9 @@ bool Paciencia::existeJogadaPossivel() const {
             }
         }
     }
-
-    // 3. Verifica se há cartas no descarte
     if (!descarte.empty()) {
         const Carta& d = descarte.back();
-        // Pode mover para fundação?
         if (Regras::podeMoverParaFundacao(d, fundacoes[static_cast<int>(d.mostraNaipe())])) return true;
-        // Pode mover para alguma coluna?
         for (int i = 0; i < 7; ++i) {
             if (colunas[i].empty()) {
                 if (Regras::podeMoverParaColunaVazia(d)) return true;
@@ -407,25 +467,66 @@ bool Paciencia::existeJogadaPossivel() const {
             }
         }
     }
+    return false;
+}
+
+// ==============================================================================
+// AUTO COMPLETAR
+// ==============================================================================
+
+// Move todas as cartas possíveis para as fundações em loop
+void Paciencia::completarAutomaticamente() {
+    while (moverUmaParaFundacao()) {}
+}
+
+// Tenta mover uma única carta (descarte ou coluna) para a fundação correta
+bool Paciencia::moverUmaParaFundacao() {
+    if (!descarte.empty()) {
+        Carta& carta = descarte.back();
+        int nIdx = static_cast<int>(carta.mostraNaipe());
+
+        // Barricada: naipe deve estar no intervalo válido
+        if (nIdx < 0 || nIdx >= 4)
+            throw EstadoInvalidoException("moverUmaParaFundacao: naipe inválido no descarte (" + std::to_string(nIdx) + ").");
+
+        if (Regras::podeMoverParaFundacao(carta, fundacoes[nIdx]))
+            return mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, nIdx);
+    }
+
+    for (int i = 0; i < 7; i++) {
+        if (!colunas[i].empty()) {
+            Carta& c = colunas[i].back();
+            int nIdx = static_cast<int>(c.mostraNaipe());
+
+            // Barricada: naipe deve estar no intervalo válido
+            if (nIdx < 0 || nIdx >= 4)
+                throw EstadoInvalidoException("moverUmaParaFundacao: naipe inválido na coluna " + std::to_string(i) + " (" + std::to_string(nIdx) + ").");
+
+            if (Regras::podeMoverParaFundacao(c, fundacoes[nIdx]))
+                return mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, nIdx);
+        }
+    }
 
     return false;
 }
 
+// ==============================================================================
+// SOLVER / IA
+// ==============================================================================
+
+// Gera uma representação textual do tabuleiro para uso no solver
 std::string Paciencia::converterParaString() const {
     std::string output = "--- ESTADO DO JOGO ---\n";
-    
-    // 1. Fundações
+
     output += "Fundacoes: ";
     for (int i = 0; i < 4; ++i) {
         if (fundacoes[i].empty()) output += "[  ] ";
         else output += "[" + fundacoes[i].back().toString() + "] ";
     }
-    
-    // 2. Descarte
+
     output += "\nDescarte: " + (descarte.empty() ? "[Vazio]" : descarte.back().toString());
     output += "\n\nColunas:\n";
 
-    // 3. Colunas (Iterando até a altura máxima da coluna mais alta)
     int maxAltura = 0;
     for (int i = 0; i < 7; ++i) {
         if ((int)colunas[i].size() > maxAltura) maxAltura = colunas[i].size();
@@ -434,14 +535,10 @@ std::string Paciencia::converterParaString() const {
     for (int linha = 0; linha < maxAltura; ++linha) {
         for (int col = 0; col < 7; ++col) {
             if (linha < (int)colunas[col].size()) {
-                // Verifica se a carta está virada para baixo
-                if (linha < cartasEscondidas[col]) {
-                    output += "[#]  "; 
-                } else {
-                    output += "[" + colunas[col][linha].toString() + "] ";
-                }
+                if (linha < cartasEscondidas[col]) output += "[#]  ";
+                else output += "[" + colunas[col][linha].toString() + "] ";
             } else {
-                output += "     "; // Espaço vazio para manter o alinhamento
+                output += "     ";
             }
         }
         output += "\n";
@@ -451,339 +548,252 @@ std::string Paciencia::converterParaString() const {
     return output;
 }
 
-//SOLVER QUE LE TODAS AS JOGADOS POSSIVEIS 
-#include <set>
-
-// 1. ORQUESTRADOR (O método público agora é limpo e fácil de ler)
+// Coleta e retorna todas as jogadas válidas no estado atual
 std::vector<JogadaSimulada> Paciencia::listarJogadasPossiveis() {
     std::vector<JogadaSimulada> jogadas;
-
     coletarJogadasDescarte(jogadas);
     coletarJogadasColunas(jogadas);
     coletarJogadasFundacao(jogadas);
 
-    // D. Comprar Carta (Lógica mantida original)
-    if (cava.tamanho() > 0 || !descarte.empty()) {
+    if (cava.tamanho() > 0 || !descarte.empty())
         jogadas.push_back({"COMPRAR", TipoPilha::Descarte, 0, TipoPilha::Descarte, 0, 0});
-    }
 
     return jogadas;
 }
 
-// 2. MÉTODOS PRIVADOS (Encapsulamento das regras)
+// Adiciona ao vetor as jogadas possíveis a partir do descarte
 void Paciencia::coletarJogadasDescarte(std::vector<JogadaSimulada>& jogadas) const {
     if (descarte.empty()) return;
     const Carta& topo = descarte.back();
 
-    // Descarte -> Fundação
-    for (int i = 0; i < 4; ++i) {
-        if (Regras::podeMoverParaFundacao(topo, fundacoes[i])) {
+    for (int i = 0; i < 4; ++i)
+        if (Regras::podeMoverParaFundacao(topo, fundacoes[i]))
             jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Fundacao, i, 0});
-        }
-    }
-    // Descarte -> Colunas
-    for (int i = 0; i < 7; ++i) {
-        if (colunas[i].empty() ? Regras::podeMoverParaColunaVazia(topo) : Regras::podeMoverParaColuna(topo, colunas[i].back())) {
+
+    for (int i = 0; i < 7; ++i)
+        if (colunas[i].empty() ? Regras::podeMoverParaColunaVazia(topo) : Regras::podeMoverParaColuna(topo, colunas[i].back()))
             jogadas.push_back({"MOVER", TipoPilha::Descarte, 0, TipoPilha::Coluna, i, 0});
-        }
-    }
 }
 
+// Adiciona ao vetor as jogadas possíveis a partir das colunas
 void Paciencia::coletarJogadasColunas(std::vector<JogadaSimulada>& jogadas) const {
     for (int i = 0; i < 7; ++i) {
         if (colunas[i].empty()) continue;
 
         for (int j = (int)colunas[i].size() - 1; j >= 0; --j) {
-            if (!cartaVisivel(i, j)) break; // Defensivo: respeita a visibilidade
+            if (!cartaVisivel(i, j)) break;
 
             const Carta& carta = colunas[i][j];
             bool ehUltima = (j == (int)colunas[i].size() - 1);
 
-            // Mover Bloco
             for (int k = 0; k < 7; ++k) {
                 if (i == k) continue;
-                if (colunas[k].empty() ? Regras::podeMoverParaColunaVazia(carta) : Regras::podeMoverParaColuna(carta, colunas[k].back())) {
+                if (colunas[k].empty() ? Regras::podeMoverParaColunaVazia(carta) : Regras::podeMoverParaColuna(carta, colunas[k].back()))
                     jogadas.push_back({"MOVER_BLOCO", TipoPilha::Coluna, i, TipoPilha::Coluna, k, j});
-                }
             }
 
-            // Mover para Fundação (apenas se for a última carta)
-            if (ehUltima) {
-                for (int k = 0; k < 4; ++k) {
-                    if (Regras::podeMoverParaFundacao(carta, fundacoes[k])) {
+            if (ehUltima)
+                for (int k = 0; k < 4; ++k)
+                    if (Regras::podeMoverParaFundacao(carta, fundacoes[k]))
                         jogadas.push_back({"MOVER", TipoPilha::Coluna, i, TipoPilha::Fundacao, k, 0});
-                    }
-                }
-            }
         }
     }
 }
 
+// Adiciona ao vetor as jogadas possíveis a partir das fundações
 void Paciencia::coletarJogadasFundacao(std::vector<JogadaSimulada>& jogadas) const {
     for (int i = 0; i < 4; ++i) {
         if (fundacoes[i].empty()) continue;
         const Carta& topo = fundacoes[i].back();
 
-        for (int j = 0; j < 7; ++j) {
-            if (colunas[j].empty() ? Regras::podeMoverParaColunaVazia(topo) : Regras::podeMoverParaColuna(topo, colunas[j].back())) {
+        for (int j = 0; j < 7; ++j)
+            if (colunas[j].empty() ? Regras::podeMoverParaColunaVazia(topo) : Regras::podeMoverParaColuna(topo, colunas[j].back()))
                 jogadas.push_back({"MOVER_DA_FUNDACAO", TipoPilha::Fundacao, i, TipoPilha::Coluna, j, 0});
-            }
-        }
     }
 }
 
-// 2. RECURSÃO COM BACKTRACKING: EXPLORA A ÁRVORE DE JOGADAS
+// Busca recursiva com backtracking para encontrar uma solução
 bool Paciencia::simularSolucao(std::set<std::string>& estadosVisitados) {
     if (verificarVitoria()) return true;
 
-    // 1. Verificação de Loop (Impressão digital)
     std::string estadoAtualStr = converterParaString();
-    if (estadosVisitados.count(estadoAtualStr)) return false; 
+    if (estadosVisitados.count(estadoAtualStr)) return false;
     estadosVisitados.insert(estadoAtualStr);
 
-    // 2. Limite de profundidade (segurança)
     if (estadosVisitados.size() > 5000) return false;
 
-    // 3. Obtém todas as jogadas possíveis
     std::vector<JogadaSimulada> jogadas = listarJogadasPossiveis();
 
     for (const auto& jogada : jogadas) {
         bool movimentoRealizado = false;
 
-        // Executa a jogada e captura o sucesso (Bool)
-        if (jogada.tipoAcao == "COMPRAR") {
-            comprarCarta(); // Assumindo que comprar carta sempre funciona se listarJogadas permitiu
-            movimentoRealizado = true; 
-        } else if (jogada.tipoAcao == "MOVER") {
-            movimentoRealizado = mover(jogada.origemTipo, jogada.origemIdx, jogada.destinoTipo, jogada.destinoIdx);
-        } else if (jogada.tipoAcao == "MOVER_BLOCO") {
-            movimentoRealizado = moverBloco(jogada.origemIdx, jogada.cartaIdx, jogada.destinoIdx);
-        } else if (jogada.tipoAcao == "MOVER_DA_FUNDACAO") {
-            movimentoRealizado = moverDaFundacao(jogada.origemIdx, jogada.destinoTipo, jogada.destinoIdx);
+        try {
+            if (jogada.tipoAcao == "COMPRAR") {
+                comprarCarta();
+                movimentoRealizado = true;
+            } else if (jogada.tipoAcao == "MOVER") {
+                movimentoRealizado = mover(jogada.origemTipo, jogada.origemIdx, jogada.destinoTipo, jogada.destinoIdx);
+            } else if (jogada.tipoAcao == "MOVER_BLOCO") {
+                movimentoRealizado = moverBloco(jogada.origemIdx, jogada.cartaIdx, jogada.destinoIdx);
+            } else if (jogada.tipoAcao == "MOVER_DA_FUNDACAO") {
+                movimentoRealizado = moverDaFundacao(jogada.origemIdx, jogada.destinoTipo, jogada.destinoIdx);
+            } else {
+                throw MovimentoInvalidoException("simularSolucao: ação desconhecida '" + jogada.tipoAcao + "'.");
+            }
+        }
+        catch (const std::exception& e) {
+            std::cerr << "[EXCEÇÃO] simularSolucao: " << e.what() << "\n";
+            continue;
         }
 
-        // Só prosseguimos se o movimento foi realmente válido
         if (movimentoRealizado) {
-            // Continua avançando
-            if (simularSolucao(estadosVisitados)) {
-                return true; 
-            }
-
-            // Backtracking: só desfaz se o movimento foi feito
+            if (simularSolucao(estadosVisitados)) return true;
             desfazer();
         }
     }
 
-    return false; // Nenhuma jogada desse ponto levou à vitória
+    return false;
 }
 
-// 3. O FILTRO DO NOVO JOGO: GERA BARALHOS ATÉ ACHAR UM VENCÍVEL
+// Garante que o jogo gerado tenha pelo menos 2 jogadas reais disponíveis
 bool Paciencia::garantirJogoVencivel() {
-    // 1. Gera um jogo matematicamente garantido como vencível
     gerarJogoReversivel();
 
-    // 2. Heurística de Qualidade (Opcional)
-    // Às vezes o jogo é vencível, mas o tabuleiro inicial é "chato" (ex: tudo escondido).
-    // Podemos tentar gerar novamente apenas se o jogo estiver *muito* travado.
     std::vector<JogadaSimulada> jogadas = listarJogadasPossiveis();
     int jogadasReais = 0;
-    
-    for (const auto& j : jogadas) {
+    for (const auto& j : jogadas)
         if (j.tipoAcao != "COMPRAR") jogadasReais++;
-    }
 
-    // Se o jogo for muito "seco" (menos de 2 jogadas reais), geramos de novo, 
-    // mas apenas uma vez para não perder performance.
     if (jogadasReais < 2) {
-        std::cout << "[SOLVER] Jogo gerado estava muito travado. Regenerando..." << std::endl;
+        std::cout << "[SOLVER] Jogo gerado estava muito travado. Regenerando...\n";
         gerarJogoReversivel();
     }
 
-    std::cout << "[SOLVER] Jogo garantido gerado com sucesso!" << std::endl;
-    return true; 
+    std::cout << "[SOLVER] Jogo garantido gerado com sucesso!\n";
+    return true;
 }
+
+// Gera um jogo vencível distribuindo cartas de trás para frente
 void Paciencia::gerarJogoReversivel() {
     std::mt19937 rng(std::random_device{}());
 
-    // 1. Limpa o estado atual do jogo
     colunas.assign(7, std::vector<Carta>());
     fundacoes.assign(4, std::vector<Carta>());
     descarte.clear();
     while (!historico.empty()) historico.pop();
-    
-    // Baralho vazio para reconstruir
-    cava = Baralho(0); 
-    
-    // Reseta visibilidade (Padrão Klondike: 1, 2, 3, 4, 5, 6, 7)
+
+    cava = Baralho(0);
     for (int i = 0; i < 7; i++) cartasEscondidas[i] = i;
 
-    // 2. Estado de controle reverso
-    int cartas_nas_fundacoes[4] = {13, 13, 13, 13}; 
+    int cartas_nas_fundacoes[4] = {13, 13, 13, 13};
     std::vector<Naipe> naipes = { Naipe::Paus, Naipe::Copa, Naipe::Espada, Naipe::Ouro };
 
     std::vector<std::vector<Carta>> colunas_temp(7);
     std::vector<Carta> deck_temp;
-    deck_temp.reserve(24); // Otimização de memória
-    
-    // Capacidade oficial de cada coluna no início do jogo (Total 28 cartas no tableau)
+    deck_temp.reserve(24);
+
     int capacidade_coluna[7] = {1, 2, 3, 4, 5, 6, 7};
 
-    // 3. Distribuição das 52 cartas
-    for (int i = 0; i < 52; i++) {
-        std::vector<int> naipes_disponiveis;
-        for (int n = 0; n < 4; n++) {
-            if (cartas_nas_fundacoes[n] > 0) {
-                naipes_disponiveis.push_back(n);
-            }
-        }
+    try {
+        for (int i = 0; i < 52; i++) {
+            std::vector<int> naipes_disponiveis;
+            for (int n = 0; n < 4; n++)
+                if (cartas_nas_fundacoes[n] > 0)
+                    naipes_disponiveis.push_back(n);
 
-        // Seleção aleatória do naipe
-        std::uniform_int_distribution<int> dist_naipe(0, (int)naipes_disponiveis.size() - 1);
-        int naipe_escolhido = naipes_disponiveis[dist_naipe(rng)];
-        
-        int valor_carta = cartas_nas_fundacoes[naipe_escolhido];
-        cartas_nas_fundacoes[naipe_escolhido]--; 
+            if (naipes_disponiveis.empty())
+                throw EstadoInvalidoException("gerarJogoReversivel: nenhum naipe disponível na iteração " + std::to_string(i) + ".");
 
-        Carta carta_atual(static_cast<Valor>(valor_carta), naipes[naipe_escolhido]);
+            std::uniform_int_distribution<int> dist_naipe(0, (int)naipes_disponiveis.size() - 1);
+            int naipe_escolhido = naipes_disponiveis[dist_naipe(rng)];
 
-        // Determina onde colocar
-        std::vector<int> destinos_disponiveis;
-        for (int c = 0; c < 7; c++) {
-            if ((int)colunas_temp[c].size() < capacidade_coluna[c]) {
-                destinos_disponiveis.push_back(c);
-            }
-        }
-        
-        // Peso para a cava (índice 7)
-        if (deck_temp.size() < 24) {
-            for(int p = 0; p < 3; p++) destinos_disponiveis.push_back(7); 
-        }
+            int valor_carta = cartas_nas_fundacoes[naipe_escolhido];
+            cartas_nas_fundacoes[naipe_escolhido]--;
 
-        // Segurança: garante que sempre haverá um destino
-        if (destinos_disponiveis.empty()) {
-            // Se as colunas estiverem cheias, força para o deck
-            deck_temp.push_back(carta_atual);
-        } else {
-            std::uniform_int_distribution<int> dist_dest(0, (int)destinos_disponiveis.size() - 1);
-            int destino_escolhido = destinos_disponiveis[dist_dest(rng)];
+            Carta carta_atual(static_cast<Valor>(valor_carta), naipes[naipe_escolhido]);
 
-            if (destino_escolhido == 7) {
+            std::vector<int> destinos_disponiveis;
+            for (int c = 0; c < 7; c++)
+                if ((int)colunas_temp[c].size() < capacidade_coluna[c])
+                    destinos_disponiveis.push_back(c);
+
+            if ((int)deck_temp.size() < 24)
+                for (int p = 0; p < 3; p++) destinos_disponiveis.push_back(7);
+
+            if (destinos_disponiveis.empty()) {
                 deck_temp.push_back(carta_atual);
             } else {
-                colunas_temp[destino_escolhido].push_back(carta_atual);
+                std::uniform_int_distribution<int> dist_dest(0, (int)destinos_disponiveis.size() - 1);
+                int destino_escolhido = destinos_disponiveis[dist_dest(rng)];
+
+                if (destino_escolhido == 7)
+                    deck_temp.push_back(carta_atual);
+                else
+                    colunas_temp[destino_escolhido].push_back(carta_atual);
             }
         }
     }
+    catch (const EstadoInvalidoException& e) {
+        std::cerr << "[EXCEÇÃO] " << e.what() << "\n";
+        // Reinicia com embaralhamento simples como fallback
+        iniciarJogo();
+        return;
+    }
 
-    // 4. Finalização
+    // Validação de integridade pós-geração
+    int totalDistribuido = (int)deck_temp.size();
+    for (int c = 0; c < 7; c++) totalDistribuido += (int)colunas_temp[c].size();
+
+    if (totalDistribuido != 52)
+        throw EstadoInvalidoException("gerarJogoReversivel: distribuição incompleta — " +
+                                      std::to_string(totalDistribuido) + "/52 cartas distribuídas.");
+
     std::shuffle(deck_temp.begin(), deck_temp.end(), rng);
 
-    for (int c = 0; c < 7; c++) {
-        colunas[c] = colunas_temp[c];
-    }
-    for (const auto& carta : deck_temp) {
-        cava.inserirCarta(carta);
-    }
+    for (int c = 0; c < 7; c++) colunas[c] = colunas_temp[c];
+    for (const auto& carta : deck_temp) cava.inserirCarta(carta);
 
     pontuacao.resetar();
     vitoria = false;
 
-    std::cout << "[GERADOR] Jogo 100% vencível gerado via Método Reverso Matemático." << std::endl;
+    std::cout << "[GERADOR] Jogo 100% vencível gerado via Método Reverso Matemático.\n";
 }
 
+// ==============================================================================
+// DEBUG
+// ==============================================================================
 
-// 9. Get Pontuação
-// Retorna a pontuação atual. Mantive o nome original que você utilizava.
-int Paciencia::getPontuacao() const {
-    return pontuacao.getPontos();
-}
-
-
-void Paciencia::completarAutomaticamente() {
-    // Executa a tentativa de mover uma carta repetidamente.
-    // O loop continua chamando a função enquanto ela retornar 'true'.
-    // Quando não houver mais movimentos possíveis, a função retorna 'false' e o loop encerra.
-    while (moverUmaParaFundacao()) {
-        // O trabalho está sendo feito pela moverUmaParaFundacao()
-    }
-}
-
-// Esta função move apenas UMA carta por vez
-bool Paciencia::moverUmaParaFundacao() {
-    // 1. Tenta mover do DESCARTE (apenas a carta do topo)
-    if (!descarte.empty()) {
-        Carta& carta = descarte.back();
-        int nIdx = static_cast<int>(carta.mostraNaipe());
-
-        if (Regras::podeMoverParaFundacao(carta, fundacoes[nIdx])) {
-            // Tenta realizar o movimento e retorna o sucesso da operação
-            return mover(TipoPilha::Descarte, 0, TipoPilha::Fundacao, nIdx);
-        }
-    }
-
-    // 2. Tenta mover das COLUNAS (apenas a carta do topo)
-    for (int i = 0; i < 7; i++) {
-        if (!colunas[i].empty()) {
-            Carta& c = colunas[i].back();
-            int nIdx = static_cast<int>(c.mostraNaipe());
-
-            if (Regras::podeMoverParaFundacao(c, fundacoes[nIdx])) {
-                // Tenta realizar o movimento e retorna o sucesso da operação
-                return mover(TipoPilha::Coluna, i, TipoPilha::Fundacao, nIdx);
-            }
-        }
-    }
-    
-    return false; // Nenhum movimento possível encontrado
-}
-
+// Imprime o estado completo do jogo no console para depuração
 void Paciencia::imprimirJogo() {
     std::cout << "\n========================================\n";
     std::cout << "PONTOS: " << pontuacao.getPontos() << " | RECORDE: " << pontuacao.getRecord() << "\n";
     std::cout << "========================================\n";
-    
-    // Cava e Descarte (CORRIGIDO: Unificado dentro da função)
+
     std::cout << "Cava [" << cava.tamanho() << "] | Descarte: ";
-    if (descarte.empty()) {
-        std::cout << "[ vazio ]";
-    } else {
-        std::cout << "[" << descarte.back().cartaString() << "]";
-    }
+    if (descarte.empty()) std::cout << "[ vazio ]";
+    else std::cout << "[" << descarte.back().cartaString() << "]";
     std::cout << "\n\n";
- 
-    // Fundações
+
     std::cout << "Fundacoes: ";
     for (int i = 0; i < 4; i++) {
-        if (fundacoes[i].empty()) {
-            std::cout << "[ _ ] ";
-        } else {
-            std::cout << "[" << fundacoes[i].back().cartaString() << "] ";
-        }
+        if (fundacoes[i].empty()) std::cout << "[ _ ] ";
+        else std::cout << "[" << fundacoes[i].back().cartaString() << "] ";
     }
     std::cout << "\n\n";
- 
-    // Colunas
+
     std::cout << "Colunas:\n";
     int maxLinhas = 0;
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 7; i++)
         if ((int)colunas[i].size() > maxLinhas) maxLinhas = (int)colunas[i].size();
-    }
- 
-    // Cabeçalho das colunas
-    for (int i = 0; i < 7; i++) {
-        std::cout << "  Col" << (i + 1) << "  \t";
-    }
+
+    for (int i = 0; i < 7; i++) std::cout << "  Col" << (i + 1) << "  \t";
     std::cout << "\n";
- 
+
     for (int linha = 0; linha < maxLinhas; linha++) {
         for (int col = 0; col < 7; col++) {
             if (linha < (int)colunas[col].size()) {
-                // CORRIGIDO: Modificado de 'estaExposta' para '!cartaVisivel'
-                if (!cartaVisivel(col, linha)) {
-                    std::cout << "[   ???   ]\t";
-                } else {
-                    std::cout << "[" << colunas[col][linha].cartaString() << "]\t";
-                }
+                if (!cartaVisivel(col, linha)) std::cout << "[   ???   ]\t";
+                else std::cout << "[" << colunas[col][linha].cartaString() << "]\t";
             } else {
                 std::cout << "        \t";
             }
@@ -791,8 +801,6 @@ void Paciencia::imprimirJogo() {
         std::cout << "\n";
     }
     std::cout << "\n";
- 
-    if (vitoria) {
-        std::cout << "*** PARABENS! VOCE GANHOU! ***\n";
-    }
+
+    if (vitoria) std::cout << "*** PARABENS! VOCE GANHOU! ***\n";
 }
