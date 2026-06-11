@@ -2,8 +2,8 @@
  * @file SalaTruco.hpp
  * @brief Definição da classe SalaTruco e do encapsulamento das conexões de rede do jogo.
  *
- * Integra a lógica central do Truco (Engine) e as regras de arbitragem (JuizTruco) ao
- * ecossistema multiplayer, gerenciando a distribuição por equipes e reconexões.
+ * Integra a lógica central do Truco, o juiz responsável pela variante escolhida
+ * e as conexões WebSocket utilizadas na partida multiplayer.
  */
 
 #pragma once
@@ -13,177 +13,202 @@
 #include <vector>
 
 #include "crow_all.h"
+
 #include "coreAPI/SalaBase.hpp"
 
-#include "BaralhoTruco.hpp"
-#include "Jogador_Truco.hpp"
-#include "JuizTruco.hpp"
-#include "Truco.hpp"
+#include "Truco/BaralhoTruco.hpp"
+#include "Truco/Jogador_Truco.hpp"
+#include "Truco/JuizTruco.hpp"
+#include "Truco/Truco.hpp"
 
 /**
  * @enum TipoTruco
  * @brief Define as variações de regras do Truco aceitas pelo sistema.
  */
 enum class TipoTruco {
-    Paulista, ///< Manilhas variam a cada rodada baseando-se no "Vira".
-    Mineiro   ///< Manilhas fixas tradicionais (4 de Paus, 7 de Copas, Ás de Espadas, 7 de Ouros).
+    Paulista, ///< Utiliza manilhas definidas a partir da carta vira.
+    Mineiro   ///< Utiliza as manilhas fixas do Truco Mineiro.
 };
 
 /**
  * @struct ConexaoTruco
- * @brief Estrutura de pareamento que vincula o assento de um jogador ao seu soquete WebSocket.
+ * @brief Associa um jogador a uma conexão WebSocket ativa.
  */
 struct ConexaoTruco {
-    int idJogador;                        ///< ID identificador do assento alocado ao jogador na partida.
-    crow::websocket::connection* conexao; ///< Ponteiro para a conexão WebSocket correspondente do Crow.
+    int idJogador;                        ///< Identificador do jogador na sala.
+    crow::websocket::connection* conexao; ///< Conexão WebSocket ativa.
 };
 
 /**
  * @class SalaTruco
- * @brief Extensão de SalaBase especializada para mediar partidas de Truco Mineiro ou Paulista.
+ * @brief Gerencia uma sala multiplayer de Truco.
  *
- * Gerencia a composição das duas equipes, o ciclo de vida dos ponteiros dos jogadores locais,
- * a instância do baralho especializado, o juiz polimórfico adequado e o motor de regras (`Truco`).
+ * A classe mantém o baralho, o juiz, a instância principal do jogo,
+ * os jogadores e as conexões WebSocket associadas à sala.
  */
 class SalaTruco : public SalaBase {
 private:
-    TipoTruco tipo_;                                            ///< Variante do regulamento selecionada para a sala.
-    BaralhoTruco baralho_;                                      ///< Instância do baralho limpo de Truco (sem 4, 5, 6, 7 de espadas/paus/ouros conforme a regra).
-    std::unique_ptr<JuizTruco> juiz_;                           ///< Ponteiro polimórfico para o calculador de força de cartas (JuizPaulistaTruco ou JuizMineiroTruco).
-    std::unique_ptr<Truco> jogo_;                               ///< Instância da classe principal da engine/regras do Truco.
-    std::vector<std::unique_ptr<Jogador_Truco>> jogadoresTruco_; ///< Vetor contendo a posse e os dados de jogo de cada participante.
-    std::vector<ConexaoTruco> conexoes_;                         ///< Vetor de canais de comunicação ativos indexados por assento.
-    bool partidaIniciada_;                                      ///< Flag de controlo que sinaliza se o jogo já saiu do lobby.
+    TipoTruco tipo_;                                             ///< Variante de Truco utilizada.
+    BaralhoTruco baralho_;                                       ///< Baralho utilizado na partida.
+    std::unique_ptr<JuizTruco> juiz_;                            ///< Juiz responsável pela comparação das cartas.
+    std::unique_ptr<Truco> jogo_;                                ///< Instância principal da lógica do Truco.
+    std::vector<std::unique_ptr<Jogador_Truco>> jogadoresTruco_; ///< Jogadores pertencentes à sala.
+    std::vector<ConexaoTruco> conexoes_;                         ///< Conexões WebSocket ativas.
+    bool partidaIniciada_;                                      ///< Indica se a partida já começou.
 
     /**
-     * @brief Procura internamente a estrutura de rede conectada ao ID do assento solicitado.
-     * @param idJogador ID do assento pesquisado.
-     * @return Ponteiro para a estrutura ConexaoTruco, ou nullptr se o jogador estiver offline.
+     * @brief Procura a conexão associada a um jogador.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro para o registro ou nullptr quando não encontrado.
      */
     ConexaoTruco* buscarConexaoDoJogador(int idJogador);
 
     /**
-     * @brief Sobrecarga constante (const) para busca da estrutura de rede do jogador.
-     * @param idJogador ID do assento pesquisado.
-     * @return Ponteiro constante para a estrutura ConexaoTruco, ou nullptr caso não exista.
+     * @brief Procura a conexão associada a um jogador para consulta.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro constante para o registro ou nullptr quando não encontrado.
      */
     const ConexaoTruco* buscarConexaoDoJogador(int idJogador) const;
 
 public:
     /**
-     * @brief Construtor da classe SalaTruco.
-     * @param idSala Código identificador alfanumérico da sala.
-     * @param tipo Regulamento escolhido para a mesa (Paulista ou Mineiro).
-     * @param maxJogadores Lotação máxima configurada (tipicamente 2 ou 4 jogadores).
+     * @brief Constrói uma sala de Truco.
+     * @param idSala Código identificador da sala.
+     * @param tipo Variante de Truco escolhida.
+     * @param maxJogadores Quantidade máxima de jogadores.
      */
     SalaTruco(const std::string& idSala, TipoTruco tipo, int maxJogadores);
 
     /**
-     * @brief Aloca um jogador novo num assento vago, vinculando-o a uma equipe e canal de rede.
-     * @param conexao Ponteiro para a conexão WebSocket do Crow.
-     * @param tokenReconexao Token gerado pelo backend para autenticar futuras reconexões.
-     * @param nome Nome de exibição do utilizador.
-     * @param equipe Código da equipe pretendida (1 ou 2).
-     * @return O ID do assento alocado (0 a max-1), ou -1 em caso de erro, equipe ou sala cheia.
+     * @brief Adiciona um jogador à sala.
+     * @param conexao Conexão WebSocket do jogador.
+     * @param tokenReconexao Token utilizado para reconexão.
+     * @param nome Nome do jogador.
+     * @param equipe Equipe escolhida, sendo 1 ou 2.
+     * @return Identificador do jogador ou -1 em caso de falha.
      */
-    int adicionarJogador(crow::websocket::connection* conexao, const std::string& tokenReconexao, const std::string& nome, int equipe);
+    int adicionarJogador(crow::websocket::connection* conexao,
+                         const std::string& tokenReconexao,
+                         const std::string& nome,
+                         int equipe);
 
     /**
-     * @brief Restabelece a conexão de um jogador que caiu recuperando o seu token identificador de assento.
-     * @param conexao Novo ponteiro de WebSocket aberto.
-     * @param tokenReconexao Chave que comprova a posse do assento reservado na sala.
-     * @return O ID do assento reabilitado, ou -1 caso a validação falhe.
+     * @brief Reconecta um jogador usando seu token.
+     * @param conexao Nova conexão WebSocket.
+     * @param tokenReconexao Token de reconexão.
+     * @return Identificador do jogador ou -1 em caso de falha.
      */
-    int reconectarJogador(crow::websocket::connection* conexao, const std::string& tokenReconexao);
+    int reconectarJogador(crow::websocket::connection* conexao,
+                          const std::string& tokenReconexao);
 
     /**
-     * @brief Remove o vínculo de uma conexão WebSocket do histórico de canais ativos da sala.
-     * @param conexao Ponteiro para a ligação do Crow que se desconectou.
-     * @return true se foi encontrada e removida com sucesso, false caso contrário.
+     * @brief Remove uma conexão ativa da sala.
+     * @param conexao Conexão que será removida.
+     * @return true quando removida; false caso contrário.
      */
     bool removerConexao(crow::websocket::connection* conexao);
 
     /**
-     * @brief Transiciona o lobby para o estado ativo de jogo, disparando a primeira distribuição de cartas.
-     * @return true se a operação foi autorizada e inicializada com sucesso, false caso contrário.
+     * @brief Inicializa a partida quando todos os jogadores estiverem conectados.
+     * @return true quando a partida estiver iniciada; false caso contrário.
      */
     bool iniciarPartida();
 
     /**
-     * @brief Informa se o estado interno da partida atual de Truco já foi inicializado.
-     * @return true se o jogo começou, false se está parado em espera no lobby.
+     * @brief Verifica se a partida já começou.
+     * @return true quando iniciada; false caso contrário.
      */
     bool partidaIniciada() const;
 
     /**
-     * @brief Avalia se a sala possui capacidade para acomodar novos participantes.
-     * @return true se puder receber novos jogadores, false se estiver cheia.
+     * @brief Verifica se a sala pode receber outro jogador.
+     * @return true quando houver vaga; false caso contrário.
      */
     bool podeReceberNovoJogador() const;
 
     /**
-     * @brief Valida se o token apresentado pertence a um utilizador legítimo que sofreu desconexão.
-     * @param tokenReconexao Cadeia de caracteres contendo o token.
-     * @return true se for passível de reconexão, false caso contrário.
+     * @brief Verifica se um token pode ser utilizado para reconexão.
+     * @param tokenReconexao Token informado pelo cliente.
+     * @return true quando o token existir; false caso contrário.
      */
     bool podeReconectar(const std::string& tokenReconexao) const;
 
     /**
-     * @brief Verifica se uma equipe específica ainda possui vagas abertas de assento.
-     * @param equipe Código da equipe avaliada (1 ou 2).
-     * @return true se houver vaga na equipe, false se estiver completa.
+     * @brief Verifica se uma equipe ainda possui vaga.
+     * @param equipe Equipe consultada.
+     * @return true quando houver vaga; false caso contrário.
      */
     bool equipeDisponivel(int equipe) const;
 
     /**
-     * @brief Descobre qual o ID do assento do jogador associado a uma determinada conexão.
-     * @param conexao Ponteiro para a conexão do Crow.
-     * @return ID numérico correspondente (0 a max-1), ou -1 se a conexão não fizer parte desta sala.
+     * @brief Obtém o jogador associado a uma conexão.
+     * @param conexao Conexão WebSocket consultada.
+     * @return Identificador do jogador ou -1.
      */
     int obterIdJogador(crow::websocket::connection* conexao) const;
 
     /**
-     * @brief Retorna o número total de jogadores atualmente alocados numa determinada equipe.
-     * @param equipe Código da equipe consultada (1 ou 2).
-     * @return Quantidade de jogadores presentes na equipe.
+     * @brief Retorna a quantidade de jogadores em uma equipe.
+     * @param equipe Equipe consultada.
+     * @return Quantidade de jogadores.
      */
     int quantidadeNaEquipe(int equipe) const;
 
     /**
-     * @brief Retorna o ponteiro de rede do Crow associado a um ID de jogador.
-     * @param idJogador ID do assento do jogador consultado.
-     * @return Ponteiro para o canal de WebSocket, ou nullptr se o jogador estiver offline/desconectado.
+     * @brief Obtém a conexão ativa de um jogador.
+     * @param idJogador Identificador do jogador.
+     * @return Conexão ativa ou nullptr.
      */
     crow::websocket::connection* obterConexaoJogador(int idJogador) const;
 
     /**
-     * @brief Verifica se um determinado ponteiro de conexão WebSocket faz parte desta sala.
-     * @param conexao Ponteiro para a conexão do Crow.
-     * @return true se pertencer à sala, false caso contrário.
+     * @brief Verifica se uma conexão pertence à sala.
+     * @param conexao Conexão consultada.
+     * @return true quando pertencer; false caso contrário.
      */
     bool possuiConexao(crow::websocket::connection* conexao) const;
 
     /**
-     * @brief Retorna o regulamento ativo (Paulista ou Mineiro) configurado nesta sala.
-     * @return O valor do enum TipoTruco correspondente.
+     * @brief Retorna a variante de Truco utilizada.
+     * @return Variante configurada para a sala.
      */
     TipoTruco tipo() const;
 
     /**
-     * @brief Fornece acesso direto por referência para leitura/escrita no motor lógico interno do Truco.
-     * @return Referência direta para a instância da classe Truco (`jogo_`).
+     * @brief Retorna a instância principal do jogo.
+     * @return Referência para a instância de Truco.
      */
-    Truco& obterJogo();
+    Truco& jogo();
 
     /**
-     * @brief Fornece acesso apenas de leitura (constante) ao motor lógico interno do Truco.
-     * @return Referência constante para a instância da classe Truco (`jogo_`).
+     * @brief Retorna a instância principal do jogo para consulta.
+     * @return Referência constante para a instância de Truco.
      */
-    const Truco& obterJogo() const;
+    const Truco& jogo() const;
 
     /**
-     * @brief Retorna uma referência constante para a coleção interna de conexões de rede da sala.
-     * @return Referência constante para o vetor `std::vector<ConexaoTruco>`.
+     * @brief Retorna um jogador de Truco.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro para o jogador ou nullptr.
+     */
+    Jogador_Truco* jogadorTruco(int idJogador);
+
+    /**
+     * @brief Retorna um jogador de Truco para consulta.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro constante para o jogador ou nullptr.
+     */
+    const Jogador_Truco* jogadorTruco(int idJogador) const;
+
+    /**
+     * @brief Retorna as conexões da sala.
+     * @return Referência para o vetor de conexões.
+     */
+    std::vector<ConexaoTruco>& conexoes();
+
+    /**
+     * @brief Retorna as conexões da sala para consulta.
+     * @return Referência constante para o vetor de conexões.
      */
     const std::vector<ConexaoTruco>& conexoes() const;
 };

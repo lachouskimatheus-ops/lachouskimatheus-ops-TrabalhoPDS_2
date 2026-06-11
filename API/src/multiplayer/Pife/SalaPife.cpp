@@ -34,12 +34,17 @@ int SalaPife::adicionarJogador(crow::websocket::connection* conexao, const std::
     conexoes_.push_back({idJogador, conexao});
 
     std::string nomeFinal = nome;
-    if (nomeFinal.empty()) nomeFinal = "Jogador " + std::to_string(idJogador + 1);
-    if (nomeFinal.size() > 20) nomeFinal.resize(20);
+
+    if (nomeFinal.empty())
+        nomeFinal = "Jogador " + std::to_string(idJogador + 1);
+
+    if (nomeFinal.size() > 20)
+        nomeFinal.resize(20);
 
     jogo_.consultarJogador(idJogador).definirNome(nomeFinal);
 
-    if (todosConectados()) iniciarPartida();
+    if (todosConectados())
+        iniciarPartida();
 
     return idJogador;
 }
@@ -52,8 +57,10 @@ int SalaPife::reconectarJogador(crow::websocket::connection* conexao, const std:
 
     ConexaoPife* registro = buscarConexaoDoJogador(idJogador);
 
-    if (registro) registro->conexao = conexao;
-    else conexoes_.push_back({idJogador, conexao});
+    if (registro)
+        registro->conexao = conexao;
+    else
+        conexoes_.push_back({idJogador, conexao});
 
     return idJogador;
 }
@@ -77,7 +84,8 @@ int SalaPife::obterIdJogador(crow::websocket::connection* conexao) const {
     if (!conexao) return -1;
 
     for (const auto& registro : conexoes_)
-        if (registro.conexao == conexao) return registro.idJogador;
+        if (registro.conexao == conexao)
+            return registro.idJogador;
 
     return -1;
 }
@@ -100,11 +108,12 @@ bool SalaPife::podeReceberNovoJogador() const {
 }
 
 bool SalaPife::podeReconectar(const std::string& tokenReconexao) const {
-    return tokenExiste(tokenReconexao);
+    return !tokenReconexao.empty() && tokenExiste(tokenReconexao);
 }
 
 void SalaPife::iniciarPartida() {
     if (partidaIniciada_ || !todosConectados()) return;
+
     partidaIniciada_ = true;
 }
 
