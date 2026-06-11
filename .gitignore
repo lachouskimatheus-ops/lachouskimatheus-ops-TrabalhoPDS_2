@@ -1,32 +1,34 @@
-# Compilação
+# macOS
+.DS_Store
+**/.DS_Store
+__MACOSX/
+
+# Arquivos compilados
 *.o
 *.d
-*.exe
 *.out
-build/
+
+# Pastas de build/objetos
+obj/
 **/obj/
+build/
+**/build/
 
-# Binário gerado pelo Makefile no Linux/WSL
+# Executáveis gerados
 API/servidor_api
+servidor_api
 
-# Doxygen
-docs/
+# Testes compilados
+test_poker
+teste_poker
+**/test_poker
+**/teste_poker
+
+# Doxygen gerado
+docs/html/
+docs/latex/
 html/
 latex/
 
-# Editor e IDEs
+# VSCode local
 .vscode/
-.idea/
-
-# Windows
-Thumbs.db
-desktop.ini
-
-# Downloads e arquivos locais
-*.zip
-*.txt
-!CMakeLists.txt
-
-# Arquivos locais de recordes
-API/record.txt
-Jogos/Paciência/src/record.txt
