@@ -1,123 +1,320 @@
+jogo21.cpp
 #include "Jogo21.hpp"
-#include <iostream>
+
+#include <algorithm>
 #include <stdexcept>
 
-
-Jogo21::Jogo21() {
-    // Inicializa com 1 baralho padrão (52 cartas)
-    baralho_ = new Baralho(1); 
-    banca_ = new Jogador21(0, "Banca (Dealer)");
+Jogo21::Jogo21()
+    : baralho_(nullptr),
+      banca_(nullptr),
+      fase_(Fase21::NaoIniciado),
+      rodada_(0) {
+    prepararBaralho();
+    banca_ = new Jogador21(0, "Banca");
 }
 
 Jogo21::~Jogo21() {
+    limparPartida();
+
     delete baralho_;
+    baralho_ = nullptr;
+
     delete banca_;
-    for (Jogador21* jogador : jogadores_) {
-        delete jogador;
-    }
-    jogadores_.clear();
+    banca_ = nullptr;
 }
 
-void Jogo21::inicializarJogo(const std::vector<std::string>& nomesLista) {
+void Jogo21::prepararBaralho() {
+    delete baralho_;
+    baralho_ = new Baralho(1);
     baralho_->embaralhar();
-
-    int id_counter = 1;
-    for (const std::string& nome : nomesLista) {
-        jogadores_.push_back(new Jogador21(id_counter++, nome));
-    }
-    std::cout << "Jogo inicializado com " << jogadores_.size() << " jogadores e baralho embaralhado.\n";
 }
 
-void Jogo21::distribuirCartasIniciais() {
-    std::cout << "\n--- Distribuindo Cartas Iniciais ---\n";
+bool Jogo21::inicializarJogo(const std::vector<std::string>& nomesLista) {
+    limparPartida();
+
+    if (nomesLista.empty()) {
+        fase_ = Fase21::NaoIniciado;
+        return false;
+    }
+
+    int id = 1;
+
+    for (const std::string& nomeOriginal : nomesLista) {
+        std::string nome = nomeOriginal;
+
+        if (nome.empty()) {
+            nome = "Jogador " + std::to_string(id);
+        }
+
+        jogadores_.push_back(new Jogador21(id, nome));
+        id++;
+    }
+
+    resultados_.assign(jogadores_.size(), Resultado21::Indefinido);
+    rodada_ = 0;
+
+    return iniciarNovaRodada();
+}
+
+bool Jogo21::iniciarNovaRodada() {
+    if (jogadores_.empty()) {
+        fase_ = Fase21::NaoIniciado;
+        return false;
+    }
+
+    prepararBaralho();
+
+    for (Jogador21* jogador : jogadores_) {
+        if (jogador != nullptr) {
+            jogador->prepararNovaRodada();
+        }
+    }
+
+    if (banca_ == nullptr) {
+        banca_ = new Jogador21(0, "Banca");
+    }
+
+    banca_->prepararNovaRodada();
+
+    resultados_.assign(jogadores_.size(), Resultado21::Indefinido);
+
+    rodada_++;
+    fase_ = Fase21::EscolhendoAcoes;
+
+    return distribuirCartasIniciais();
+}
+
+bool Jogo21::distribuirCartasIniciais() {
+    if (fase_ != Fase21::EscolhendoAcoes) {
+        return false;
+    }
+
+    if (baralho_ == nullptr || banca_ == nullptr || jogadores_.empty()) {
+        return false;
+    }
+
+    for (int i = 0; i < 2; i++) {
+        for (Jogador21* jogador : jogadores_) {
+            if (!comprarCartaPara(jogador)) {
+                fase_ = Fase21::Resultado;
+                determinarVencedores();
+                return false;
+            }
+        }
+
+        if (!comprarCartaPara(banca_)) {
+            fase_ = Fase21::Resultado;
+            determinarVencedores();
+            return false;
+        }
+    }
+
+    for (Jogador21* jogador : jogadores_) {
+        if (jogador != nullptr) {
+            jogador->calcularPontuacao();
+
+            if (jogador->estourou()) {
+                jogador->parar();
+            }
+        }
+    }
+
+    banca_->calcularPontuacao();
+
+    return true;
+}
+
+bool Jogo21::comprarCartaPara(Jogador21* jogador) {
+    if (jogador == nullptr || baralho_ == nullptr) {
+        return false;
+    }
+
     try {
-        // No Blackjack, todos recebem 2 cartas inicialmente
-        for (int i = 0; i < 2; i++) {
-            for (Jogador21* jogador : jogadores_) {
-                jogador->receberCarta(baralho_->puxarCarta());
-            }
-            banca_->receberCarta(baralho_->puxarCarta());
+        Carta* carta = baralho_->puxarCarta();
+
+        if (carta == nullptr) {
+            return false;
         }
-    } catch (const std::runtime_error& e) {
-        // Capturamos o erro lançado pelo Baralho.cpp se faltar carta
-        std::cerr << "Erro ao distribuir: " << e.what() << "\n";
+
+        jogador->receberCarta(carta);
+        jogador->calcularPontuacao();
+
+        return true;
+    } catch (const std::runtime_error&) {
+        return false;
     }
 }
 
-
-void Jogo21::turnoJogador(Jogador21* jogador) {
-    int escolha = 0;
-    std::cout << "\n--- Turno de " << jogador->getNome() << " ---\n";
-
-    while (!jogador->estourou()) {
-        std::cout << "Sua pontuacao atual: " << jogador->calcularPontuacao() << "\n";
-        std::cout << "1. Pedir carta\n2. Parar\nEscolha: ";
-        std::cin >> escolha;
-
-        if (escolha == 1) {
-            try {
-                Carta* novaCarta = baralho_->puxarCarta();
-                jogador->receberCarta(novaCarta);
-                std::cout << "Voce puxou: " << novaCarta->toString() << "\n";
-                
-                if (jogador->calcularPontuacao() > 21) {
-                    std::cout << "Voce estourou com " << jogador->calcularPontuacao() << " pontos!\n";
-                    break;
-                }
-            } catch (const std::runtime_error& e) {
-                std::cout << "O baralho acabou! (" << e.what() << ")\n";
-                break;
-            }
-        } else {
-            std::cout << jogador->getNome() << " parou com " << jogador->calcularPontuacao() << " pontos.\n";
-            break;
+int Jogo21::indiceJogadorPorId(int idJogador) const {
+    for (int i = 0; i < static_cast<int>(jogadores_.size()); i++) {
+        if (jogadores_[i] != nullptr && jogadores_[i]->getId() == idJogador) {
+            return i;
         }
     }
+
+    return -1;
+}
+
+bool Jogo21::podeAgir(int idJogador) const {
+    int indice = indiceJogadorPorId(idJogador);
+
+    if (indice < 0) {
+        return false;
+    }
+
+    if (fase_ != Fase21::EscolhendoAcoes) {
+        return false;
+    }
+
+    Jogador21* jogador = jogadores_[indice];
+
+    if (jogador == nullptr) {
+        return false;
+    }
+
+    if (jogador->parou()) {
+        return false;
+    }
+
+    int pontos = const_cast<Jogador21*>(jogador)->calcularPontuacao();
+
+    return pontos <= 21;
+}
+
+bool Jogo21::pedirCarta(int idJogador) {
+    if (!podeAgir(idJogador)) {
+        return false;
+    }
+
+    int indice = indiceJogadorPorId(idJogador);
+
+    if (indice < 0) {
+        return false;
+    }
+
+    Jogador21* jogador = jogadores_[indice];
+
+    if (!comprarCartaPara(jogador)) {
+        jogador->parar();
+    }
+
+    if (jogador->estourou()) {
+        jogador->parar();
+    }
+
+    if (todosJogadoresFinalizaram()) {
+        turnoBanca();
+        determinarVencedores();
+    }
+
+    return true;
+}
+
+bool Jogo21::parar(int idJogador) {
+    if (!podeAgir(idJogador)) {
+        return false;
+    }
+
+    int indice = indiceJogadorPorId(idJogador);
+
+    if (indice < 0) {
+        return false;
+    }
+
+    jogadores_[indice]->parar();
+
+    if (todosJogadoresFinalizaram()) {
+        turnoBanca();
+        determinarVencedores();
+    }
+
+    return true;
+}
+
+bool Jogo21::todosJogadoresFinalizaram() {
+    if (jogadores_.empty()) {
+        return false;
+    }
+
+    for (Jogador21* jogador : jogadores_) {
+        if (jogador == nullptr) {
+            continue;
+        }
+
+        if (!jogador->parou() && !jogador->estourou()) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void Jogo21::turnoBanca() {
-    std::cout << "\n--- Turno da Banca ---\n";
-    std::cout << "A Banca revela suas cartas.\n";
+    if (banca_ == nullptr) {
+        return;
+    }
+
+    fase_ = Fase21::TurnoBanca;
 
     while (banca_->calcularPontuacao() < 17) {
-        try {
-            Carta* novaCarta = baralho_->puxarCarta();
-            banca_->receberCarta(novaCarta);
-            std::cout << "Banca puxou: " << novaCarta->toString() << "\n";
-        } catch (const std::runtime_error& e) {
-            std::cout << "Faltaram cartas para a Banca!\n";
+        if (!comprarCartaPara(banca_)) {
             break;
         }
     }
-
-    int pontosBanca = banca_->calcularPontuacao();
-    std::cout << "A Banca encerra seu turno com " << pontosBanca << " pontos.\n";
-    if (pontosBanca > 21) {
-        std::cout << "A Banca estourou!\n";
-    }
 }
 
-
 void Jogo21::determinarVencedores() {
-    std::cout << "\n================ RESULTADOS ================\n";
+    if (banca_ == nullptr) {
+        return;
+    }
+
     int pontosBanca = banca_->calcularPontuacao();
     bool bancaEstourou = pontosBanca > 21;
 
-    for (Jogador21* jogador : jogadores_) {
+    resultados_.assign(jogadores_.size(), Resultado21::Indefinido);
+
+    for (int i = 0; i < static_cast<int>(jogadores_.size()); i++) {
+        Jogador21* jogador = jogadores_[i];
+
+        if (jogador == nullptr) {
+            resultados_[i] = Resultado21::Derrota;
+            continue;
+        }
+
         int pontosJogador = jogador->calcularPontuacao();
-        std::cout << "Jogador " << jogador->getNome() << ": " << pontosJogador << " pontos.\n";
 
         if (pontosJogador > 21) {
-            std::cout << "  -> " << jogador->getNome() << " perdeu (estourou).\n";
-        } else if (bancaEstourou || pontosJogador > pontosBanca) {
-            std::cout << "  -> " << jogador->getNome() << " GANHOU!\n";
+            resultados_[i] = Resultado21::Estourou;
+        } else if (bancaEstourou) {
+            resultados_[i] = Resultado21::Vitoria;
+        } else if (pontosJogador > pontosBanca) {
+            resultados_[i] = Resultado21::Vitoria;
         } else if (pontosJogador == pontosBanca) {
-            std::cout << "  -> " << jogador->getNome() << " EMPATOU com a Banca.\n";
+            resultados_[i] = Resultado21::Empate;
         } else {
-            std::cout << "  -> " << jogador->getNome() << " PERDEU para a Banca.\n";
+            resultados_[i] = Resultado21::Derrota;
         }
     }
-    std::cout << "============================================\n";
+
+    fase_ = Fase21::Resultado;
+}
+
+void Jogo21::limparPartida() {
+    for (Jogador21* jogador : jogadores_) {
+        if (jogador != nullptr) {
+            jogador->prepararNovaRodada();
+            delete jogador;
+        }
+    }
+
+    jogadores_.clear();
+    resultados_.clear();
+
+    if (banca_ != nullptr) {
+        banca_->prepararNovaRodada();
+    }
+
+    fase_ = Fase21::NaoIniciado;
 }
 
 const std::vector<Jogador21*>& Jogo21::getJogadores() const {
@@ -126,4 +323,69 @@ const std::vector<Jogador21*>& Jogo21::getJogadores() const {
 
 Jogador21* Jogo21::getBanca() const {
     return banca_;
+}
+
+Resultado21 Jogo21::resultadoJogador(int idJogador) const {
+    int indice = indiceJogadorPorId(idJogador);
+
+    if (indice < 0 || indice >= static_cast<int>(resultados_.size())) {
+        return Resultado21::Indefinido;
+    }
+
+    return resultados_[indice];
+}
+
+const std::vector<Resultado21>& Jogo21::resultados() const {
+    return resultados_;
+}
+
+Fase21 Jogo21::fase() const {
+    return fase_;
+}
+
+int Jogo21::rodada() const {
+    return rodada_;
+}
+
+int Jogo21::quantidadeJogadores() const {
+    return static_cast<int>(jogadores_.size());
+}
+
+std::string Jogo21::nomeFase() const {
+    switch (fase_) {
+        case Fase21::NaoIniciado:
+            return "Nao iniciado";
+
+        case Fase21::EscolhendoAcoes:
+            return "Jogadores escolhendo acoes";
+
+        case Fase21::TurnoBanca:
+            return "Turno da banca";
+
+        case Fase21::Resultado:
+            return "Resultado";
+
+        default:
+            return "Fase desconhecida";
+    }
+}
+
+std::string Jogo21::nomeResultado(Resultado21 resultado) {
+    switch (resultado) {
+        case Resultado21::Vitoria:
+            return "Vitoria";
+
+        case Resultado21::Derrota:
+            return "Derrota";
+
+        case Resultado21::Empate:
+            return "Empate";
+
+        case Resultado21::Estourou:
+            return "Estourou";
+
+        case Resultado21::Indefinido:
+        default:
+            return "Indefinido";
+    }
 }
