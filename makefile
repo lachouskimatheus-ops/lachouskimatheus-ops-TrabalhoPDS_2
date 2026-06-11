@@ -31,7 +31,8 @@ JOGOS_SOURCES := $(shell find \
 	Jogos/src/Truco \
 	-type f -name '*.cpp' \
 	! -path 'Jogos/src/BlackJack/Baralho.cpp' \
-	! -path 'Jogos/src/BlackJack/Jogador.cpp')
+	! -path 'Jogos/src/BlackJack/Jogador.cpp' \
+	! -path 'Jogos/src/BlackJack/Carta.cpp')
 
 SOURCES := $(API_SOURCES) $(JOGOS_SOURCES)
 
