@@ -1,27 +1,29 @@
 /**
  * @file PacienciaRoutes.hpp
- * @brief Definição das rotas e requisições HTTP para o jogo Paciência (Solitaire).
- *
- * Mapeia os endpoints necessários para criar sessões, registrar jogadas,
- * salvar estados no histórico e lidar com as ações locais do jogo singleplayer.
+ * @brief Definição do registrador de rotas da Paciência.
  */
 
 #pragma once
 
-#include "dependencias/crow_all.h"
+#include "crow_all.h"
 
 /**
  * @class PacienciaRoutes
- * @brief Controlador de endpoints dedicados à lógica e persistência de sessões de Paciência.
+ * @brief Integra as rotas de comunicação da Paciência à aplicação Crow.
  *
- * Como o jogo é tradicionalmente de um jogador, gerencia os estados da partida por meio
- * de requisições REST/HTTP (GET/POST) enviadas pelo cliente.
+ * A classe funciona como ponto de entrada do módulo dentro do registrador
+ * geral de rotas da API. A comunicação da partida é delegada à classe
+ * PacienciaWebSocket.
  */
 class PacienciaRoutes {
 public:
     /**
-     * @brief Registra as rotas REST associadas ao gerenciamento do jogo Paciência.
-     * @param app Instância orquestradora global do servidor Crow (SimpleApp).
+     * @brief Registra as rotas utilizadas pelo jogo Paciência.
+     *
+     * Atualmente registra o endpoint WebSocket `/ws/paciencia`, responsável
+     * pela comunicação em tempo real entre o frontend e o servidor.
+     *
+     * @param app Instância principal da aplicação Crow.
      */
     static void registrar(crow::SimpleApp& app);
 };

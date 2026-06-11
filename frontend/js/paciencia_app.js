@@ -1,47 +1,66 @@
 // ==========================================
 // CONEXÃO WEBSOCKET COM O C++
 // ==========================================
-const socket = new WebSocket('ws://localhost:8080/ws');
+const protocoloWebSocket = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const socket = new WebSocket(
+    `${protocoloWebSocket}//${window.location.host}/ws/paciencia`
+);
 
-let estaProcessando = false; //Necessario para Travar os cliques
+let estaProcessando = false;
 
 socket.onclose = () => {
     console.warn('Conexão perdida. Tentando reconectar em 3 segundos...');
+
     setTimeout(() => {
-        // Tenta recarregar a conexão ou mostrar um aviso ao jogador
-        location.reload(); 
+        location.reload();
     }, 3000);
 };
 
-// Adicione isso logo após abrir o socket
 socket.onopen = () => {
     console.log('Conectado ao servidor C++');
-    socket.send(JSON.stringify({ acao: 'OBTER_ESTADO_ATUAL' }));
+
+    socket.send(JSON.stringify({
+        acao: 'OBTER_ESTADO_ATUAL'
+    }));
+
     iniciarCronometro();
 
-    // MANTÉM A CONEXÃO VIVA
     setInterval(() => {
         if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ acao: 'PING' }));
+            socket.send(JSON.stringify({
+                acao: 'PING'
+            }));
         }
-    }, 30000); 
+    }, 30000);
 };
 
 socket.onmessage = (event) => {
     const estado = JSON.parse(event.data);
-    
-    // Se o C++ enviar uma mensagem de que não houve movimento possível
+
+    if (estado.tipo === 'pong') {
+        return;
+    }
+
+    if (estado.tipo === 'erro') {
+        console.error('Erro do servidor:', estado.mensagem || estado.erro);
+        estaProcessando = false;
+        return;
+    }
+
     if (estado.movimento_realizado === false) {
         pararAutoCompletar();
-        return;
     }
 
     window.estadoAtual = estado;
     atualizarInterface(estado);
+    estaProcessando = false;
 };
 
 socket.onerror = () => {
-    mostrarModal('<h2 style="color:#ef4444">⚠ Servidor offline</h2><p>Verifique se o servidor C++ está rodando.</p>', 5000);
+    mostrarModal(
+        '<h2 style="color:#ef4444">⚠ Servidor offline</h2><p>Verifique se o servidor C++ está rodando.</p>',
+        5000
+    );
 };
 
 
