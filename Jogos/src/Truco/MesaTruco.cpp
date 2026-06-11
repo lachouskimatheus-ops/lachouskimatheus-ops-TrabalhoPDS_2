@@ -167,13 +167,19 @@ int MesaTruco::jogarTurno() {
                 }
             }
 
-            jogadores[i]->getMao();
-
+            // (Substitua as linhas 170 a 174 dentro do seu jogarTurno)
             int escolha = -1;
 
-            while (escolha < 0 || escolha >= 3) {
+            // Agora o limite é a quantidade de cartas atual que o jogador possui
+            while (escolha < 0 || escolha >= jogadores[i]->getQuantidadeCartas()) {
                 std::cout << "Escolha o indice da carta: ";
                 std::cin >> escolha;
+
+                if (std::cin.fail()) {
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    escolha = -1;
+                }
             }
 
             Carta* cartaJogada = jogadores[i]->jogarCarta(escolha);

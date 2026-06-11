@@ -4,25 +4,27 @@
 #include <limits>
 
 void Menu::addOpcao(std::string nome, std::function<void()> acao) {
-	//Compilador já cria um objeto da struct e já manda direto, sem precisar criar manualmente
 	this->opcoes.push_back({nome, acao});
 }
 
 void Menu::exibir() {
-
-	std::cout << "\033[2J\033[1;1H"; //Limpa a tela usando ANSI 
+	std::cout << "\033[2J\033[1;1H"; 
 	std::cout << "\n --- Jogos --- \n";
 
-
-	//Exibe todos os jogos que foram adicionados
 	for(int i = 0; i < opcoes.size(); i++){
 		std::cout << (i + 1) << " - " << opcoes[i].nome_opcao << "\n";
 	};
 
 	std::cout << "Escolha uma opção: ";
-
 	int escolha;
 	std::cin >> escolha;
+
+    // Limpa o buffer caso o jogador digite uma letra
+	if (std::cin.fail()) {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        escolha = -1;
+    }
 
 	if (escolha > 0 && escolha <= opcoes.size()){
 		opcoes[escolha - 1].acao();

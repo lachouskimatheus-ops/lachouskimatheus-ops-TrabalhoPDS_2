@@ -137,6 +137,12 @@ bool Truco::iniciarNovaMao() {
         return false;
     }
 
+    // TRAVA DE CONCORRÊNCIA: Se os 4 clicarem juntos, só o 1º passa
+    if (fase_ != FaseTruco::AguardandoInicio && fase_ != FaseTruco::MaoFinalizada) {
+        ultimaMensagem_ = "Estado invalido para iniciar nova mao";
+        return false;
+    }
+
     limparCartasDaMao();
     distribuirCartas();
 
@@ -150,17 +156,15 @@ bool Truco::iniciarNovaMao() {
     vencedorPrimeiraQueda_ = 0;
     vencedorUltimaQueda_ = 0;
     vencedorMao_ = 0;
-    equipeQuePediu_ = 0;
+    equipeQuePediu_ = 0; // Zera para qualquer um poder pedir
     valorPedido_ = 0;
     nomePedidor_.clear();
     jogadasDaQueda_.clear();
 
     ultimoEvento_ = "NOVA_MAO";
-    ultimaMensagem_ = maoTravada_
-        ? "Mao de onze iniciada valendo tres pontos"
-        : "Nova mao iniciada";
-
+    ultimaMensagem_ = maoTravada_ ? "Mao de onze iniciada valendo tres pontos" : "Nova mao iniciada";
     fase_ = FaseTruco::AguardandoJogada;
+    
     return true;
 }
 
@@ -173,7 +177,8 @@ bool Truco::podeJogar(int idJogador) const {
 bool Truco::podePedirTruco(int idJogador) const {
     return podeJogar(idJogador) &&
            !maoTravada_ &&
-           proximoValorMao(valorMao_) != 0;
+           proximoValorMao(valorMao_) != 0 &&
+           getEquipeDoJogador(idJogador) != equipeQuePediu_; // A mesma equipe não pode pedir em cima do próprio pedido
 }
 
 bool Truco::podeResponderTruco(int idJogador) const {
@@ -186,6 +191,13 @@ bool Truco::jogarCarta(int idJogador, int indiceCarta) {
     if (!podeJogar(idJogador)) {
         ultimaMensagem_ = "Jogada fora de turno ou fase invalida";
         return false;
+    }
+
+    // --- ATRASO DE LIMPEZA DA MESA ---
+    // Se a mesa estiver cheia (da queda anterior), limpamos apenas agora
+    // que o primeiro jogador da nova queda confirmou sua jogada.
+    if (jogadasDaQueda_.size() == jogadores_.size()) {
+        jogadasDaQueda_.clear();
     }
 
     Carta* carta = jogadores_[idJogador]->jogarCarta(indiceCarta);
@@ -217,14 +229,14 @@ void Truco::concluirQueda() {
         cartas.push_back(jogada.carta);
     }
 
-    bool forcarVencedor = numeroQueda_ == 3 && vitoriasEquipe1_ == vitoriasEquipe2_;
+    // FIX: Não forçamos o vencedor pelo naipe para respeitar a regra do empate da 3ª queda
+    bool forcarVencedor = false;
     int indiceVencedor = juiz_->decidirVencedor(cartas, *vira_, forcarVencedor);
 
     int jogadorVencedor = -1;
     int vencedorQueda = 0;
 
-    if (indiceVencedor >= 0 &&
-        indiceVencedor < static_cast<int>(jogadasDaQueda_.size())) {
+    if (indiceVencedor >= 0 && indiceVencedor < static_cast<int>(jogadasDaQueda_.size())) {
         jogadorVencedor = jogadasDaQueda_[indiceVencedor].idJogador;
         vencedorQueda = getEquipeDoJogador(jogadorVencedor);
     }
@@ -244,21 +256,26 @@ void Truco::concluirQueda() {
         return;
     }
 
-    int proximoInicial = vencedorQueda == 0
-        ? jogadorInicialQueda_
-        : jogadorVencedor;
-
+    int proximoInicial = vencedorQueda == 0 ? jogadorInicialQueda_ : jogadorVencedor;
     iniciarProximaQueda(proximoInicial);
 }
 
 void Truco::iniciarProximaQueda(int jogadorInicial) {
     ++numeroQueda_;
-    jogadasDaQueda_.clear();
+    
+    // A limpeza de jogadasDaQueda_.clear() foi removida daqui!
+    // Ela agora será feita no início da próxima jogada para garantir
+    // que a interface receba o estado do jogo com as 4 cartas na mesa.
+
     jogadorInicialQueda_ = jogadorInicial;
     jogadorAtual_ = jogadorInicial;
     fase_ = FaseTruco::AguardandoJogada;
-    ultimoEvento_ = "NOVA_QUEDA";
-    ultimaMensagem_ = "Proxima queda iniciada";
+    
+    // Dispara a flag que o Front-end vai interceptar
+    ultimoEvento_ = "FIM_QUEDA";
+    ultimaMensagem_ = vencedorUltimaQueda_ == 0 
+        ? "A queda empatou!" 
+        : "Equipe " + std::to_string(vencedorUltimaQueda_) + " levou a queda!";
 }
 
 bool Truco::pedirTruco(int idJogador) {
@@ -287,7 +304,7 @@ bool Truco::aceitarTruco(int idJogador) {
     }
 
     valorMao_ = valorPedido_;
-    equipeQuePediu_ = 0;
+    // A equipeQuePediu_ NÃO é zerada, pois ela retém o poder de quem aceitou!
     valorPedido_ = 0;
     nomePedidor_.clear();
     fase_ = FaseTruco::AguardandoJogada;

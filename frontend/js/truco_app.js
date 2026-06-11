@@ -14,6 +14,7 @@ let tentativaReconexao = 0;
 let intervaloPing = null;
 let eventoAnterior = "";
 let novaMaoAgendada = false;
+let historicoQuedas = { 1: undefined, 2: undefined, 3: undefined };
 
 const modalEntrada = document.getElementById("modal-entrada");
 const modalEspera = document.getElementById("modal-espera");
@@ -70,42 +71,25 @@ function tocarSom(nomeArquivo) {
     audio.play().catch(() => {});
 }
 
-function chaveToken() {
-    return `truco_token_${idSala}`;
-}
-
-function chaveNome() {
-    return `truco_nome_${idSala}`;
-}
-
-function chaveEquipe() {
-    return `truco_equipe_${idSala}`;
-}
-
-function chaveSessaoAtiva() {
-    return `truco_sessao_${idSala}`;
-}
+function chaveToken() { return `truco_token_${idSala}`; }
+function chaveNome() { return `jogador_nickname`; }
+function chaveEquipe() { return `truco_equipe_preferida`; }
+function chaveSessaoAtiva() { return `truco_sessao_${idSala}`; }
 
 function obterTokenReconexao() {
     let token = localStorage.getItem(chaveToken());
-
     if (!token) {
         token = typeof crypto !== "undefined" && crypto.randomUUID
             ? crypto.randomUUID()
             : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-
         localStorage.setItem(chaveToken(), token);
     }
-
     return token;
 }
 
 function atualizarSelecaoEquipe() {
     botoesEquipe.forEach(botao => {
-        botao.classList.toggle(
-            "selecionado",
-            Number(botao.dataset.equipe) === equipeEscolhida
-        );
+        botao.classList.toggle("selecionado", Number(botao.dataset.equipe) === equipeEscolhida);
     });
 }
 
@@ -129,14 +113,12 @@ function conectarWebSocket() {
 
     socket.onmessage = evento => {
         let dados;
-
         try {
             dados = JSON.parse(evento.data);
         } catch {
             console.error("Mensagem inválida recebida:", evento.data);
             return;
         }
-
         processarMensagem(dados);
     };
 
@@ -152,17 +134,13 @@ function conectarWebSocket() {
 
         const atraso = Math.min(1000 * (2 ** tentativaReconexao), 10000);
         ++tentativaReconexao;
-
         setTimeout(conectarWebSocket, atraso);
     };
 }
 
 function iniciarPing() {
     pararPing();
-
-    intervaloPing = setInterval(() => {
-        enviarMensagem({ tipo: "ping" });
-    }, 20000);
+    intervaloPing = setInterval(() => { enviarMensagem({ tipo: "ping" }); }, 20000);
 }
 
 function pararPing() {
@@ -182,7 +160,6 @@ function processarMensagem(dados) {
             meuId = dados.id_jogador;
             localStorage.setItem(chaveSessaoAtiva(), "true");
             fecharModalEntrada();
-
             if (!dados.partida_iniciada) abrirModalEspera();
             return;
 
@@ -192,10 +169,7 @@ function processarMensagem(dados) {
 
         case "sessao_substituida":
             reconectarAutomaticamente = false;
-            mostrarModal(
-                "<h2>Sessão substituída</h2><p>Esta sala foi aberta em outra janela.</p>",
-                0
-            );
+            mostrarModal("<h2>Sessão substituída</h2><p>Esta sala foi aberta em outra janela.</p>", 0);
             return;
 
         case "erro":
@@ -206,15 +180,10 @@ function processarMensagem(dados) {
 
 function tratarErro(mensagem) {
     console.error("Erro do Truco:", mensagem);
-
-    const erroDeEntrada =
-        !meuId ||
-        mensagem.includes("equipe") ||
-        mensagem.includes("sala") ||
-        mensagem.includes("entrar") ||
-        mensagem.includes("cheia");
+    const erroDeEntrada = !meuId || mensagem.includes("equipe") || mensagem.includes("sala") || mensagem.includes("entrar") || mensagem.includes("cheia");
 
     if (erroDeEntrada) {
+        reconectarAutomaticamente = false; 
         localStorage.removeItem(chaveSessaoAtiva());
         abrirModalEntrada();
         erroEntrada.textContent = mensagem;
@@ -222,7 +191,6 @@ function tratarErro(mensagem) {
         btnEntrarJogo.textContent = "Entrar";
         return;
     }
-
     mostrarModal(`<h2>Não foi possível realizar a ação</h2><p>${mensagem}</p>`, 2200);
 }
 
@@ -262,7 +230,6 @@ function enviarEntrada(reconexao) {
         mensagem.nome = meuNome || inputNome.value.trim();
         mensagem.equipe = equipeEscolhida;
     }
-
     enviarMensagem(mensagem);
 }
 
@@ -275,7 +242,6 @@ function enviarMensagem(mensagem) {
 function abrirModalEntrada() {
     modalEspera.classList.add("modal-oculto");
     modalEntrada.classList.remove("modal-oculto");
-
     setTimeout(() => inputNome.focus(), 100);
 }
 
@@ -301,15 +267,8 @@ function atualizarInterface(dados) {
 
     if (!dados.partida_iniciada) {
         abrirModalEspera();
-
-        document.getElementById("info-jogadores-espera").textContent =
-            `${dados.jogadores_registrados} de ${dados.max_jogadores} jogadores na sala.`;
-
-        atualizarIndicadorConexao(
-            "Aguardando jogadores",
-            `${dados.jogadores_registrados}/${dados.max_jogadores} jogadores`
-        );
-
+        document.getElementById("info-jogadores-espera").textContent = `${dados.jogadores_registrados} de ${dados.max_jogadores} jogadores na sala.`;
+        atualizarIndicadorConexao("Aguardando jogadores", `${dados.jogadores_registrados}/${dados.max_jogadores} jogadores`);
         renderizarJogadores(dados);
         return;
     }
@@ -317,16 +276,34 @@ function atualizarInterface(dados) {
     fecharModalEntrada();
     fecharModalEspera();
 
+    const novaDistribuicao = verificarNovaDistribuicao(dados);
+
+    if (dados.ultimo_evento === "NOVA_MAO" || (dados.numero_queda === 1 && (!dados.jogadas_queda || dados.jogadas_queda.length === 0))) {
+        historicoQuedas = { 1: undefined, 2: undefined, 3: undefined };
+        renderizarPainelQuedas();
+    }
+
     atualizarPlacar(dados);
     atualizarInformacoesMao(dados);
     renderizarVira(dados.vira);
     renderizarCartasDaQueda(dados.jogadas_queda || []);
     renderizarJogadores(dados);
-    renderizarMinhaMao(dados);
+    renderizarMinhaMao(dados, novaDistribuicao);
     atualizarPainelAcoes(dados);
     atualizarIndicadorTurno(dados);
     tratarEvento(dados);
-    verificarNovaDistribuicao(dados);
+}
+
+function verificarNovaDistribuicao(dados) {
+    if (!estadoAnterior) return false;
+    const quantidadeAnterior = estadoAnterior.minha_mao?.length || 0;
+    const quantidadeAtual = dados.minha_mao?.length || 0;
+
+    if (quantidadeAtual > quantidadeAnterior && quantidadeAtual === 3) {
+        animarDistribuicao(dados);
+        return true;
+    }
+    return false;
 }
 
 function atualizarPlacar(dados) {
@@ -337,11 +314,8 @@ function atualizarPlacar(dados) {
     const equipe2 = dados.jogadores?.find(jogador => jogador.equipe === 2);
 
     if (dados.max_jogadores === 2) {
-        document.getElementById("nome-equipe-1").textContent =
-            equipe1?.nome || "Equipe 1";
-
-        document.getElementById("nome-equipe-2").textContent =
-            equipe2?.nome || "Equipe 2";
+        document.getElementById("nome-equipe-1").textContent = equipe1?.nome || "Equipe 1";
+        document.getElementById("nome-equipe-2").textContent = equipe2?.nome || "Equipe 2";
     } else {
         document.getElementById("nome-equipe-1").textContent = "Equipe 1";
         document.getElementById("nome-equipe-2").textContent = "Equipe 2";
@@ -352,21 +326,17 @@ function atualizarInformacoesMao(dados) {
     const valorMao = document.getElementById("valor-mao");
     valorMao.textContent = dados.valor_mao ?? 1;
     valorMao.classList.toggle("mao-de-onze", Boolean(dados.mao_de_onze));
-
-    document.getElementById("queda-atual").textContent =
-        `${dados.numero_queda || 1}ª queda`;
+    document.getElementById("queda-atual").textContent = `${dados.numero_queda || 1}ª queda`;
 }
 
 function renderizarVira(vira) {
     const elemento = document.getElementById("carta-vira");
-
     if (!vira || vira.valor === undefined) {
         elemento.innerHTML = "?";
         elemento.className = "carta carta-vazia";
-        elemento.removeAttribute("data-naipe-simbolo");
+        elemento.style.backgroundImage = "none";
         return;
     }
-
     preencherCarta(elemento, vira);
 }
 
@@ -376,7 +346,6 @@ function renderizarCartasDaQueda(jogadas) {
 
     jogadas.forEach((jogada, indice) => {
         if (!jogada.carta) return;
-
         const carta = document.createElement("div");
         preencherCarta(carta, jogada.carta);
         carta.title = nomeDoJogador(jogada.id_jogador);
@@ -408,9 +377,7 @@ function renderizarJogadores(dados) {
         document.getElementById(cadeira).innerHTML = `
             <div class="perfil-jogador ${suaVez ? "sua-vez" : ""}">
                 <h3>${escaparHtml(jogador.nome || `Jogador ${jogador.id + 1}`)}</h3>
-                ${dados.max_jogadores === 4
-                    ? `<span class="tag-equipe tag-equipe-${jogador.equipe}">Equipe ${jogador.equipe}</span>`
-                    : ""}
+                ${dados.max_jogadores === 4 ? `<span class="tag-equipe tag-equipe-${jogador.equipe}">Equipe ${jogador.equipe}</span>` : ""}
                 ${!jogador.conectado ? '<span class="status-desconectado">Desconectado</span>' : ""}
             </div>
             <div class="mao-oponente">${cartas}</div>
@@ -418,36 +385,36 @@ function renderizarJogadores(dados) {
     });
 
     const jogadorLocal = jogadores.find(jogador => jogador.id === meuId);
-
     if (jogadorLocal) {
         meuNome = jogadorLocal.nome;
         document.getElementById("nome-local").textContent = jogadorLocal.nome;
         document.getElementById("local-equipe").textContent = jogadorLocal.equipe;
-        document.getElementById("local-quedas").textContent =
-            jogadorLocal.equipe === 1
-                ? dados.vitorias_equipe_1 || 0
-                : dados.vitorias_equipe_2 || 0;
-
-        document.querySelector(".dados-local").classList.toggle(
-            "dados-local-ocultos",
-            dados.max_jogadores === 2
-        );
+        document.getElementById("local-quedas").textContent = jogadorLocal.equipe === 1 ? dados.vitorias_equipe_1 || 0 : dados.vitorias_equipe_2 || 0;
+        document.querySelector(".dados-local").classList.toggle("dados-local-ocultos", dados.max_jogadores === 2);
     }
 }
 
-function renderizarMinhaMao(dados) {
+function renderizarMinhaMao(dados, ocultarTemporariamente = false) {
     const mao = document.getElementById("minha-mao");
     const cartas = dados.minha_mao || [];
     const meio = (cartas.length - 1) / 2;
-
     mao.innerHTML = "";
 
     cartas.forEach((carta, indice) => {
         const elemento = document.createElement("div");
         preencherCarta(elemento, carta);
-
         elemento.style.setProperty("--rotacao", `${(indice - meio) * 6}deg`);
         elemento.style.setProperty("--transY", `${Math.abs(indice - meio) * 4}px`);
+
+        if (ocultarTemporariamente) {
+            elemento.style.opacity = "0";
+            elemento.style.pointerEvents = "none";
+            setTimeout(() => {
+                elemento.style.transition = "opacity 0.3s";
+                elemento.style.opacity = "1";
+                elemento.style.pointerEvents = "auto";
+            }, 850);
+        }
 
         if (dados.pode_jogar) {
             elemento.addEventListener("click", () => jogarCarta(indice));
@@ -470,45 +437,25 @@ function atualizarPainelAcoes(dados) {
     if (dados.fase === "MAO_FINALIZADA") {
         painel.classList.remove("escondido");
         titulo.textContent = "Mão encerrada:";
-
-        botoes.appendChild(
-            criarBotao("Nova mão", "aceitar", iniciarNovaMao)
-        );
-
+        botoes.appendChild(criarBotao("Nova mão", "aceitar", iniciarNovaMao));
         return;
     }
 
     if (dados.pode_responder_truco) {
         painel.classList.remove("escondido");
         titulo.textContent = `${dados.nome_pedidor || "Adversário"} pediu ${nomeValorTruco(dados.valor_pedido)}:`;
-
         botoes.appendChild(criarBotao("Aceitar", "aceitar", aceitarTruco));
         botoes.appendChild(criarBotao("Recusar", "recusar", recusarTruco));
-
         if (proximoValor(dados.valor_pedido) !== 0) {
-            botoes.appendChild(
-                criarBotao(
-                    `${nomeValorTruco(proximoValor(dados.valor_pedido))}!`,
-                    "aumentar",
-                    aumentarTruco
-                )
-            );
+            botoes.appendChild(criarBotao(`${nomeValorTruco(proximoValor(dados.valor_pedido))}!`, "aumentar", aumentarTruco));
         }
-
         return;
     }
 
     if (dados.pode_pedir_truco) {
         painel.classList.remove("escondido");
         titulo.textContent = "Sua vez:";
-
-        botoes.appendChild(
-            criarBotao(
-                `${nomeValorTruco(proximoValor(dados.valor_mao))}!`,
-                "truco",
-                pedirTruco
-            )
-        );
+        botoes.appendChild(criarBotao(`${nomeValorTruco(proximoValor(dados.valor_mao))}!`, "truco", pedirTruco));
     }
 }
 
@@ -548,11 +495,7 @@ function atualizarIndicadorTurno(dados) {
     }
 
     indicador.classList.add("aguardando");
-
-    const jogadorAtual = dados.jogadores?.find(
-        jogador => jogador.id === dados.jogador_atual
-    );
-
+    const jogadorAtual = dados.jogadores?.find(jogador => jogador.id === dados.jogador_atual);
     texto.textContent = `Vez de ${jogadorAtual?.nome || "outro jogador"}`;
     fase.textContent = `${dados.numero_queda}ª queda`;
 }
@@ -560,7 +503,6 @@ function atualizarIndicadorTurno(dados) {
 function atualizarIndicadorConexao(texto, fase) {
     const indicador = document.getElementById("indicador-turno");
     indicador.className = "indicador-turno aguardando";
-
     document.getElementById("indicador-turno-texto").textContent = texto;
     document.getElementById("indicador-turno-fase").textContent = fase;
 }
@@ -579,41 +521,55 @@ function tratarEvento(dados) {
     eventoAnterior = assinatura;
 
     switch (dados.ultimo_evento) {
+        case "FIM_QUEDA":
+            // CORREÇÃO: Como o servidor já avançou o número da rodada, 
+            // a queda que acabou de ser vencida é a anterior (- 1).
+            historicoQuedas[dados.numero_queda - 1] = dados.vencedor_ultima_queda;
+            renderizarPainelQuedas();
+
+            let msgQueda = "";
+            if (dados.vencedor_ultima_queda === 0) {
+                msgQueda = "A queda empatou!";
+            } else {
+                msgQueda = `${nomeEquipe(dados.vencedor_ultima_queda)} levou a queda!`;
+            }
+
+            mostrarToastQueda(msgQueda, dados.vencedor_ultima_queda);
+            bloquearInteracaoTemporariamente(2500);
+            break;
+
         case "TRUCO_PEDIDO":
-            mostrarModal(
-                `<h2 class="texto-dourado">${escaparHtml(dados.nome_pedidor || "Um jogador")} pediu ${nomeValorTruco(dados.valor_pedido)}!</h2>
-                 <p>A mão passará a valer ${dados.valor_pedido} pontos se for aceita.</p>`,
-                2200
-            );
+            mostrarModal(`<h2 class="texto-dourado">${escaparHtml(dados.nome_pedidor || "Um jogador")} pediu ${nomeValorTruco(dados.valor_pedido)}!</h2><p>A mão passará a valer ${dados.valor_pedido} pontos se for aceita.</p>`, 2200);
             tocarSom("click.mp3");
             break;
 
         case "TRUCO_ACEITO":
-            mostrarModal(
-                `<h2 class="texto-verde">Pedido aceito</h2>
-                 <p>A mão agora vale ${dados.valor_mao} pontos.</p>`,
-                2000
-            );
+            mostrarModal(`<h2 class="texto-verde">Pedido aceito</h2><p>A mão agora vale ${dados.valor_mao} pontos.</p>`, 2000);
             break;
 
         case "TRUCO_RECUSADO":
-            mostrarModal(
-                `<h2 class="texto-vermelho">Pedido recusado</h2>
-                 <p>${escaparHtml(dados.mensagem || "")}</p>`,
-                2200
-            );
+            mostrarModal(`<h2 class="texto-vermelho">Pedido recusado</h2><p>${escaparHtml(dados.mensagem || "")}</p>`, 2200);
             break;
 
         case "FIM_MAO":
-            mostrarModal(
-                `<h2 class="texto-dourado">Fim da mão</h2>
-                 <p>${escaparHtml(dados.mensagem || "")}</p>`,
-                2300
-            );
+            // No FIM_MAO, o servidor NÃO avança a rodada, então usamos o numero_queda normal
+            if (dados.vencedor_ultima_queda !== undefined && dados.numero_queda !== undefined) {
+                historicoQuedas[dados.numero_queda] = dados.vencedor_ultima_queda;
+                renderizarPainelQuedas();
+                
+                const msgQuedaMao = dados.vencedor_ultima_queda === 0 ? "A última queda empatou!" : `${nomeEquipe(dados.vencedor_ultima_queda)} levou a última queda!`;
+                mostrarToastQueda(msgQuedaMao, dados.vencedor_ultima_queda);
+            }
+
+            mostrarModal(`<h2 class="texto-dourado">Fim da mão</h2><p>${escaparHtml(dados.mensagem || "")}</p>`, 2300);
             tocarSom("victory_6.mp3");
             break;
 
         case "FIM_PARTIDA":
+            reconectarAutomaticamente = false;
+            localStorage.removeItem(chaveToken());
+            localStorage.removeItem(chaveSessaoAtiva());
+
             mostrarModal(
                 `<h2 class="texto-dourado">${nomeEquipe(dados.vencedor_partida)} venceu!</h2>
                  <p>Placar final: ${dados.pontos_equipe_1} × ${dados.pontos_equipe_2}</p>
@@ -625,211 +581,128 @@ function tratarEvento(dados) {
     }
 }
 
-function verificarNovaDistribuicao(dados) {
-    if (!estadoAnterior) return;
-
-    const quantidadeAnterior = estadoAnterior.minha_mao?.length || 0;
-    const quantidadeAtual = dados.minha_mao?.length || 0;
-
-    if (quantidadeAtual > quantidadeAnterior) {
-        animarDistribuicao(dados);
-    }
-}
-
 function jogarCarta(indice) {
     tocarSom("jogar_carta.ogg");
-
-    enviarMensagem({
-        tipo: "acao_jogo",
-        acao: "JOGAR_CARTA",
-        indice
-    });
+    enviarMensagem({ tipo: "acao_jogo", acao: "JOGAR_CARTA", indice });
 }
 
 function pedirTruco() {
     tocarSom("click.mp3");
-
-    enviarMensagem({
-        tipo: "acao_jogo",
-        acao: "PEDIR_TRUCO"
-    });
+    enviarMensagem({ tipo: "acao_jogo", acao: "PEDIR_TRUCO" });
 }
 
 function aceitarTruco() {
     tocarSom("click.mp3");
-
-    enviarMensagem({
-        tipo: "acao_jogo",
-        acao: "ACEITAR_TRUCO"
-    });
+    enviarMensagem({ tipo: "acao_jogo", acao: "ACEITAR_TRUCO" });
 }
 
 function recusarTruco() {
     tocarSom("click.mp3");
-
-    enviarMensagem({
-        tipo: "acao_jogo",
-        acao: "RECUSAR_TRUCO"
-    });
+    enviarMensagem({ tipo: "acao_jogo", acao: "RECUSAR_TRUCO" });
 }
 
 function aumentarTruco() {
     tocarSom("click.mp3");
-
-    enviarMensagem({
-        tipo: "acao_jogo",
-        acao: "AUMENTAR_TRUCO"
-    });
+    enviarMensagem({ tipo: "acao_jogo", acao: "AUMENTAR_TRUCO" });
 }
 
 function iniciarNovaMao() {
     if (novaMaoAgendada) return;
     novaMaoAgendada = true;
-
-    enviarMensagem({
-        tipo: "acao_jogo",
-        acao: "NOVA_MAO"
-    });
-
-    setTimeout(() => {
-        novaMaoAgendada = false;
-    }, 1000);
+    enviarMensagem({ tipo: "acao_jogo", acao: "NOVA_MAO" });
+    setTimeout(() => { novaMaoAgendada = false; }, 1000);
 }
 
 function criarBotao(texto, classe, acao) {
     const botao = document.createElement("button");
     botao.className = `btn-acao ${classe}`;
     botao.textContent = texto;
-
     botao.addEventListener("click", acao);
     return botao;
 }
 
-function preencherCarta(elemento, carta) {
-    const valor = traduzirValor(carta.valor);
-    const naipe = normalizarNaipe(carta.naipe);
+// --- LÓGICA DOS SPRITES ---
 
-    elemento.className = `carta ${naipe}`;
-    elemento.innerHTML = `<span>${valor}</span>${gerarFigura(valor, naipe)}`;
-    elemento.setAttribute("data-naipe-simbolo", obterSimbolo(naipe));
-}
-
-function traduzirValor(valor) {
-    const mapa = {
-        1: "A",
-        11: "J",
-        12: "Q",
-        13: "K"
+function obterNomeArquivoSprite(valor, naipe) {
+    const mapaNaipes = {
+        "paus": "clubs",
+        "ouros": "diamonds",
+        "copas": "hearts",
+        "espadas": "spades"
     };
 
-    return mapa[Number(valor)] || String(valor);
+    const mapaValores = {
+        1: "ace", 2: "02", 3: "03", 4: "04", 5: "05",
+        6: "06", 7: "07", 8: "08", 9: "09", 10: "10",
+        11: "jack", 12: "queen", 13: "king"
+    };
+
+    const spriteNaipe = mapaNaipes[naipe];
+    const spriteValor = mapaValores[Number(valor)];
+
+    if (!spriteNaipe || !spriteValor) return "back03.png";
+
+    return `${spriteNaipe}_${spriteValor}.png`;
+}
+
+function preencherCarta(elemento, carta) {
+    const naipeNormalizado = normalizarNaipe(carta.naipe);
+    const nomeArquivo = obterNomeArquivoSprite(carta.valor, naipeNormalizado);
+
+    elemento.className = "carta";
+    elemento.innerHTML = ""; 
+    elemento.style.backgroundImage = `url('../assets/cartas/${nomeArquivo}')`;
 }
 
 function normalizarNaipe(naipe) {
     if (typeof naipe === "string") {
         const normalizado = naipe.toLowerCase();
-
         if (normalizado.includes("ouro")) return "ouros";
         if (normalizado.includes("copa")) return "copas";
         if (normalizado.includes("espada")) return "espadas";
         if (normalizado.includes("pau")) return "paus";
-
         return normalizado;
     }
-
-    const mapaNumerico = {
-        0: "ouros",
-        1: "copas",
-        2: "espadas",
-        3: "paus"
-    };
-
+    const mapaNumerico = { 0: "ouros", 1: "copas", 2: "espadas", 3: "paus" };
     return mapaNumerico[Number(naipe)] || "";
-}
-
-function obterSimbolo(naipe) {
-    return {
-        paus: "♣",
-        copas: "♥",
-        espadas: "♠",
-        ouros: "♦"
-    }[naipe] || "";
-}
-
-function gerarFigura(valor, naipe) {
-    const figuras = {
-        K: "rei.png",
-        Q: "rainha.png",
-        J: "valete.png"
-    };
-
-    const arquivo = figuras[valor];
-    if (!arquivo) return "";
-
-    const filtro =
-        naipe === "copas" || naipe === "ouros"
-            ? " filtro-vermelho"
-            : "";
-
-    return `<img src="/assets/cartas/${arquivo}" class="figura-centro${filtro}" alt="${valor}">`;
 }
 
 function obterCadeira(idJogador, totalJogadores) {
     const posicao = (idJogador - meuId + totalJogadores) % totalJogadores;
-
     if (totalJogadores === 2) return "cadeira-topo";
     if (posicao === 1) return "cadeira-direita";
     if (posicao === 2) return "cadeira-topo";
     if (posicao === 3) return "cadeira-esquerda";
-
     return "";
 }
 
 function nomeDoJogador(idJogador) {
-    return estadoAtual?.jogadores?.find(jogador => jogador.id === idJogador)?.nome ||
-        `Jogador ${idJogador + 1}`;
+    return estadoAtual?.jogadores?.find(jogador => jogador.id === idJogador)?.nome || `Jogador ${idJogador + 1}`;
 }
 
 function nomeEquipe(equipe) {
     if (!estadoAtual || estadoAtual.max_jogadores !== 2) {
         return `Equipe ${equipe}`;
     }
-
-    return estadoAtual.jogadores?.find(jogador => jogador.equipe === equipe)?.nome ||
-        `Equipe ${equipe}`;
+    return estadoAtual.jogadores?.find(jogador => jogador.equipe === equipe)?.nome || `Equipe ${equipe}`;
 }
 
 function nomeValorTruco(valor) {
-    return {
-        3: "Truco",
-        6: "Seis",
-        9: "Nove",
-        12: "Doze"
-    }[Number(valor)] || `${valor} pontos`;
+    return { 3: "Truco", 6: "Seis", 9: "Nove", 12: "Doze" }[Number(valor)] || `${valor} pontos`;
 }
 
 function proximoValor(valor) {
-    return {
-        1: 3,
-        3: 6,
-        6: 9,
-        9: 12
-    }[Number(valor)] || 0;
+    return { 1: 3, 3: 6, 6: 9, 9: 12 }[Number(valor)] || 0;
 }
 
 function mostrarModal(conteudo, tempo) {
     const modal = document.getElementById("modal-notificacao");
     const texto = document.getElementById("modal-texto");
-
     texto.innerHTML = conteudo;
     modal.classList.remove("modal-oculto");
-
     clearTimeout(window.temporizadorModal);
-
     if (tempo > 0) {
-        window.temporizadorModal = setTimeout(() => {
-            modal.classList.add("modal-oculto");
-        }, tempo);
+        window.temporizadorModal = setTimeout(() => { modal.classList.add("modal-oculto"); }, tempo);
     }
 }
 
@@ -841,7 +714,6 @@ function escaparHtml(texto) {
 
 function animarDistribuicao(dados) {
     tocarSom("shuffle.mp3");
-
     const centro = document.querySelector(".centro-da-mesa");
     if (!centro || !dados.jogadores) return;
 
@@ -849,10 +721,7 @@ function animarDistribuicao(dados) {
     let atraso = 0;
 
     dados.jogadores.forEach(jogador => {
-        const cadeira = jogador.id === meuId
-            ? "cadeira-base"
-            : obterCadeira(jogador.id, dados.jogadores.length);
-
+        const cadeira = jogador.id === meuId ? "cadeira-base" : obterCadeira(jogador.id, dados.jogadores.length);
         const alvo = document.getElementById(cadeira);
         if (!alvo) return;
 
@@ -865,7 +734,6 @@ function animarDistribuicao(dados) {
                 carta.className = "carta-verso carta-animada";
                 carta.style.left = `${origem.left + origem.width / 2}px`;
                 carta.style.top = `${origem.top + origem.height / 2}px`;
-
                 document.body.appendChild(carta);
 
                 requestAnimationFrame(() => {
@@ -877,8 +745,136 @@ function animarDistribuicao(dados) {
 
                 setTimeout(() => carta.remove(), 650);
             }, atraso);
-
             atraso += 80;
         }
     });
+}
+
+function renderizarPainelQuedas() {
+    let painel = document.getElementById("painel-quedas");
+    if (!painel) {
+        painel = document.createElement("div");
+        painel.id = "painel-quedas";
+        document.querySelector(".mesa-de-pano-verde").appendChild(painel);
+
+        const estilo = document.createElement("style");
+        estilo.textContent = `
+            #painel-quedas {
+                position: absolute;
+                top: 110px;
+                left: 28px;
+                z-index: 30;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px 20px;
+                background: rgba(2, 6, 23, 0.78);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+                backdrop-filter: blur(9px);
+            }
+            .marcador-queda {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 0.85rem;
+                color: #cbd5e1;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .bolinha {
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.1);
+                border: 2px solid rgba(255,255,255,0.2);
+                transition: all 0.3s;
+            }
+            .bolinha.eq1 { background: #3b82f6; border-color: #60a5fa; box-shadow: 0 0 12px rgba(59, 130, 246, 0.6); }
+            .bolinha.eq2 { background: #ef4444; border-color: #f87171; box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
+            .bolinha.empate { background: #f59e0b; border-color: #fbbf24; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+            @media (max-width: 1000px) { #painel-quedas { top: 90px; left: 14px; padding: 10px 15px; } .marcador-queda { font-size: 0.75rem; } }
+            @media (max-width: 760px) { #painel-quedas { top: 130px; left: 10px; padding: 10px; } }
+        `;
+        document.head.appendChild(estilo);
+    }
+
+    const getClasseBolinha = (vencedor) => {
+        if (vencedor === 1) return "eq1";
+        if (vencedor === 2) return "eq2";
+        if (vencedor === 0) return "empate";
+        return "";
+    };
+
+    const getTexto = (vencedor) => {
+        if (vencedor === undefined) return "---";
+        if (vencedor === 0) return "Empate";
+        return nomeEquipe(vencedor);
+    };
+
+    painel.innerHTML = `
+        <div class="marcador-queda">
+            <div class="bolinha ${getClasseBolinha(historicoQuedas[1])}"></div> 
+            1ª Queda: <span style="color: #fff; margin-left: 4px;">${getTexto(historicoQuedas[1])}</span>
+        </div>
+        <div class="marcador-queda">
+            <div class="bolinha ${getClasseBolinha(historicoQuedas[2])}"></div> 
+            2ª Queda: <span style="color: #fff; margin-left: 4px;">${getTexto(historicoQuedas[2])}</span>
+        </div>
+        <div class="marcador-queda">
+            <div class="bolinha ${getClasseBolinha(historicoQuedas[3])}"></div> 
+            3ª Queda: <span style="color: #fff; margin-left: 4px;">${getTexto(historicoQuedas[3])}</span>
+        </div>
+    `;
+}
+
+function mostrarToastQueda(mensagem, vencedor) {
+    let toast = document.getElementById("toast-queda");
+    
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast-queda";
+        document.body.appendChild(toast);
+
+        const estilo = document.createElement("style");
+        estilo.textContent = `
+            .toast-notificacao { position: absolute; top: 25px; right: 30px; z-index: 999; display: flex; align-items: center; gap: 12px; padding: 15px 25px; background: rgba(15, 23, 42, 0.95); border-left: 5px solid #f0c040; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); color: #f8fafc; font-family: 'Cinzel', serif; font-weight: 600; letter-spacing: 1px; transform: translateX(150%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+            .toast-notificacao.mostrar { transform: translateX(0); }
+        `;
+        document.head.appendChild(estilo);
+    }
+
+    let cor = "#94a3b8"; 
+    let icone = "⚖️";
+
+    if (vencedor === 1) { cor = "#60a5fa"; icone = "🏆"; } 
+    else if (vencedor === 2) { cor = "#f87171"; icone = "🏆"; }
+
+    toast.className = "toast-notificacao";
+    toast.style.borderLeftColor = cor;
+    toast.innerHTML = `<span style="font-size: 1.5rem;">${icone}</span> <span>${escaparHtml(mensagem)}</span>`;
+    
+    void toast.offsetWidth; 
+    toast.classList.add("mostrar");
+    
+    setTimeout(() => { toast.classList.remove("mostrar"); }, 3000);
+}
+
+function bloquearInteracaoTemporariamente(tempo) {
+    let overlay = document.getElementById("overlay-bloqueio");
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement("div");
+    overlay.id = "overlay-bloqueio";
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.zIndex = "998"; 
+    overlay.style.cursor = "wait"; 
+    document.body.appendChild(overlay);
+
+    setTimeout(() => {
+        if (document.body.contains(overlay)) { overlay.remove(); }
+    }, tempo);
 }
