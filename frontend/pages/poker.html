@@ -6,77 +6,174 @@
     <title>Poker Fechado</title>
     <link rel="stylesheet" href="/css/poker_style.css">
 </head>
+
 <body>
 <main>
+
+    <!-- ========================= -->
+    <!-- TELA DE CONEXÃO -->
+    <!-- ========================= -->
     <section id="tela-conexao" class="tela-conexao">
         <div class="caixa-conexao">
-            <div class="naipes"><span>♠</span><span>♥</span></div>
+            <div class="naipes">
+                <span>♠</span>
+                <span>♥</span>
+            </div>
+
             <h1>Poker Fechado</h1>
+
             <p id="sala-conexao">Sala: ---</p>
+
             <label for="nome-jogador">Nome do jogador</label>
-            <input id="nome-jogador" type="text" maxlength="20" autocomplete="off" placeholder="Digite seu nome">
+            <input
+                id="nome-jogador"
+                type="text"
+                maxlength="20"
+                autocomplete="off"
+                placeholder="Digite seu nome"
+            >
+
             <button id="btn-conectar">Conectar à mesa</button>
+
             <p id="mensagem-conexao" class="mensagem-erro"></p>
+
             <a href="/pages/poker_config.html">Voltar</a>
         </div>
     </section>
 
+    <!-- ========================= -->
+    <!-- TELA DO JOGO -->
+    <!-- ========================= -->
     <section id="tela-jogo" class="tela-jogo escondido">
+
+        <!-- Painel lateral de conexão -->
         <aside class="bloco-conexao">
             <div>
                 <span id="ponto-conexao" class="ponto conectado"></span>
                 <strong id="texto-conexao">Conectado à sala</strong>
             </div>
+
             <span id="jogadores-conexao">Jogadores: 0/0</span>
             <span id="fase-conexao">Aguardando estado</span>
         </aside>
 
+        <!-- Cabeçalho -->
         <header class="cabecalho">
             <div>
                 <h1>Poker Fechado</h1>
                 <p id="descricao-partida">Conectado à mesa</p>
             </div>
+
             <div class="sala-cabecalho">
                 <span>Sala</span>
                 <strong id="sala-jogo">---</strong>
             </div>
         </header>
 
+        <!-- Placar superior -->
         <section class="placar">
-            <div><span>Rodada</span><strong id="rodada">0</strong></div>
-            <div><span>Empates</span><strong id="empates">0</strong></div>
-            <div><span>Modo</span><strong id="modo">---</strong></div>
-            <div><span>Jogadores</span><strong id="quantidade-jogadores">0/0</strong></div>
+            <div>
+                <span>Rodada</span>
+                <strong id="rodada">0</strong>
+            </div>
+
+            <div>
+                <span>Empates</span>
+                <strong id="empates">0</strong>
+            </div>
+
+            <div>
+                <span>Modo</span>
+                <strong id="modo">---</strong>
+            </div>
+
+            <div>
+                <span>Jogadores</span>
+                <strong id="quantidade-jogadores">0/0</strong>
+            </div>
         </section>
 
+        <!-- ========================= -->
+        <!-- MESA PRINCIPAL -->
+        <!-- ========================= -->
         <section class="mesa">
-            <div id="adversarios" class="adversarios"></div>
 
-            <div class="centro">
+            <!-- Marca decorativa da mesa -->
+            <div class="marca-mesa">POKER</div>
+
+            <!-- Adversários -->
+            <section class="area-adversarios">
+                <div class="titulo-area">
+                    <span>Adversários</span>
+                    <small>Cartas ocultas até o resultado</small>
+                </div>
+
+                <div id="adversarios" class="adversarios"></div>
+            </section>
+
+            <!-- Centro da mesa -->
+            <section class="centro">
+
+                <!-- Baralho -->
                 <div class="monte">
                     <div class="carta-verso"></div>
                     <span>Baralho</span>
                 </div>
 
+                <!-- Área central de informações -->
                 <div class="painel">
                     <h2 id="mensagem-principal">Aguardando jogadores</h2>
-                    <p id="mensagem-secundaria">A partida começará quando a sala estiver completa.</p>
+                    <p id="mensagem-secundaria">
+                        A partida começará quando a sala estiver completa.
+                    </p>
                 </div>
 
+                <!-- Descartes visíveis na mesa -->
+                <div class="mesa-descartes">
+
+                    <div class="descarte-bloco descarte-adversarios">
+                        <h3>Descarte adversário</h3>
+
+                        <div id="descarte-adversarios" class="descarte-area">
+                            <span class="slot-descarte"></span>
+                            <span class="slot-descarte"></span>
+                            <span class="slot-descarte"></span>
+                        </div>
+                    </div>
+
+                    <div class="descarte-bloco descarte-local">
+                        <h3>Seu descarte</h3>
+
+                        <div id="descarte-local" class="descarte-area">
+                            <span class="slot-descarte"></span>
+                            <span class="slot-descarte"></span>
+                            <span class="slot-descarte"></span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Slots de seleção antigos mantidos para compatibilidade -->
                 <div class="trocas">
                     <div id="slots-troca">
-                        <span></span><span></span><span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
                     </div>
+
                     <small>Cartas selecionadas</small>
                 </div>
-            </div>
 
-            <div class="jogador-local">
+            </section>
+
+            <!-- Jogador local -->
+            <section class="jogador-local">
                 <div class="cabecalho-jogador">
                     <div>
                         <h2 id="nome-local">Jogador</h2>
                         <p id="jogada-local">Aguardando cartas</p>
                     </div>
+
                     <div class="pontos">
                         <span>Pontos</span>
                         <strong id="pontos-local">0</strong>
@@ -89,14 +186,39 @@
                     <span id="contador-selecionadas">Selecionadas: 0/3</span>
                     <span id="status-confirmacao">Troca não confirmada</span>
                 </div>
-            </div>
+            </section>
+
+            <!-- Ranking rápido das mãos -->
+            <aside class="ranking-poker">
+                <h3>Força das mãos</h3>
+
+                <ol>
+                    <li>Royal Flush</li>
+                    <li>Straight Flush</li>
+                    <li>Quadra</li>
+                    <li>Full House</li>
+                    <li>Flush</li>
+                    <li>Sequência</li>
+                    <li>Trinca</li>
+                    <li>Dois Pares</li>
+                    <li>Um Par</li>
+                    <li>Carta Alta</li>
+                </ol>
+            </aside>
+
         </section>
 
+        <!-- Controles -->
         <section class="controles">
             <button id="btn-confirmar" disabled>Manter todas as cartas</button>
-            <button id="btn-nova-rodada" class="secundario escondido">Nova rodada</button>
+
+            <button id="btn-nova-rodada" class="secundario escondido">
+                Nova rodada
+            </button>
+
             <a href="/pages/poker_config.html">Sair da mesa</a>
         </section>
+
     </section>
 </main>
 
