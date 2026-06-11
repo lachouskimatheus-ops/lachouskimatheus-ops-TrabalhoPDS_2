@@ -1,4 +1,3 @@
-jogo21.cpp
 #include "Jogo21.hpp"
 
 #include <algorithm>
