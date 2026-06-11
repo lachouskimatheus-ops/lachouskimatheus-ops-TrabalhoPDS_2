@@ -1,1 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blackjack / 21 - Criar Sala</title>
+    <link rel="stylesheet" href="/css/blackjack_style.css" />
+</head>
+<body class="pagina-config">
+    <main class="config-container">
+        <section class="config-card">
+            <div class="marca-jogo">
+                <div class="icone-naipes">
+                    <span>♠</span>
+                    <span>♥</span>
+                    <span>♣</span>
+                    <span>♦</span>
+                </div>
 
+                <h1>Blackjack / 21</h1>
+                <p>
+                    Crie uma sala ou entre em uma mesa já existente para jogar contra a banca.
+                </p>
+            </div>
+
+            <div class="config-bloco">
+                <h2>Criar nova sala</h2>
+
+                <label for="quantidade-jogadores">Quantidade de jogadores</label>
+                <select id="quantidade-jogadores">
+                    <option value="1">1 jogador</option>
+                    <option value="2" selected>2 jogadores</option>
+                    <option value="3">3 jogadores</option>
+                    <option value="4">4 jogadores</option>
+                </select>
+
+                <button id="btn-criar-sala" class="botao-principal">
+                    Criar sala
+                </button>
+            </div>
+
+            <div class="divisor-config">
+                <span>ou</span>
+            </div>
+
+            <div class="config-bloco">
+                <h2>Entrar em uma sala</h2>
+
+                <label for="codigo-sala">Código da sala</label>
+                <input
+                    id="codigo-sala"
+                    type="text"
+                    maxlength="12"
+                    placeholder="Ex.: ABC123"
+                    autocomplete="off"
+                />
+
+                <button id="btn-entrar-sala" class="botao-secundario">
+                    Entrar na sala
+                </button>
+            </div>
+
+            <div id="mensagem-config" class="mensagem-config"></div>
+
+            <a class="voltar-menu" href="/">
+                Voltar ao menu
+            </a>
+        </section>
+    </main>
+
+    <script>
+        const btnCriarSala = document.getElementById("btn-criar-sala");
+        const btnEntrarSala = document.getElementById("btn-entrar-sala");
+        const quantidadeJogadores = document.getElementById("quantidade-jogadores");
+        const codigoSala = document.getElementById("codigo-sala");
+        const mensagemConfig = document.getElementById("mensagem-config");
+
+        function mostrarMensagem(texto, erro = false) {
+            mensagemConfig.textContent = texto;
+            mensagemConfig.className = erro
+                ? "mensagem-config erro"
+                : "mensagem-config sucesso";
+        }
+
+        function normalizarSala(valor) {
+            return valor.trim().toUpperCase();
+        }
+
+        btnCriarSala.addEventListener("click", async () => {
+            const quantidade = Number(quantidadeJogadores.value);
+
+            btnCriarSala.disabled = true;
+            mostrarMensagem("Criando sala...");
+
+            try {
+                const resposta = await fetch("/api/blackjack/salas", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        quantidade_jogadores: quantidade
+                    })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok || dados.sucess === false || dados.success === false) {
+                    throw new Error(dados.message || dados.mensagem || "Erro ao criar sala.");
+                }
+
+                const sala = dados.data?.sala || dados.sala;
+
+                if (!sala) {
+                    throw new Error("A API não retornou o código da sala.");
+                }
+
+                mostrarMensagem("Sala criada! Redirecionando...");
+
+                setTimeout(() => {
+                    window.location.href = `/pages/blackjack.html?sala=${encodeURIComponent(sala)}`;
+                }, 500);
+            } catch (erro) {
+                mostrarMensagem(erro.message, true);
+                btnCriarSala.disabled = false;
+            }
+        });
+
+        btnEntrarSala.addEventListener("click", () => {
+            const sala = normalizarSala(codigoSala.value);
+
+            if (!sala) {
+                mostrarMensagem("Informe o código da sala.", true);
+                return;
+            }
+
+            window.location.href = `/pages/blackjack.html?sala=${encodeURIComponent(sala)}`;
+        });
+
+        codigoSala.addEventListener("keydown", (evento) => {
+            if (evento.key === "Enter") {
+                btnEntrarSala.click();
+            }
+        });
+    </script>
+</body>
+</html>
