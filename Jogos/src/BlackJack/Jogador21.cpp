@@ -1,4 +1,3 @@
-jogador 21.cpp
 #include "Jogador21.hpp"
 
 Jogador21::Jogador21(int id, const std::string& nome)
