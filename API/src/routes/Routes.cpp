@@ -1,10 +1,12 @@
 #include "routes/Routes.hpp"
+
 #include "routes/FrontendRoutes.hpp"
 #include "routes/PacienciaRoutes.hpp"
 #include "routes/PifeRoutes.hpp"
 #include "routes/FDPRoutes.hpp"
 #include "routes/TrucoRoutes.hpp"
 #include "routes/PokerRoutes.hpp"
+#include "routes/BlackJackRoutes.hpp"
 
 void Routes::registrarRotas(crow::SimpleApp& app) {
 
@@ -21,4 +23,5 @@ void Routes::registrarRotas(crow::SimpleApp& app) {
     FDPRoutes::registrar(app);
     TrucoRoutes::registrar(app);
     PokerRoutes::registrar(app);
+    BlackJackRoutes::registrar(app);
 }
