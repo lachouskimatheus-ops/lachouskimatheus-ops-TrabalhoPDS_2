@@ -1,44 +1,72 @@
 CXX := g++
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -MMD -MP \
-	-Iinclude \
-	-Iinclude/Core \
-	-Iinclude/BlackJack \
-	-Iinclude/FDP \
-	-Iinclude/Paciencia \
-	-Iinclude/Pife \
-	-Iinclude/Poker \
-	-Iinclude/Truco
+CXXFLAGS := -std=c++17 -Wall -Wextra -pthread \
+	-DASIO_STANDALONE \
+	-IAPI \
+	-IAPI/include \
+	-IAPI/dependencias \
+	-IJogos/include \
+	-IJogos/include/Core \
+	-IJogos/include/BlackJack \
+	-IJogos/include/FDP \
+	-IJogos/include/Paciencia \
+	-IJogos/include/Pife \
+	-IJogos/include/Poker \
+	-IJogos/include/Truco
 
-SRC_DIR := src
-OBJ_DIR := obj
+TARGET := API/servidor_api
 
-SOURCES := $(shell find \
-	$(SRC_DIR)/Core \
-	$(SRC_DIR)/BlackJack \
-	$(SRC_DIR)/FDP \
-	$(SRC_DIR)/Paciencia \
-	$(SRC_DIR)/Pife \
-	$(SRC_DIR)/Poker \
-	$(SRC_DIR)/Truco \
+OBJ_DIR := build/obj
+
+API_SOURCES := $(shell find API/src -type f -name '*.cpp')
+
+JOGOS_SOURCES := $(shell find \
+	Jogos/src/Core \
+	Jogos/src/BlackJack \
+	Jogos/src/FDP \
+	Jogos/src/Paciencia \
+	Jogos/src/Pife \
+	Jogos/src/Poker \
+	Jogos/src/Truco \
 	-type f -name '*.cpp')
 
-OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+SOURCES := $(API_SOURCES) $(JOGOS_SOURCES)
+
+OBJECTS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+
 DEPFILES := $(OBJECTS:.o=.d)
 
-all: $(OBJECTS)
-	@echo "[Jogos] Todos os módulos ativos foram compilados."
+all: $(TARGET)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(TARGET): $(OBJECTS)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $@
+
+$(OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+run: all
+	./$(TARGET)
 
 clean:
-	rm -rf $(OBJ_DIR)
-	mkdir -p $(OBJ_DIR)
+	rm -rf build
+	rm -f $(TARGET)
+	rm -rf API/obj
+	rm -rf Jogos/obj
+	rm -f *.o
+	rm -f *.d
+	rm -rf .DS_Store
+	rm -rf API/.DS_Store
+	rm -rf Jogos/.DS_Store
+	rm -rf frontend/.DS_Store
+	rm -rf __MACOSX
+	rm -rf API/__MACOSX
+	rm -rf Jogos/__MACOSX
+	rm -rf frontend/__MACOSX
 
 rebuild: clean all
 
 -include $(DEPFILES)
 
-.PHONY: all clean rebuild
+.PHONY: all run clean rebuild
