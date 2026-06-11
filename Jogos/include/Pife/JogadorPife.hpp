@@ -13,8 +13,8 @@
  */
 class JogadorPife {
 private:
-    std::string nome_;        ///< Nome do jogador
-    std::vector<Carta> mao_;  ///< Cartas atualmente na mão do jogador
+    std::string nome_;
+    std::vector<Carta> mao_;
 
     /**
      * @brief Verifica se um índice é válido para a mão atual.
@@ -27,9 +27,9 @@ public:
     /** @brief Construtor padrão. Cria um jogador sem nome e sem cartas. */
     JogadorPife();
 
-    // =========================================================
+    // ===================
     /// @name Identidade
-    // =========================================================
+    // ==================
     ///@{
 
     /**
@@ -46,9 +46,9 @@ public:
 
     ///@}
 
-    // =========================================================
+    // ================================
     /// @name Gerenciamento da Mão
-    // =========================================================
+    // ================================
     ///@{
 
     /**

@@ -1,5 +1,4 @@
 #include "Pife.hpp"
-#include <stdexcept>
 
 Pife::Pife(int quantidadeJogadores)
     : baralho_(2),
@@ -7,6 +6,10 @@ Pife::Pife(int quantidadeJogadores)
       vencedor_(-1),
       jogoFinalizado_(false),
       faseTurno_(FaseTurno::AguardandoCompra) {
+
+    if (quantidadeJogadores < 2 || quantidadeJogadores > 4) {
+        throw QuantidadeJogadoresInvalida();
+    }
 
     jogadores_.reserve(quantidadeJogadores);
 
@@ -19,27 +22,20 @@ Pife::Pife(int quantidadeJogadores)
 }
 
 void Pife::distribuirCartas() {
-    for (int rodada = 0; rodada < 9; rodada++) {
-        for (int idJogador = 0; idJogador < static_cast<int>(jogadores_.size()); idJogador++) {
-            if (baralho_.estaVazio()) {
-                throw std::runtime_error(
-                    "O baralho não possui cartas suficientes."
-                );
-            }
+    const int cartasNecessarias =
+        static_cast<int>(jogadores_.size()) * 9 + 1;
 
-            jogadores_[idJogador].receberCarta(
-                baralho_.retirarCarta()
-            );
+    if (baralho_.tamanho() < cartasNecessarias) {
+        throw BaralhoIndisponivel();
+    }
+
+    for (int rodada = 0; rodada < 9; rodada++) {
+        for (JogadorPife& jogador : jogadores_) {
+            jogador.receberCarta(baralho_.retirarCarta());
         }
     }
 
-    if (baralho_.estaVazio()) {
-        throw std::runtime_error(
-            "Não há carta disponível para definir a vira."
-        );
-    }
     vira_ = baralho_.retirarCarta();
-
     mesa_.clear();
 
     jogadorAtual_ = 0;
@@ -49,113 +45,38 @@ void Pife::distribuirCartas() {
 }
 
 bool Pife::jogadorValido(int idJogador) const {
-    return idJogador >= 0 && idJogador < static_cast<int>(jogadores_.size());
+    return idJogador >= 0 &&
+           idJogador < static_cast<int>(jogadores_.size());
 }
 
-bool Pife::podeComprarBaralho(int idJogador) const {
-    if (jogoFinalizado_) {
-        return false;
-    }
-
+void Pife::validarJogador(int idJogador) const {
     if (!jogadorValido(idJogador)) {
-        return false;
+        throw JogadorInvalido();
     }
+}
+
+void Pife::validarPartidaAtiva() const {
+    if (jogoFinalizado_) {
+        throw JogoFinalizado();
+    }
+}
+
+void Pife::validarTurno(int idJogador) const {
+    validarJogador(idJogador);
+    validarPartidaAtiva();
 
     if (idJogador != jogadorAtual_) {
-        return false;
+        throw ForaDoTurno();
     }
+}
+
+void Pife::comprarBaralho(int idJogador) {
+    validarTurno(idJogador);
 
     if (faseTurno_ != FaseTurno::AguardandoCompra) {
-        return false;
-    }
-
-    if (!baralho_.estaVazio()) {
-        return true;
-    }
-
-    return mesa_.size() > 1;
-}
-
-bool Pife::comprarMesa(int idJogador) {
-    if (!podeComprarMesa(idJogador)) {
-        return false;
-    }
-    Carta cartaComprada = mesa_.back();
-    mesa_.pop_back();
-    jogadores_[idJogador].receberCarta(
-        cartaComprada
-    );
-    faseTurno_ = FaseTurno::AguardandoDescarte;
-    return true;
-}
-
-bool Pife::colocarNaMesa(int idJogador, int indiceCarta) {
-    if (!podeColocarNaMesa(idJogador)) {
-        return false;
-    }
-
-    if (indiceCarta < 0 || indiceCarta >= jogadores_[idJogador].tmnhMao()) {
-        return false;
-    }
-
-    Carta cartaDescartada = jogadores_[idJogador].descartarCarta(indiceCarta);
-
-    if (!cartaDescartada.validacaoCarta()) {
-        return false;
-    }
-    mesa_.push_back(cartaDescartada);
-    proximoJogador();
-    faseTurno_ = FaseTurno::AguardandoCompra;
-    return true;
-}
-
-bool Pife::organizarMao(int idJogador) {
-    if (!jogadorValido(idJogador)) {
-        return false;
-    }
-
-    if (jogoFinalizado_) {
-        return false;
-    }
-
-    jogadores_[idJogador].organizarMao();
-
-    return true;
-}
-
-bool Pife::bati(int idJogador) {
-    if (!podeBater(idJogador)) {
-        return false;
-    }
-
-    const std::vector<Carta>& mao =
-        jogadores_[idJogador].verMao();
-
-    if (!verificaVitoria(mao, vira_)) {
-        return false;
-    }
-
-    jogoFinalizado_ = true;
-    vencedor_ = idJogador;
-    faseTurno_ = FaseTurno::Finalizado;
-
-    return true;
-}
-
-void Pife::proximoJogador() {
-    if (jogadores_.empty()) {
-        return;
-    }
-    jogadorAtual_++;
-
-    if (jogadorAtual_ >= static_cast<int>(jogadores_.size())) {
-        jogadorAtual_ = 0;
-    }
-}
-
-bool Pife::comprarBaralho(int idJogador) {
-    if (!podeComprarBaralho(idJogador)) {
-        return false;
+        throw FaseTurnoInvalida(
+            "O jogador já comprou uma carta e deve descartar."
+        );
     }
 
     if (baralho_.estaVazio()) {
@@ -163,7 +84,7 @@ bool Pife::comprarBaralho(int idJogador) {
     }
 
     if (baralho_.estaVazio()) {
-        return false;
+        throw BaralhoIndisponivel();
     }
 
     jogadores_[idJogador].receberCarta(
@@ -171,79 +92,150 @@ bool Pife::comprarBaralho(int idJogador) {
     );
 
     faseTurno_ = FaseTurno::AguardandoDescarte;
-
-    return true;
 }
 
-bool Pife::podeComprarMesa(int idJogador) const {
-    if (jogoFinalizado_) {
-        return false;
-    }
-
-    if (!jogadorValido(idJogador)) {
-        return false;
-    }
-
-    if (idJogador != jogadorAtual_) {
-        return false;
-    }
+void Pife::comprarMesa(int idJogador) {
+    validarTurno(idJogador);
 
     if (faseTurno_ != FaseTurno::AguardandoCompra) {
-        return false;
+        throw FaseTurnoInvalida(
+            "O jogador já comprou uma carta e deve descartar."
+        );
     }
 
     if (mesa_.empty()) {
+        throw MesaVazia();
+    }
+
+    Carta cartaComprada = mesa_.back();
+    mesa_.pop_back();
+
+    jogadores_[idJogador].receberCarta(cartaComprada);
+    faseTurno_ = FaseTurno::AguardandoDescarte;
+}
+
+void Pife::colocarNaMesa(int idJogador, int indiceCarta) {
+    validarTurno(idJogador);
+
+    if (faseTurno_ != FaseTurno::AguardandoDescarte) {
+        throw FaseTurnoInvalida(
+            "O jogador deve comprar uma carta antes de descartar."
+        );
+    }
+
+    if (indiceCarta < 0 ||
+        indiceCarta >= jogadores_[idJogador].tmnhMao()) {
+        throw IndiceCartaInvalido();
+    }
+
+    Carta cartaDescartada =
+        jogadores_[idJogador].descartarCarta(indiceCarta);
+
+    if (!cartaDescartada.validacaoCarta()) {
+        throw CartaInvalida();
+    }
+
+    mesa_.push_back(cartaDescartada);
+
+    proximoJogador();
+    faseTurno_ = FaseTurno::AguardandoCompra;
+}
+
+void Pife::organizarMao(int idJogador) {
+    validarJogador(idJogador);
+    validarPartidaAtiva();
+
+    jogadores_[idJogador].organizarMao();
+}
+
+void Pife::bati(int idJogador) {
+    validarTurno(idJogador);
+
+    const int quantidadeCartas =
+        jogadores_[idJogador].tmnhMao();
+
+    const bool podeBaterAntesDaCompra =
+        faseTurno_ == FaseTurno::AguardandoCompra &&
+        quantidadeCartas == 9;
+
+    const bool podeBaterDepoisDaCompra =
+        faseTurno_ == FaseTurno::AguardandoDescarte &&
+        quantidadeCartas == 10;
+
+    if (!podeBaterAntesDaCompra &&
+        !podeBaterDepoisDaCompra) {
+        throw FaseTurnoInvalida(
+            "O jogador não pode bater neste momento."
+        );
+    }
+
+    const std::vector<Carta>& mao =
+        jogadores_[idJogador].verMao();
+
+    if (!verificaVitoria(mao, vira_)) {
+        throw MaoInvalida();
+    }
+
+    jogoFinalizado_ = true;
+    vencedor_ = idJogador;
+    faseTurno_ = FaseTurno::Finalizado;
+}
+
+void Pife::proximoJogador() {
+    if (jogadores_.empty()) {
+        return;
+    }
+
+    jogadorAtual_ =
+        (jogadorAtual_ + 1) %
+        static_cast<int>(jogadores_.size());
+}
+
+bool Pife::podeComprarBaralho(int idJogador) const {
+    if (jogoFinalizado_ ||
+        !jogadorValido(idJogador) ||
+        idJogador != jogadorAtual_ ||
+        faseTurno_ != FaseTurno::AguardandoCompra) {
         return false;
     }
 
-    return true;
+    return !baralho_.estaVazio() || mesa_.size() > 1;
+}
+
+bool Pife::podeComprarMesa(int idJogador) const {
+    if (jogoFinalizado_ ||
+        !jogadorValido(idJogador) ||
+        idJogador != jogadorAtual_ ||
+        faseTurno_ != FaseTurno::AguardandoCompra) {
+        return false;
+    }
+
+    return !mesa_.empty();
 }
 
 bool Pife::podeColocarNaMesa(int idJogador) const {
-    if (jogoFinalizado_) {
-        return false;
-    }
-
-    if (!jogadorValido(idJogador)) {
-        return false;
-    }
-
-    if (idJogador != jogadorAtual_) {
-        return false;
-    }
-
-    if (faseTurno_ != FaseTurno::AguardandoDescarte) {
-        return false;
-    }
-
-    return true;
+    return !jogoFinalizado_ &&
+           jogadorValido(idJogador) &&
+           idJogador == jogadorAtual_ &&
+           faseTurno_ == FaseTurno::AguardandoDescarte;
 }
 
 bool Pife::podeBater(int idJogador) const {
-    if (jogoFinalizado_) {
-        return false;
-    }
-
-    if (!jogadorValido(idJogador)) {
-        return false;
-    }
-
-    if (idJogador != jogadorAtual_) {
+    if (jogoFinalizado_ ||
+        !jogadorValido(idJogador) ||
+        idJogador != jogadorAtual_) {
         return false;
     }
 
     const int quantidadeCartas =
         jogadores_[idJogador].tmnhMao();
 
-
-//Pode bater antes de comprar, com 9 cartas.
-    if (faseTurno_ == FaseTurno::AguardandoCompra && quantidadeCartas == 9) {
-        return true;
+    if (faseTurno_ == FaseTurno::AguardandoCompra) {
+        return quantidadeCartas == 9;
     }
 
-//Pode bater depois de comprar, com 10 cartas.
-    if (faseTurno_ == FaseTurno::AguardandoDescarte && quantidadeCartas == 10) {
-        return true;
+    if (faseTurno_ == FaseTurno::AguardandoDescarte) {
+        return quantidadeCartas == 10;
     }
 
     return false;
@@ -266,9 +258,7 @@ FaseTurno Pife::consultarFaseTurno() const {
 }
 
 int Pife::numeroDeJogadores() const {
-    return static_cast<int>(
-        jogadores_.size()
-    );
+    return static_cast<int>(jogadores_.size());
 }
 
 int Pife::quantidadeCartasBaralho() const {
@@ -276,32 +266,21 @@ int Pife::quantidadeCartasBaralho() const {
 }
 
 JogadorPife& Pife::consultarJogador(int idJogador) {
-    if (!jogadorValido(idJogador)) {
-        throw std::out_of_range(
-            "ID de jogador inválido."
-        );
-    }
-
+    validarJogador(idJogador);
     return jogadores_[idJogador];
 }
 
-
-const JogadorPife& Pife::consultarJogador(int idJogador) const {
-    if (!jogadorValido(idJogador)) {
-        throw std::out_of_range(
-            "ID de jogador inválido."
-        );
-    }
-
+const JogadorPife& Pife::consultarJogador(
+    int idJogador
+) const {
+    validarJogador(idJogador);
     return jogadores_[idJogador];
 }
 
-const std::vector<Carta>& Pife::consultarMao(int idJogador) const {
-    if (!jogadorValido(idJogador)) {
-        throw std::out_of_range(
-            "ID de jogador inválido."
-        );
-    }
+const std::vector<Carta>& Pife::consultarMao(
+    int idJogador
+) const {
+    validarJogador(idJogador);
     return jogadores_[idJogador].verMao();
 }
 
@@ -318,17 +297,11 @@ bool Pife::cartaEhCoringa(const Carta& carta) const {
 }
 
 void Pife::reporBaralhoComDescarte() {
-//Só é possível reconstruir o monte quando existem pelo menos duas cartas na mesa:
-    if (!baralho_.estaVazio()) {
-        return;
-    }
-
-    if (mesa_.size() <= 1) {
+    if (!baralho_.estaVazio() || mesa_.size() <= 1) {
         return;
     }
 
     Carta cartaDoTopo = mesa_.back();
-
     mesa_.pop_back();
 
     for (const Carta& carta : mesa_) {
@@ -336,8 +309,6 @@ void Pife::reporBaralhoComDescarte() {
     }
 
     mesa_.clear();
-
-//A última carta descartada continua sendo a carta disponível
     mesa_.push_back(cartaDoTopo);
 
     baralho_.embaralhar();

@@ -15,6 +15,7 @@ build/
 **/build/
 
 # Executáveis gerados
+servidor
 API/servidor_api
 servidor_api
 
