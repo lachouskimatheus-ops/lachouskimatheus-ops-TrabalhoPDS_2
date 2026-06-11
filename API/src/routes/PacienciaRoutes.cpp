@@ -1,7 +1,7 @@
 #include "routes/PacienciaRoutes.hpp"
 #include "dependencias/json.hpp"
 #include "coreAPI/JsonConversor.hpp"
-#include "Jogos/Paciencia/include/Paciencia.hpp"
+#include "Paciencia/Paciencia.hpp"
 #include "Jogos/Paciencia/include/Regras.hpp"
 
 #include <iostream>
