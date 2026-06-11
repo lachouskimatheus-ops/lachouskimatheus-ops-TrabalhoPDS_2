@@ -146,7 +146,7 @@ input {
         radial-gradient(circle at center, #115e3b 0%, #062417 68%, #020c08 100%);
 }
 
-/* painel parecido com Pife */
+/* Painel lateral de conexão */
 .bloco-conexao {
     position: fixed;
     top: 18px;
@@ -210,7 +210,10 @@ input {
     }
 }
 
-/* cabeçalho e placar */
+/* ========================= */
+/* CABEÇALHO E PLACAR */
+/* ========================= */
+
 .cabecalho,
 .placar,
 .mesa,
@@ -296,12 +299,12 @@ input {
 }
 
 /* ========================= */
-/* MESA ESTILO PIFE */
+/* MESA PRINCIPAL */
 /* ========================= */
 
 .mesa {
     position: relative;
-    min-height: 690px;
+    min-height: 705px;
     flex: 1;
     padding: 24px;
     display: flex;
@@ -327,30 +330,65 @@ input {
     pointer-events: none;
 }
 
-.mesa::after {
-    content: "POKER";
+.marca-mesa {
     position: absolute;
-    top: 50%;
     left: 50%;
+    top: 50%;
     z-index: 0;
     transform: translate(-50%, -50%);
-    color: #ffffff08;
-    font-size: 118px;
+    color: rgba(255, 255, 255, 0.055);
+    font-size: 110px;
     font-weight: 900;
-    letter-spacing: 16px;
+    letter-spacing: 18px;
     pointer-events: none;
 }
 
+.area-adversarios,
 .adversarios,
 .centro,
-.jogador-local {
+.jogador-local,
+.ranking-poker {
     position: relative;
     z-index: 2;
 }
 
-/* adversários ao redor */
+/* ========================= */
+/* ADVERSÁRIOS */
+/* ========================= */
+
+.area-adversarios {
+    width: 100%;
+}
+
+.titulo-area {
+    width: fit-content;
+    margin: 0 auto 12px auto;
+    padding: 8px 18px;
+    border: 1px solid rgba(240, 192, 64, 0.35);
+    border-radius: 999px;
+    background: rgba(0, 19, 13, 0.72);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.38);
+    text-align: center;
+}
+
+.titulo-area span {
+    display: block;
+    color: #f0c040;
+    font-weight: 900;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.titulo-area small {
+    display: block;
+    margin-top: 2px;
+    color: #d9e0ec;
+    font-size: 11px;
+}
+
 .adversarios {
-    min-height: 190px;
+    min-height: 175px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -388,19 +426,34 @@ input {
     font-size: 13px;
 }
 
-/* centro da mesa */
+.mao-adversario {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+/* ========================= */
+/* CENTRO DA MESA */
+/* ========================= */
+
 .centro {
-    width: min(850px, 100%);
-    min-height: 240px;
+    width: min(1030px, 100%);
+    min-height: 270px;
     margin: 0 auto;
-    padding: 24px 38px;
+    padding: 24px 28px;
     display: grid;
-    grid-template-columns: 135px 1fr 190px;
+    grid-template-columns: 130px minmax(260px, 1fr) 250px 150px;
     align-items: center;
-    gap: 32px;
-    border-radius: 100px;
-    background: #00130d73;
-    box-shadow: inset 0 0 30px #0006;
+    gap: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 42px;
+    background:
+        radial-gradient(circle at center, rgba(32, 168, 89, 0.18), transparent 65%),
+        rgba(0, 19, 13, 0.62);
+    box-shadow:
+        inset 0 0 32px rgba(0, 0, 0, 0.50),
+        0 12px 34px rgba(0, 0, 0, 0.38);
 }
 
 .monte {
@@ -428,11 +481,14 @@ input {
 }
 
 .painel {
-    min-height: 110px;
+    min-height: 128px;
     padding: 20px 26px;
     border: 1px solid #20a85955;
     border-radius: 22px;
     background: #101827e6;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     text-align: center;
     box-shadow:
         0 12px 28px #0007,
@@ -451,11 +507,119 @@ input {
     line-height: 1.4;
 }
 
+/* ========================= */
+/* DESCARTES NA MESA */
+/* ========================= */
+
+.mesa-descartes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.descarte-bloco {
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    background: rgba(5, 20, 15, 0.76);
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.42);
+}
+
+.descarte-bloco h3 {
+    margin: 0 0 8px 0;
+    color: #d9e0ec;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.descarte-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    min-height: 78px;
+}
+
+.slot-descarte {
+    width: 48px;
+    height: 68px;
+    border: 2px dashed rgba(255, 255, 255, 0.34);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.18s ease;
+}
+
+.slot-descarte.ocupado {
+    border-style: solid;
+    border-color: #f0c040;
+    background: rgba(240, 192, 64, 0.15);
+    box-shadow: 0 0 14px rgba(240, 192, 64, 0.35);
+}
+
+.carta-descarte {
+    width: 44px;
+    height: 62px;
+    border: 2px solid #eeeeee;
+    border-radius: 7px;
+    background: #fffdf7;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    font-weight: 900;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.42);
+    animation: cairNaMesa 0.28s ease both;
+}
+
+.carta-descarte.vermelha {
+    color: #c1122f;
+}
+
+.carta-descarte.preta {
+    color: #111827;
+}
+
+.slot-descarte:nth-child(1) .carta-descarte {
+    transform: rotate(-6deg);
+}
+
+.slot-descarte:nth-child(2) .carta-descarte {
+    transform: rotate(4deg);
+}
+
+.slot-descarte:nth-child(3) .carta-descarte {
+    transform: rotate(-2deg);
+}
+
+@keyframes cairNaMesa {
+    0% {
+        opacity: 0;
+        transform: translateY(-26px) scale(0.88) rotate(-8deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+    }
+}
+
+/* ========================= */
+/* SLOTS DE TROCA AUXILIARES */
+/* ========================= */
+
 .trocas {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    opacity: 0.92;
 }
 
 #slots-troca {
@@ -465,8 +629,8 @@ input {
 }
 
 #slots-troca span {
-    width: 50px;
-    height: 72px;
+    width: 38px;
+    height: 54px;
     border: 2px dashed #ffffff66;
     border-radius: 9px;
     background: #20a8590a;
@@ -485,7 +649,10 @@ input {
     text-align: center;
 }
 
-/* jogador local embaixo */
+/* ========================= */
+/* JOGADOR LOCAL */
+/* ========================= */
+
 .jogador-local {
     width: min(980px, 96%);
     margin: 0 auto;
@@ -527,12 +694,9 @@ input {
     gap: 9px;
 }
 
-.mao-adversario {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 12px;
-}
+/* ========================= */
+/* CARTAS */
+/* ========================= */
 
 .carta {
     width: 98px;
@@ -552,6 +716,14 @@ input {
     transition: 0.16s;
 }
 
+.carta.vermelha {
+    color: #c1122f;
+}
+
+.carta.preta {
+    color: #111827;
+}
+
 .carta.selecionavel {
     cursor: pointer;
 }
@@ -561,11 +733,11 @@ input {
 }
 
 .carta.selecionada {
-    transform: translateY(-18px);
+    transform: translateY(-22px);
     border-color: #f0c040;
     box-shadow:
-        0 0 18px #f0c0408c,
-        0 8px 18px #0007;
+        0 0 22px rgba(240, 192, 64, 0.76),
+        0 10px 22px rgba(0, 0, 0, 0.55);
 }
 
 .carta.oculta,
@@ -580,6 +752,49 @@ input {
     border-radius: 8px;
     font-size: 18px;
 }
+
+/* Carta saindo da mão em direção à mesa */
+.carta.jogando-na-mesa {
+    animation: jogarCartaNaMesa 0.42s ease forwards;
+}
+
+@keyframes jogarCartaNaMesa {
+    0% {
+        opacity: 1;
+        transform: translateY(-22px) scale(1);
+    }
+
+    45% {
+        opacity: 0.75;
+        transform: translateY(-70px) scale(0.94) rotate(5deg);
+    }
+
+    100% {
+        opacity: 0.15;
+        transform: translateY(-130px) scale(0.78) rotate(12deg);
+    }
+}
+
+/* Cartas novas chegando do baralho */
+.carta.carta-nova {
+    animation: cartaNovaEntrando 0.32s ease both;
+}
+
+@keyframes cartaNovaEntrando {
+    0% {
+        opacity: 0;
+        transform: translateY(-42px) scale(0.84) rotate(-4deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0);
+    }
+}
+
+/* ========================= */
+/* STATUS DA TROCA */
+/* ========================= */
 
 .status-troca {
     margin-top: 13px;
@@ -596,7 +811,60 @@ input {
     font-size: 13px;
 }
 
-/* controles */
+#status-confirmacao.confirmado {
+    color: #43ff8d;
+    font-weight: 900;
+}
+
+#status-confirmacao.aguardando {
+    color: #f0c040;
+    font-weight: 900;
+}
+
+/* ========================= */
+/* RANKING DAS MÃOS */
+/* ========================= */
+
+.ranking-poker {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    z-index: 3;
+    width: 190px;
+    padding: 14px 16px;
+    border: 1px solid rgba(240, 192, 64, 0.36);
+    border-radius: 16px;
+    background: rgba(16, 24, 39, 0.92);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    transform: translateY(-50%);
+}
+
+.ranking-poker h3 {
+    margin: 0 0 9px 0;
+    color: #f0c040;
+    font-size: 14px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ranking-poker ol {
+    margin: 0;
+    padding-left: 21px;
+    color: #d9e0ec;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.ranking-poker li::marker {
+    color: #f0c040;
+    font-weight: bold;
+}
+
+/* ========================= */
+/* CONTROLES */
+/* ========================= */
+
 .controles {
     max-width: 920px;
     margin-top: 4px;
@@ -644,14 +912,28 @@ input {
 /* RESPONSIVO */
 /* ========================= */
 
-@media (max-width: 1050px) {
+@media (max-width: 1180px) {
     .centro {
-        width: min(760px, 100%);
-        gap: 20px;
-        grid-template-columns: 110px 1fr 160px;
-        padding: 22px;
+        grid-template-columns: 110px minmax(220px, 1fr) 220px;
     }
 
+    .trocas {
+        display: none;
+    }
+
+    .ranking-poker {
+        position: static;
+        width: min(600px, 100%);
+        margin: 10px auto 0 auto;
+        transform: none;
+    }
+
+    .ranking-poker ol {
+        columns: 2;
+    }
+}
+
+@media (max-width: 1050px) {
     .carta {
         width: 82px;
         height: 120px;
@@ -684,12 +966,23 @@ input {
         border-radius: 38px;
     }
 
-    .mesa::after {
+    .marca-mesa {
         font-size: 64px;
+        letter-spacing: 8px;
     }
 
     .placar {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .mesa-descartes {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .descarte-bloco {
+        width: min(260px, 100%);
     }
 }
 
@@ -736,5 +1029,24 @@ input {
         width: 74px;
         height: 108px;
         font-size: 19px;
+    }
+
+    .descarte-area {
+        gap: 4px;
+    }
+
+    .slot-descarte {
+        width: 42px;
+        height: 60px;
+    }
+
+    .carta-descarte {
+        width: 38px;
+        height: 54px;
+        font-size: 14px;
+    }
+
+    .ranking-poker ol {
+        columns: 1;
     }
 }
