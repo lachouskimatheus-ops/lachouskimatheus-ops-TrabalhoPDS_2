@@ -1,50 +1,44 @@
 CXX := g++
-TARGET := servidor
-BUILD_DIR := build
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -pthread -DASIO_STANDALONE \
-	-IAPI \
-	-IAPI/include \
-	-IAPI/dependencias \
-	-IJogos/include \
-	-IJogos/include/Core \
-	-IJogos/include/FDP \
-	-IJogos/include/Paciencia \
-	-IJogos/include/Pife \
-	-IJogos/include/Poker \
-	-IJogos/include/Truco
+CXXFLAGS := -std=c++17 -Wall -Wextra -MMD -MP \
+	-Iinclude \
+	-Iinclude/Core \
+	-Iinclude/BlackJack \
+	-Iinclude/FDP \
+	-Iinclude/Paciencia \
+	-Iinclude/Pife \
+	-Iinclude/Poker \
+	-Iinclude/Truco
 
-API_SOURCES := $(shell find API/src -type f -name '*.cpp')
+SRC_DIR := src
+OBJ_DIR := obj
 
-JOGOS_SOURCES := $(shell find \
-	Jogos/src/Core \
-	Jogos/src/FDP \
-	Jogos/src/Paciencia \
-	Jogos/src/Pife \
-	Jogos/src/Poker \
-	Jogos/src/Truco \
+SOURCES := $(shell find \
+	$(SRC_DIR)/Core \
+	$(SRC_DIR)/BlackJack \
+	$(SRC_DIR)/FDP \
+	$(SRC_DIR)/Paciencia \
+	$(SRC_DIR)/Pife \
+	$(SRC_DIR)/Poker \
+	$(SRC_DIR)/Truco \
 	-type f -name '*.cpp')
 
-SOURCES := $(API_SOURCES) $(JOGOS_SOURCES)
-OBJECTS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(SOURCES))
+OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
+DEPFILES := $(OBJECTS:.o=.d)
 
-all: $(TARGET)
+all: $(OBJECTS)
+	@echo "[Jogos] Todos os módulos ativos foram compilados."
 
-$(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $@
-	@echo "Servidor compilado: ./$(TARGET)"
-	@echo "Execute com: make run"
-
-$(BUILD_DIR)/%.o: %.cpp
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-run: $(TARGET)
-	./$(TARGET)
-
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+	rm -rf $(OBJ_DIR)
+	mkdir -p $(OBJ_DIR)
 
 rebuild: clean all
 
-.PHONY: all run clean rebuild
+-include $(DEPFILES)
+
+.PHONY: all clean rebuild
