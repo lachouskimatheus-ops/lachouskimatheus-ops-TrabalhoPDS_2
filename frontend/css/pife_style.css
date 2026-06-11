@@ -1,85 +1,583 @@
-*{margin:0;padding:0;box-sizing:border-box}
-body{height:100vh;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#0b0f19;color:#f3f4f6;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.mesa-de-pano-verde{width:95vw;height:90vh;margin:15px;position:relative;border-radius:70px;background:radial-gradient(circle at center,#115e3b 0%,#062417 70%,#020c08 100%);border:12px solid #0a3a22;box-shadow:0 20px 50px #000c,inset 0 0 60px #0009}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-.painel-conexao{position:absolute;top:18px;left:18px;z-index:30;min-width:197px;padding:12px 14px;border:1px solid #b32633;border-radius:12px;background:#101827;box-shadow:0 10px 25px #0007;color:#d8dee9;font-size:12px;transition:.3s}
-.painel-conexao.oculto{opacity:0;pointer-events:none;transform:translateY(-10px)}
-.linha-conexao{display:flex;align-items:center;gap:9px;margin-bottom:8px;color:#fff;font-size:13px}
-.ponto-conexao{width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444}
-.ponto-conexao.conectando{animation:pulsar 1s infinite}
-.ponto-conexao.conectado{background:#22c55e;box-shadow:0 0 8px #22c55e;animation:none}
-.ponto-conexao.reconectando{background:#f59e0b;box-shadow:0 0 8px #f59e0b;animation:pulsar 1s infinite}
-.painel-conexao p{margin-top:7px;color:#aab4c3}
-.codigo-sala{position:absolute;top:20px;right:25px;z-index:20;padding:7px 13px;border-radius:999px;background:#101827;border:1px solid #ffffff1a;color:#f0c040;font-size:12px}
-@keyframes pulsar{50%{opacity:.35;transform:scale(.8)}}
+body {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0b0f19;
+    color: #f3f4f6;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
 
-.assento-topo{position:absolute;top:5%;left:50%;transform:translateX(-50%);text-align:center;z-index:10}
-.assento-lateral{position:absolute;top:45%;transform:translateY(-50%);text-align:center;z-index:10;min-width:120px}
-#cadeira-esquerda{left:40px}
-#cadeira-direita{right:40px}
-.assento-topo h2,.assento-lateral h2,.grupo-monte-vira h3,.descarte-area h3,.titulo-mao{margin-bottom:12px;color:#fff;font-size:14px;letter-spacing:5px;text-transform:uppercase;text-align:center;transition:.3s}
-.jogador-em-turno{color:#43ff8d!important;text-shadow:0 0 12px #43ff8d88}
-.jogador-desconectado{color:#9ca3af!important}
-.mao-oponente{display:flex}
-.assento-topo .mao-oponente{gap:10px;justify-content:center}
-.assento-lateral .mao-oponente{flex-direction:column;align-items:center;gap:0;margin-top:15px}
-.carta-verso{width:58px;height:88px;position:relative;border:3px solid #e8e8e8;border-radius:7px;background:repeating-conic-gradient(#005be0 0 25%,#002f90 0 50%) 50%/16px 16px;box-shadow:0 8px 12px #0009;cursor:pointer;transition:.25s}
-.assento-topo .carta-verso:hover{z-index:10;transform:translateY(-15px) scale(1.05);box-shadow:0 15px 25px #0009}
-#cadeira-esquerda .carta-verso{margin-top:-65px;transform:rotate(90deg)}
-#cadeira-direita .carta-verso{margin-top:-65px;transform:rotate(-90deg)}
-#cadeira-esquerda .carta-verso:first-child,#cadeira-direita .carta-verso:first-child{margin-top:0}
-#cadeira-esquerda .carta-verso:hover{z-index:10;transform:rotate(90deg) translateY(-25px) scale(1.1)}
-#cadeira-direita .carta-verso:hover{z-index:10;transform:rotate(-90deg) translateY(-25px) scale(1.1)}
+.mesa-de-pano-verde {
+    width: 95vw;
+    height: 90vh;
+    margin: 15px;
+    position: relative;
+    border: 12px solid #0a3a22;
+    border-radius: 70px;
+    background: radial-gradient(
+        circle at center,
+        #115e3b 0%,
+        #062417 70%,
+        #020c08 100%
+    );
+    box-shadow:
+        0 20px 50px #000c,
+        inset 0 0 60px #0009;
+}
 
-.centro-da-mesa{position:absolute;top:39%;left:50%;width:850px;height:270px;padding:25px 45px;border-radius:100px;transform:translate(-50%,-50%);display:flex;justify-content:center;align-items:flex-start;gap:100px;background:#00130d73}
-.grupo-monte-vira,.descarte-area{display:flex;flex-direction:column;align-items:center;position:relative}
-.deck-wrapper{position:relative;width:170px;height:155px;display:flex;align-items:center;justify-content:center}
-.area-vira-under{position:absolute;z-index:1;border-radius:10px;transform:rotate(20deg) translate(65px,-5px);box-shadow:2px 5px 15px #0009;cursor:pointer;transition:.25s}
-.area-vira-under:hover{z-index:3;transform:rotate(5deg) translate(130px,-20px)}
-.baralho-visual{width:100px;height:140px;position:relative;z-index:2}
-.verso-grande{width:100px;height:140px;position:absolute;border:4px solid #ededed;border-radius:9px;background:repeating-conic-gradient(#005be0 0 25%,#002f90 0 50%) 50%/18px 18px;box-shadow:0 10px 18px #0009}
-.area-descarte{width:115px;height:155px;border:2px solid #20a859;border-radius:14px;display:flex;align-items:center;justify-content:center;background:#20a8590a}
-.texto-coringa{margin-top:15px;max-width:150px;color:#d9e0ec;font-size:12px;text-align:center;letter-spacing:1px}
-#carta-coringa{color:#f0c040}
-.interativo{transition:.2s}
-.interativo.ativo{cursor:pointer;filter:drop-shadow(0 0 12px #3fff8566)}
-.interativo.ativo:hover{transform:translateY(-10px) scale(1.05);filter:drop-shadow(0 0 20px #3fff85e6)}
-.interativo:not(.ativo){filter:grayscale(60%) brightness(.7);cursor:not-allowed}
-.dropzone.drag-over{transform:scale(1.1);border-color:#3fff85;box-shadow:0 0 35px #3fff85b3;filter:none}
+.painel-conexao {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    z-index: 30;
+    min-width: 197px;
+    padding: 12px 14px;
+    border: 1px solid #b32633;
+    border-radius: 12px;
+    background: #101827;
+    box-shadow: 0 10px 25px #0007;
+    color: #d8dee9;
+    font-size: 12px;
+    transition: .3s;
+}
 
-.carta{width:88px;height:128px;border:2px solid #eee;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#fffdf7;color:#111;font-size:26px;font-weight:bold;box-shadow:0 8px 18px #0007;cursor:pointer;transition:.15s}
-.carta:hover{transform:translateY(-12px)}
-.area-vira-under .carta:hover,.area-descarte .carta:hover{transform:none}
-.carta-vazia{border:none;background:transparent;color:transparent;box-shadow:none;cursor:default}
-.dragging{opacity:.3;pointer-events:none;transform:scale(.95)}
-.mao-jogador{min-height:135px;padding:10px;display:flex;justify-content:center;gap:8px}
-.mao-jogador .carta{border:2px solid #20a859;background:#00140d40;color:#fff}
-.mao-jogador .carta.selecionada{transform:translateY(-18px);border-color:#f0c040;box-shadow:0 0 18px #f0c0408c,0 8px 18px #0007}
+.painel-conexao.oculto {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+}
 
-.acoes-jogo{position:absolute;top:calc(39% + 165px);left:50%;z-index:5;display:flex;gap:25px;transform:translateX(-50%)}
-.acoes-jogo button{width:170px;height:60px;border:1px solid #28dc7873;border-radius:15px;background:#041a14a6;color:#fff;font-weight:bold;letter-spacing:1px;cursor:pointer;box-shadow:inset 0 0 18px #00ff7814;transition:.15s}
-.acoes-jogo button:hover:not(:disabled){transform:translateY(-2px);border-color:#32e97d;color:#43ff8d}
-.acoes-jogo button:disabled{opacity:.35;cursor:not-allowed}
-.area-jogador-local{position:absolute;bottom:25px;left:50%;width:95%;display:flex;flex-direction:column;align-items:center;gap:20px;transform:translateX(-50%)}
-.status-box{position:relative;min-width:450px;min-height:58px;padding:10px 35px;border:1px solid #ffffff14;border-radius:999px;display:flex;align-items:center;justify-content:center;gap:35px;background:#101827;transition:.3s}
-.status-box.sua-vez{overflow:hidden;border-color:transparent;background:transparent;box-shadow:0 0 30px #10b98133}
-.status-box.sua-vez:before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;z-index:-2;background:conic-gradient(#065f46,#34d399,#10b981,#064e3b,#065f46);animation:giro 2.5s linear infinite}
-.status-box.sua-vez:after{content:"";position:absolute;inset:3px;z-index:-1;border-radius:999px;background:#111827}
-.status-box.sua-vez>*{position:relative;z-index:1}
-@keyframes giro{to{transform:rotate(360deg)}}
-.info-local{display:flex;align-items:center;gap:35px}
-.info-local h2{font-size:18px;color:#3fff85}
-.dados-local{display:flex;gap:30px;color:#d9e0ec}
-.info-ajuda{padding-left:25px;border-left:1px solid #ffffff1f;color:#aab4c3;font-size:13px}
+.linha-conexao {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 8px;
+    color: #fff;
+    font-size: 13px;
+}
 
-.modal-overlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:#000a}
-.modal-oculto{display:none}
-.modal-conteudo{padding:30px 45px;border:1px solid #20a859;border-radius:18px;background:#101827;color:#fff;text-align:center;font-size:1.2rem;box-shadow:0 18px 45px #0009}
+.ponto-conexao {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+}
 
-@media(max-width:1050px){
-    .centro-da-mesa{width:760px;gap:45px}
-    .acoes-jogo{gap:12px}
-    .acoes-jogo button{width:145px}
-    .mao-oponente{gap:5px}
-    .carta-verso{width:48px;height:73px}
+.ponto-conexao.conectando {
+    animation: pulsar 1s infinite;
+}
+
+.ponto-conexao.conectado {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    animation: none;
+}
+
+.ponto-conexao.reconectando {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+    animation: pulsar 1s infinite;
+}
+
+.painel-conexao p {
+    margin-top: 7px;
+    color: #aab4c3;
+}
+
+.codigo-sala {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    z-index: 20;
+    padding: 7px 13px;
+    border: 1px solid #ffffff1a;
+    border-radius: 999px;
+    background: #101827;
+    color: #f0c040;
+    font-size: 12px;
+}
+
+@keyframes pulsar {
+    50% {
+        opacity: .35;
+        transform: scale(.8);
+    }
+}
+
+.assento-topo {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    z-index: 10;
+    text-align: center;
+    transform: translateX(-50%);
+}
+
+.assento-lateral {
+    position: absolute;
+    top: 45%;
+    z-index: 10;
+    min-width: 120px;
+    text-align: center;
+    transform: translateY(-50%);
+}
+
+#cadeira-esquerda {
+    left: 40px;
+}
+
+#cadeira-direita {
+    right: 40px;
+}
+
+.assento-topo h2,
+.assento-lateral h2,
+.grupo-monte-vira h3,
+.descarte-area h3,
+.titulo-mao {
+    margin-bottom: 0px;
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 5px;
+    text-align: center;
+    text-transform: uppercase;
+    transition: .3s;
+}
+
+.jogador-em-turno {
+    color: #43ff8d !important;
+    text-shadow: 0 0 12px #43ff8d88;
+}
+
+.jogador-desconectado {
+    color: #9ca3af !important;
+}
+
+.mao-oponente {
+    display: flex;
+}
+
+.assento-topo .mao-oponente {
+    justify-content: center;
+    gap: 10px;
+}
+
+.assento-lateral .mao-oponente {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-top: 15px;
+}
+
+.carta-verso {
+    position: relative;
+    width: 58px;
+    height: 88px;
+    border: 3px solid #e8e8e8;
+    border-radius: 7px;
+    background:
+        repeating-conic-gradient(#005be0 0 25%, #002f90 0 50%)
+        50% / 16px 16px;
+    box-shadow: 0 8px 12px #0009;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.assento-topo .carta-verso:hover {
+    z-index: 10;
+    box-shadow: 0 15px 25px #0009;
+    transform: translateY(-15px) scale(1.05);
+}
+
+#cadeira-esquerda .carta-verso {
+    margin-top: -65px;
+    transform: rotate(90deg);
+}
+
+#cadeira-direita .carta-verso {
+    margin-top: -65px;
+    transform: rotate(-90deg);
+}
+
+#cadeira-esquerda .carta-verso:first-child,
+#cadeira-direita .carta-verso:first-child {
+    margin-top: 0;
+}
+
+#cadeira-esquerda .carta-verso:hover {
+    z-index: 10;
+    transform: rotate(90deg) translateY(-25px) scale(1.1);
+}
+
+#cadeira-direita .carta-verso:hover {
+    z-index: 10;
+    transform: rotate(-90deg) translateY(-25px) scale(1.1);
+}
+
+.centro-da-mesa {
+    position: absolute;
+    top: 39%;
+    left: 50%;
+    width: 850px;
+    height: 270px;
+    padding: 25px 45px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 100px;
+    border-radius: 100px;
+    background: #00130d73;
+    transform: translate(-50%, -50%);
+}
+
+.grupo-monte-vira,
+.descarte-area {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.deck-wrapper {
+    position: relative;
+    width: 170px;
+    height: 155px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.area-vira-under {
+    position: absolute;
+    z-index: 1;
+    border-radius: 10px;
+    box-shadow: 2px 5px 15px #0009;
+    cursor: pointer;
+    transform: rotate(20deg) translate(65px, -5px);
+    transition: .25s;
+}
+
+.area-vira-under:hover {
+    z-index: 3;
+    transform: rotate(5deg) translate(130px, -20px);
+}
+
+.baralho-visual {
+    position: relative;
+    z-index: 2;
+    width: 100px;
+    height: 140px;
+}
+
+.verso-grande {
+    position: absolute;
+    width: 100px;
+    height: 140px;
+    border: 4px solid #ededed;
+    border-radius: 9px;
+    background:
+        repeating-conic-gradient(#005be0 0 25%, #002f90 0 50%)
+        50% / 18px 18px;
+    box-shadow: 0 10px 18px #0009;
+}
+
+.area-descarte {
+    width: 115px;
+    height: 155px;
+    border: 2px solid #20a859;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #20a8590a;
+}
+
+.texto-coringa {
+    max-width: 150px;
+    margin-top: 15px;
+    color: #d9e0ec;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+#carta-coringa {
+    color: #f0c040;
+}
+
+.interativo {
+    transition: .2s;
+}
+
+.interativo.ativo {
+    cursor: pointer;
+    filter: drop-shadow(0 0 12px #3fff8566);
+}
+
+.interativo.ativo:hover {
+    filter: drop-shadow(0 0 20px #3fff85e6);
+    transform: translateY(-10px) scale(1.05);
+}
+
+.interativo:not(.ativo) {
+    filter: grayscale(60%) brightness(.7);
+    cursor: not-allowed;
+}
+
+.dropzone.drag-over {
+    border-color: #3fff85;
+    box-shadow: 0 0 35px #3fff85b3;
+    filter: none;
+    transform: scale(1.1);
+}
+
+.carta {
+    width: 88px;
+    height: 128px;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fffdf7;
+    box-shadow: 0 8px 18px #0007;
+    color: #111;
+    font-size: 26px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.carta:hover {
+    transform: translateY(-12px);
+}
+
+.area-vira-under .carta:hover,
+.area-descarte .carta:hover {
+    transform: none;
+}
+
+.carta-vazia {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    color: transparent;
+    cursor: default;
+}
+
+.dragging {
+    opacity: .3;
+    pointer-events: none;
+    transform: scale(.95);
+}
+
+.mao-jogador {
+    min-height: 135px;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.mao-jogador .carta {
+    border: 2px solid #20a859;
+    background: #00140d40;
+    color: #fff;
+}
+
+.mao-jogador .carta.selecionada {
+    border-color: #f0c040;
+    box-shadow:
+        0 0 18px #f0c0408c,
+        0 8px 18px #0007;
+    transform: translateY(-18px);
+}
+
+.acoes-jogo {
+    position: absolute;
+    top: calc(39% + 165px);
+    left: 50%;
+    z-index: 5;
+    display: flex;
+    gap: 25px;
+    transform: translateX(-50%);
+}
+
+.acoes-jogo button {
+    width: 170px;
+    height: 60px;
+    border: 1px solid #28dc7873;
+    border-radius: 15px;
+    background: #041a14a6;
+    box-shadow: inset 0 0 18px #00ff7814;
+    color: #fff;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.acoes-jogo button:hover:not(:disabled) {
+    border-color: #32e97d;
+    color: #43ff8d;
+    transform: translateY(-2px);
+}
+
+.acoes-jogo button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+.area-jogador-local {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    transform: translateX(-50%);
+}
+
+.status-box {
+    position: relative;
+    min-width: 450px;
+    min-height: 58px;
+    padding: 10px 35px;
+    border: 1px solid #ffffff14;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    background: #101827;
+    transition: .3s;
+}
+
+.status-box.sua-vez {
+    overflow: hidden;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: 0 0 30px #10b98133;
+}
+
+.status-box.sua-vez::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    z-index: -2;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        #065f46,
+        #34d399,
+        #10b981,
+        #064e3b,
+        #065f46
+    );
+    animation: giro 2.5s linear infinite;
+}
+
+.status-box.sua-vez::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    z-index: -1;
+    border-radius: 999px;
+    background: #111827;
+}
+
+.status-box.sua-vez > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes giro {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.info-local {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+}
+
+.info-local h2 {
+    color: #3fff85;
+    font-size: 18px;
+}
+
+.dados-local {
+    display: flex;
+    gap: 30px;
+    color: #d9e0ec;
+}
+
+.info-ajuda {
+    padding-left: 25px;
+    border-left: 1px solid #ffffff1f;
+    color: #aab4c3;
+    font-size: 13px;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000a;
+}
+
+.modal-oculto {
+    display: none;
+}
+
+.modal-conteudo {
+    padding: 30px 45px;
+    border: 1px solid #20a859;
+    border-radius: 18px;
+    background: #101827;
+    box-shadow: 0 18px 45px #0009;
+    color: #fff;
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+@media (max-width: 1050px) {
+    .centro-da-mesa {
+        width: 760px;
+        gap: 45px;
+    }
+
+    .acoes-jogo {
+        gap: 12px;
+    }
+
+    .acoes-jogo button {
+        width: 145px;
+    }
+
+    .mao-oponente {
+        gap: 5px;
+    }
+
+    .carta-verso {
+        width: 48px;
+        height: 73px;
+    }
 }
