@@ -2,7 +2,7 @@
 #include "dependencias/json.hpp"
 #include "coreAPI/JsonConversor.hpp"
 #include "Paciencia/Paciencia.hpp"
-#include "Jogos/Paciencia/include/Regras.hpp"
+#include "Paciencia/Regras.hpp"
 
 #include <iostream>
 #include <mutex>
