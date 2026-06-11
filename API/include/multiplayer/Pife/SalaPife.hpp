@@ -25,110 +25,139 @@ struct ConexaoPife {
 
 /**
  * @class SalaPife
- * @brief Classe operacional que envelopa as regras do motor Pife e as amarra à rede do servidor.
+ * @brief Classe operacional que integra o motor lógico do Pife à infraestrutura multiplayer.
  *
- * Estende o comportamento padrão de SalaBase, implementando as rotinas de gerenciamento
- * de conexões WebSocket síncronas, reparações de queda (reconexões) e controle de início de partidas.
+ * Estende SalaBase para gerenciar jogadores registrados, conexões WebSocket,
+ * reconexões por token, início da partida e acesso ao estado interno do jogo.
  */
 class SalaPife : public SalaBase {
 private:
-    Pife jogo_;                        ///< Instância da engine/motor lógico que dita as regras do Pife.
-    std::vector<ConexaoPife> conexoes_; ///< Vetor contendo o par de conexões WebSocket ativas de cada assento.
-    bool partidaIniciada_;             ///< Flag booleana indicando se o jogo já saiu do lobby de espera.
+    Pife jogo_;                           ///< Instância do motor lógico responsável pelas regras do Pife.
+    std::vector<ConexaoPife> conexoes_;   ///< Conexões WebSocket atualmente associadas aos jogadores da sala.
+    bool partidaIniciada_;                ///< Indica se a partida já foi iniciada.
 
     /**
-     * @brief Busca a struct interna de pareamento de rede baseada no ID do jogador.
-     * @param idJogador ID do assento pesquisado.
-     * @return Ponteiro para a struct ConexaoPife interna, ou nullptr se não localizado.
+     * @brief Procura o registro de conexão associado a um jogador.
+     * @param idJogador ID numérico do jogador pesquisado.
+     * @return Ponteiro para o registro encontrado ou nullptr se não existir.
      */
     ConexaoPife* buscarConexaoDoJogador(int idJogador);
 
     /**
-     * @brief Versão de sobrecarga constante (const) para busca da struct de pareamento de rede.
-     * @param idJogador ID do assento pesquisado.
-     * @return Ponteiro constante para a struct ConexaoPife interna, ou nullptr se não localizado.
+     * @brief Procura o registro de conexão associado a um jogador em contexto constante.
+     * @param idJogador ID numérico do jogador pesquisado.
+     * @return Ponteiro constante para o registro encontrado ou nullptr se não existir.
      */
     const ConexaoPife* buscarConexaoDoJogador(int idJogador) const;
 
 public:
     /**
-     * @brief Construtor da classe SalaPife.
-     * @param idSala Código identificador alfanumérico da sala.
-     * @param maxJogadores Lotação máxima permitida de assentos.
+     * @brief Constrói uma sala multiplayer de Pife.
+     * @param idSala Código identificador da sala.
+     * @param maxJogadores Quantidade máxima de jogadores permitida.
      */
     SalaPife(const std::string& idSala, int maxJogadores);
 
     /**
-     * @brief Insere um jogador novo na sala de Pife, registrando o seu nome e criando o soquete.
-     * @param conexao Ponteiro para a conexão WebSocket aberta do Crow.
-     * @param tokenReconexao Token validador gerado para futuras quedas do cliente.
+     * @brief Adiciona um novo jogador ou reconecta um jogador já registrado.
+     * @param conexao Ponteiro para a conexão WebSocket do jogador.
+     * @param tokenReconexao Token utilizado para identificar e recuperar a sessão.
      * @param nome Nome ou apelido escolhido pelo jogador.
-     * @return O ID do assento atribuído ao jogador (0 a max-1), ou -1 em caso de erro/sala cheia.
+     * @return ID atribuído ao jogador ou -1 em caso de falha.
      */
     int adicionarJogador(crow::websocket::connection* conexao, const std::string& tokenReconexao, const std::string& nome);
 
     /**
-     * @brief Processa o reatamento de um jogador que sofreu instabilidade de rede e apresentou um token válido.
-     * @param conexao Nova conexão WebSocket aberta pelo navegador do cliente.
-     * @param tokenReconexao Token que valida se a vaga preservada pertencia a este cliente.
-     * @return O ID do assento recuperado, ou -1 se a validação falhar.
+     * @brief Reconecta um jogador registrado anteriormente na sala.
+     * @param conexao Ponteiro para a nova conexão WebSocket do jogador.
+     * @param tokenReconexao Token utilizado para localizar o jogador registrado.
+     * @return ID do jogador reconectado ou -1 se o token não for válido.
      */
     int reconectarJogador(crow::websocket::connection* conexao, const std::string& tokenReconexao);
 
     /**
-     * @brief Remove o vínculo de uma conexão WebSocket da listagem de canais ativos.
-     * @param conexao Ponteiro da conexão a ser removida.
-     * @return true se o soquete foi encontrado e limpo, false caso contrário.
+     * @brief Remove uma conexão WebSocket ativa da sala.
+     *
+     * O jogador continua registrado na SalaBase, permitindo uma futura reconexão.
+     *
+     * @param conexao Ponteiro para a conexão que será removida.
+     * @return true se a conexão foi encontrada e removida; false caso contrário.
      */
     bool removerConexao(crow::websocket::connection* conexao);
 
     /**
-     * @brief Descobre qual o ID do assento do jogador atrelado a uma conexão WebSocket.
-     * @param conexao Ponteiro para a conexão do Crow.
-     * @return ID numérico correspondente, ou -1 se a conexão não pertencer a esta sala.
+     * @brief Obtém o ID do jogador associado a uma conexão WebSocket.
+     * @param conexao Ponteiro para a conexão pesquisada.
+     * @return ID do jogador ou -1 se a conexão não estiver registrada.
      */
     int obterIdJogador(crow::websocket::connection* conexao) const;
 
     /**
-     * @brief Retorna o ponteiro de rede do Crow associado a um ID de jogador.
-     * @param idJogador ID do jogador consultado.
-     * @return Ponteiro para o canal de WebSocket, ou nullptr se o jogador estiver offline/desconectado.
+     * @brief Obtém a conexão WebSocket associada a um jogador.
+     * @param idJogador ID numérico do jogador.
+     * @return Ponteiro para a conexão ou nullptr se o jogador estiver desconectado.
      */
     crow::websocket::connection* obterConexaoJogador(int idJogador) const;
 
     /**
-     * @brief Verifica se um determinado ponteiro de conexão WebSocket faz parte desta sala.
-     * @param conexao Ponteiro para a conexão do Crow.
-     * @return true se pertencer à sala, false caso contrário.
+     * @brief Verifica se uma conexão WebSocket pertence à sala.
+     * @param conexao Ponteiro para a conexão pesquisada.
+     * @return true se a conexão estiver registrada; false caso contrário.
      */
     bool possuiConexao(crow::websocket::connection* conexao) const;
 
     /**
-     * @brief Informa se o estado interno da partida atual de Pife já foi inicializado.
-     * @return true se o jogo começou, false se está parado no lobby.
+     * @brief Informa se a partida já foi iniciada.
+     * @return true se a partida estiver em andamento ou finalizada; false se ainda estiver no lobby.
      */
     bool partidaIniciada() const;
 
     /**
-     * @brief Altera a flag de inicialização para true, disparando o início oficial do jogo.
+     * @brief Verifica se a sala ainda pode receber um jogador novo.
+     *
+     * Um novo jogador somente pode entrar antes do início da partida e enquanto
+     * ainda existir uma vaga disponível na sala.
+     *
+     * @return true se um novo jogador puder ser adicionado; false caso contrário.
+     */
+    bool podeReceberNovoJogador() const;
+
+    /**
+     * @brief Verifica se existe um jogador registrado com determinado token.
+     * @param tokenReconexao Token de reconexão apresentado pelo cliente.
+     * @return true se o token pertencer a um jogador registrado; false caso contrário.
+     */
+    bool podeReconectar(const std::string& tokenReconexao) const;
+
+    /**
+     * @brief Inicia a partida quando todos os jogadores esperados estiverem conectados.
+     *
+     * A função não realiza nenhuma alteração se a partida já tiver sido iniciada
+     * ou se ainda houver jogadores ausentes.
      */
     void iniciarPartida();
 
     /**
-     * @brief Fornece acesso direto por referência para leitura/escrita no motor lógico interno do Pife.
-     * @return Referência direta para a instância da classe Pife.
+     * @brief Fornece acesso de leitura e escrita ao motor lógico do Pife.
+     * @return Referência para a instância interna de Pife.
      */
-    Pife& obterJogo();
+    Pife& jogo();
 
     /**
-     * @brief Fornece acesso apenas de leitura (constante) ao motor lógico interno do Pife.
-     * @return Referência constante para a instância da classe Pife.
+     * @brief Fornece acesso somente de leitura ao motor lógico do Pife.
+     * @return Referência constante para a instância interna de Pife.
      */
-    const Pife& obterJogo() const;
+    const Pife& jogo() const;
 
     /**
-     * @brief Retorna uma referência constante para a coleção interna de conexões de rede da sala.
-     * @return Referência constante para o vetor `std::vector<ConexaoPife>`.
+     * @brief Fornece acesso de leitura e escrita às conexões ativas da sala.
+     * @return Referência para o vetor de registros de conexão.
+     */
+    std::vector<ConexaoPife>& conexoes();
+
+    /**
+     * @brief Fornece acesso somente de leitura às conexões ativas da sala.
+     * @return Referência constante para o vetor de registros de conexão.
      */
     const std::vector<ConexaoPife>& conexoes() const;
 };

@@ -1,82 +1,40 @@
 CXX := g++
 
-CXXFLAGS := -std=c++17 -Wall -Wextra -pthread -MMD -MP \
+CXXFLAGS := -std=c++17 -Wall -Wextra -pthread \
 	-DASIO_STANDALONE \
 	-I. \
-	-I./include \
-	-I./dependencias \
-	-I../Jogos/Core/include \
-	-I../Jogos/Pife/include \
-	-I../Jogos/Paciencia/include \
-	-I../Jogos/Truco/include \
-	-I../Jogos/FDP/include \
-	-I../Jogos/Poker/include \
-	-I..
+	-Iinclude \
+	-Idependencias \
+	-I../Jogos/include \
+	-I../Jogos/include/Core \
+	-I../Jogos/include/FDP \
+	-I../Jogos/include/Paciencia \
+	-I../Jogos/include/Pife \
+	-I../Jogos/include/Poker \
+	-I../Jogos/include/Truco
 
 SRC_DIR := src
 OBJ_DIR := obj
 TARGET := servidor_api
 
-CORE_OBJ := \
-	../Jogos/Core/obj/Carta.o \
-	../Jogos/Core/obj/Baralho.o
-
-PIFE_OBJ := \
-	../Jogos/Pife/obj/Pife.o \
-	../Jogos/Pife/obj/JogadorPife.o \
-	../Jogos/Pife/obj/RegrasPife.o
-
-PACIENCIA_OBJ := \
-	../Jogos/Paciencia/obj/Paciencia.o \
-	../Jogos/Paciencia/obj/Regras.o \
-	../Jogos/Paciencia/obj/Pontuacao.o
-
-TRUCO_OBJ := \
-	../Jogos/Truco/obj/BaralhoTruco.o \
-	../Jogos/Truco/obj/Jogador_Truco.o \
-	../Jogos/Truco/obj/JuizTruco.o \
-	../Jogos/Truco/obj/JuizPaulistaTruco.o \
-	../Jogos/Truco/obj/JuizMineiroTruco.o \
-	../Jogos/Truco/obj/Truco.o
-
-FDP_OBJ := \
-	../Jogos/FDP/obj/BaralhoSujo.o \
-	../Jogos/FDP/obj/Jogador.o \
-	../Jogos/FDP/obj/JogadorFDP.o \
-	../Jogos/FDP/obj/Juiz.o \
-	../Jogos/FDP/obj/JuizPaulista.o \
-	../Jogos/FDP/obj/Mesa.o \
-	../Jogos/FDP/obj/MesaFDP.o \
-	../Jogos/FDP/obj/Placar.o
-
-POKER_OBJ := \
-	../Jogos/Poker/obj/Poker.o \
-	../Jogos/Poker/obj/MesaPoker.o
-
-EXTERNAL_OBJ := \
-	$(CORE_OBJ) \
-	$(PIFE_OBJ) \
-	$(PACIENCIA_OBJ) \
-	$(TRUCO_OBJ) \
-	$(FDP_OBJ) \
-	$(POKER_OBJ)
-
 SOURCES := $(shell find $(SRC_DIR) -type f -name '*.cpp')
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SOURCES))
-DEPFILES := $(OBJECTS:.o=.d)
 
 all: $(TARGET)
 
-dependencias:
-	$(MAKE) -C ../Jogos/Core
-	$(MAKE) -C ../Jogos/Pife
-	$(MAKE) -C ../Jogos/Paciencia
-	$(MAKE) -C ../Jogos/Truco
-	$(MAKE) -C ../Jogos/FDP
-	$(MAKE) -C ../Jogos/Poker
-
 $(TARGET): dependencias $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJECTS) $(EXTERNAL_OBJ)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) \
+		$$(find ../Jogos/obj/Core \
+			../Jogos/obj/FDP \
+			../Jogos/obj/Paciencia \
+			../Jogos/obj/Pife \
+			../Jogos/obj/Poker \
+			../Jogos/obj/Truco \
+			-type f -name '*.o') \
+		-o $@
+
+dependencias:
+	$(MAKE) -C ../Jogos
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
@@ -86,18 +44,11 @@ clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 
 clean-all: clean
-	$(MAKE) -C ../Jogos/Core clean
-	$(MAKE) -C ../Jogos/Pife clean
-	$(MAKE) -C ../Jogos/Paciencia clean
-	$(MAKE) -C ../Jogos/Truco clean
-	$(MAKE) -C ../Jogos/FDP clean
-	$(MAKE) -C ../Jogos/Poker clean
+	$(MAKE) -C ../Jogos clean
 
 rebuild: clean-all all
 
 run: all
 	./$(TARGET)
-
--include $(DEPFILES)
 
 .PHONY: all dependencias clean clean-all rebuild run

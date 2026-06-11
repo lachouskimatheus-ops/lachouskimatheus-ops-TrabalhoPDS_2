@@ -30,10 +30,13 @@ void TrucoWebSocket::registrar(crow::SimpleApp& app) {
 
         std::string tipo = dados["tipo"].s();
 
-        if (tipo == "entrar_sala") entrarNaSala(conexao, dados);
-        else if (tipo == "acao_jogo") processarAcao(conexao, dados);
-        else if (tipo == "ping") processarPing(conexao);
-        else if (tipo == "obter_estado") {
+        if (tipo == "entrar_sala") {
+            entrarNaSala(conexao, dados);
+        } else if (tipo == "acao_jogo") {
+            processarAcao(conexao, dados);
+        } else if (tipo == "ping") {
+            processarPing(conexao);
+        } else if (tipo == "obter_estado") {
             auto it = sessoes_.find(&conexao);
 
             if (it == sessoes_.end()) {
@@ -138,7 +141,7 @@ void TrucoWebSocket::entrarNaSala(crow::websocket::connection& conexao, const cr
         conexaoAnterior->close("Sessão substituída");
     }
 
-    sessoes_[&conexao] = {idSala, idJogador};
+    sessoes_[&conexao] = {idSala, idJogador, token};
 
     crow::json::wvalue resposta;
     resposta["tipo"] = reconexao ? "reconectado_sala" : "entrou_sala";
@@ -256,7 +259,6 @@ void TrucoWebSocket::iniciarNovaMao(crow::websocket::connection& conexao, SalaTr
 void TrucoWebSocket::processarPing(crow::websocket::connection& conexao) {
     crow::json::wvalue resposta;
     resposta["tipo"] = "pong";
-
     enviarMensagem(conexao, resposta);
 }
 
@@ -273,7 +275,6 @@ void TrucoWebSocket::enviarErro(crow::websocket::connection& conexao, const std:
     crow::json::wvalue erro;
     erro["tipo"] = "erro";
     erro["mensagem"] = mensagem;
-
     enviarMensagem(conexao, erro);
 }
 
@@ -311,9 +312,7 @@ void TrucoWebSocket::enviarEstadoJogador(SalaTruco* sala, int idJogador, crow::w
     estado["pode_pedir_truco"] = jogo.podePedirTruco(idJogador);
     estado["pode_responder_truco"] = jogo.podeResponderTruco(idJogador);
 
-    if (jogo.getVira() != nullptr) {
-        adicionarCartaAoJson(estado["vira"], *jogo.getVira());
-    }
+    if (jogo.getVira() != nullptr) adicionarCartaAoJson(estado["vira"], *jogo.getVira());
 
     estado["minha_mao"] = crow::json::wvalue::list();
 
@@ -323,9 +322,7 @@ void TrucoWebSocket::enviarEstadoJogador(SalaTruco* sala, int idJogador, crow::w
         const auto& mao = jogadorLocal->getMao();
 
         for (std::size_t i = 0; i < mao.size(); ++i) {
-            if (mao[i] != nullptr) {
-                adicionarCartaAoJson(estado["minha_mao"][i], *mao[i]);
-            }
+            if (mao[i] != nullptr) adicionarCartaAoJson(estado["minha_mao"][i], *mao[i]);
         }
     }
 
@@ -336,9 +333,8 @@ void TrucoWebSocket::enviarEstadoJogador(SalaTruco* sala, int idJogador, crow::w
     for (std::size_t i = 0; i < jogadas.size(); ++i) {
         estado["jogadas_queda"][i]["id_jogador"] = jogadas[i].idJogador;
 
-        if (jogadas[i].carta != nullptr) {
+        if (jogadas[i].carta != nullptr)
             adicionarCartaAoJson(estado["jogadas_queda"][i]["carta"], *jogadas[i].carta);
-        }
     }
 
     estado["jogadores"] = crow::json::wvalue::list();
@@ -364,9 +360,8 @@ void TrucoWebSocket::enviarEstadoSala(SalaTruco* sala) {
     if (sala == nullptr) return;
 
     for (const ConexaoTruco& registro : sala->conexoes()) {
-        if (registro.conexao != nullptr) {
+        if (registro.conexao != nullptr)
             enviarEstadoJogador(sala, registro.idJogador, *registro.conexao);
-        }
     }
 }
 
@@ -374,16 +369,12 @@ std::string TrucoWebSocket::faseParaString(FaseTruco fase) {
     switch (fase) {
         case FaseTruco::AguardandoInicio:
             return "AGUARDANDO_INICIO";
-
         case FaseTruco::AguardandoJogada:
             return "AGUARDANDO_JOGADA";
-
         case FaseTruco::AguardandoRespostaTruco:
             return "AGUARDANDO_RESPOSTA_TRUCO";
-
         case FaseTruco::MaoFinalizada:
             return "MAO_FINALIZADA";
-
         case FaseTruco::PartidaFinalizada:
             return "PARTIDA_FINALIZADA";
     }

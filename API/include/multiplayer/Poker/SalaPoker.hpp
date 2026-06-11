@@ -2,8 +2,8 @@
  * @file SalaPoker.hpp
  * @brief Definição da classe SalaPoker e da estrutura de conexões de rede associada.
  *
- * Acopla a lógica central do motor de Poker (MesaPoker) ao ecossistema multiplayer,
- * gerenciando as sessões dos jogadores locais e remotos.
+ * Acopla a lógica central do motor de Poker ao sistema multiplayer,
+ * gerenciando jogadores, reconexões e sincronização do estado da partida.
  */
 
 #pragma once
@@ -15,163 +15,184 @@
 #include "json.hpp"
 
 #include "coreAPI/SalaBase.hpp"
-#include "MesaPoker.hpp"
+#include "Poker/MesaPoker.hpp"
 
 using json = nlohmann::json;
 
 /**
  * @struct ConexaoPoker
- * @brief Associa o ID do assento de um jogador ao seu respetivo ponteiro de WebSocket ativo no Crow.
+ * @brief Associa um jogador da sala à sua conexão WebSocket ativa.
  */
 struct ConexaoPoker {
-    int idJogador;                        ///< ID numérico identificador do assento alocado ao jogador.
-    crow::websocket::connection* conexao; ///< Ponteiro para a conexão WebSocket correspondente do Crow.
+    int idJogador;                        ///< Identificador do jogador na sala.
+    crow::websocket::connection* conexao; ///< Ponteiro para a conexão WebSocket.
 };
 
 /**
  * @class SalaPoker
- * @brief Extensão de SalaBase adaptada para coordenar partidas e conectividade de Poker.
+ * @brief Gerencia uma sala multiplayer de Poker.
  *
- * Integra e controla o motor lógico `MesaPoker`, fornecendo métodos de reconexão,
- * validação de integridade de fichas/trocas, início de turnos e serialização de estados em JSON.
+ * Mantém a instância de MesaPoker, as conexões dos jogadores e o estado
+ * de inicialização da partida.
  */
 class SalaPoker : public SalaBase {
 private:
-    MesaPoker jogo_;                    ///< Instância da engine/motor que dita as regras e fases do Poker.
-    std::vector<ConexaoPoker> conexoes_; ///< Coleção de conexões WebSocket ativas na sala.
-    bool partidaIniciada_;              ///< Flag de controlo que sinaliza se o jogo já saiu do lobby.
+    MesaPoker jogo_;                     ///< Motor lógico da partida.
+    std::vector<ConexaoPoker> conexoes_; ///< Conexões WebSocket ativas.
+    bool partidaIniciada_;               ///< Indica se a partida já começou.
 
     /**
-     * @brief Procura internamente o par de rede atrelado ao ID do jogador solicitado.
-     * @param idJogador ID do assento avaliado.
-     * @return Ponteiro para a estrutura ConexaoPoker, ou nullptr se o jogador estiver offline.
+     * @brief Procura a conexão associada a um jogador.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro para o registro ou nullptr quando não encontrado.
      */
     ConexaoPoker* buscarConexaoDoJogador(int idJogador);
 
     /**
-     * @brief Sobrecarga de leitura constante (const) para procurar o par de rede do jogador.
-     * @param idJogador ID do assento avaliado.
-     * @return Ponteiro constante para a estrutura ConexaoPoker, ou nullptr caso não exista.
+     * @brief Procura a conexão associada a um jogador para consulta.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro constante para o registro ou nullptr.
      */
     const ConexaoPoker* buscarConexaoDoJogador(int idJogador) const;
 
     /**
-     * @brief Traduz o enumerador de fase do jogo para uma string legível pelo JSON.
-     * @fase Valor do enum FasePoker (ex: EscolhendoTrocas, Resultado).
-     * @return String contendo o nome descritivo da fase.
+     * @brief Converte uma fase do Poker em texto.
+     * @param fase Fase que será convertida.
+     * @return Representação textual da fase.
      */
     static std::string faseParaString(FasePoker fase);
 
     /**
-     * @brief Traduz o enumerador do modo de jogo para uma representação em string.
-     * @modo Valor do enum ModoPoker (ex: ContraComputador, Multiplayer).
-     * @return String contendo o nome descritivo do modo.
+     * @brief Converte um modo de Poker em texto.
+     * @param modo Modo que será convertido.
+     * @return Representação textual do modo.
      */
     static std::string modoParaString(ModoPoker modo);
 
 public:
     /**
-     * @brief Construtor da classe SalaPoker.
-     * @param idSala Código identificador alfanumérico gerado para a sala.
-     * @param maxJogadores Lotação máxima configurada para a partida.
-     * @param modo Regulamento da mesa (Multiplayer ou ContraComputador).
+     * @brief Constrói uma sala de Poker.
+     * @param idSala Identificador da sala.
+     * @param maxJogadores Quantidade máxima de jogadores.
+     * @param modo Modo de funcionamento da partida.
      */
     SalaPoker(const std::string& idSala, int maxJogadores, ModoPoker modo);
 
     /**
-     * @brief Regista um jogador novo no lobby de Poker, associando a sua conexão e nome.
-     * @param conexao Ponteiro para a conexão WebSocket do Crow.
-     * @param tokenReconexao Chave de autenticação única atribuída para mitigar quedas de rede.
-     * @param nome Nome de exibição ou apelido escolhido pelo jogador.
-     * @return O ID do assento alocado (0 a max-1), ou -1 em caso de falha/sala cheia.
+     * @brief Adiciona um jogador à sala.
+     * @param conexao Conexão WebSocket do jogador.
+     * @param tokenReconexao Token utilizado para reconexão.
+     * @param nome Nome de exibição do jogador.
+     * @return Identificador do jogador ou -1 em caso de falha.
      */
-    int adicionarJogador(crow::websocket::connection* conexao, const std::string& tokenReconexao, const std::string& nome);
+    int adicionarJogador(crow::websocket::connection* conexao,
+                         const std::string& tokenReconexao,
+                         const std::string& nome);
 
     /**
-     * @brief Reabilita o canal de rede de um jogador desconectado através do seu token de validação.
-     * @param conexao Novo ponteiro de WebSocket aberto pelo navegador.
-     * @param tokenReconexao Token previamente gerado para comprovar a identidade do assento.
-     * @return O ID do assento recuperado, ou -1 caso a validação falhe.
+     * @brief Reconecta um jogador por meio de seu token.
+     * @param conexao Nova conexão WebSocket.
+     * @param tokenReconexao Token de reconexão.
+     * @return Identificador do jogador ou -1 em caso de falha.
      */
-    int reconectarJogador(crow::websocket::connection* conexao, const std::string& tokenReconexao);
+    int reconectarJogador(crow::websocket::connection* conexao,
+                          const std::string& tokenReconexao);
 
     /**
-     * @brief Remove o vínculo de uma conexão WebSocket específica do histórico de conexões da sala.
-     * @param conexao Ponteiro para a ligação do Crow a ser descartada.
-     * @return true se foi encontrada e removida, false caso contrário.
+     * @brief Remove uma conexão da sala.
+     * @param conexao Conexão que será removida.
+     * @return true quando removida; false caso contrário.
      */
     bool removerConexao(crow::websocket::connection* conexao);
 
     /**
-     * @brief Descobre qual o ID do assento do jogador atrelado a uma determinada conexão.
-     * @param conexao Ponteiro para a conexão do Crow.
-     * @return ID numérico correspondente, ou -1 se a conexão não pertencer a esta sala.
+     * @brief Obtém o jogador associado a uma conexão.
+     * @param conexao Conexão consultada.
+     * @return Identificador do jogador ou -1.
      */
     int obterIdJogador(crow::websocket::connection* conexao) const;
 
     /**
-     * @brief Retorna o ponteiro de rede do Crow associado a um ID de jogador.
-     * @param idJogador ID do assento do jogador consultado.
-     * @return Ponteiro para o canal de WebSocket, ou nullptr se o jogador estiver offline.
+     * @brief Obtém a conexão ativa de um jogador.
+     * @param idJogador Identificador do jogador.
+     * @return Ponteiro para a conexão ou nullptr.
      */
     crow::websocket::connection* obterConexaoJogador(int idJogador) const;
 
     /**
-     * @brief Verifica se um determinado ponteiro de conexão WebSocket faz parte desta sala.
-     * @param conexao Ponteiro para a conexão do Crow.
-     * @return true se pertencer à sala, false caso contrário.
+     * @brief Verifica se uma conexão pertence à sala.
+     * @param conexao Conexão consultada.
+     * @return true quando pertencer; false caso contrário.
      */
     bool possuiConexao(crow::websocket::connection* conexao) const;
 
     /**
-     * @brief Avalia se a sala ainda dispõe de assentos disponíveis para novos entrantes.
-     * @return true se puder aceitar novos jogadores, false se estiver lotada.
+     * @brief Verifica se a sala pode receber outro jogador.
+     * @return true quando houver vaga; false caso contrário.
      */
     bool podeReceberNovoJogador() const;
 
     /**
-     * @brief Valida se o token apresentado cumpre os requisitos para reatar uma sessão instável.
-     * @param tokenReconexao Cadeia de caracteres contendo o token.
-     * @return true se pertencer a um utilizador desconectado da sala, false caso contrário.
+     * @brief Verifica se um token pode ser usado para reconexão.
+     * @param tokenReconexao Token consultado.
+     * @return true quando o token existir; false caso contrário.
      */
     bool podeReconectar(const std::string& tokenReconexao) const;
 
     /**
-     * @brief Transiciona o estado do lobby para o início ativo do jogo, distribuindo as cartas.
-     * @return true se a operação foi autorizada, false se as condições mínimas não foram atendidas.
+     * @brief Inicia a partida quando todos os jogadores necessários estão conectados.
+     * @return true quando iniciada; false caso contrário.
      */
     bool iniciarPartida();
 
     /**
-     * @brief Informa se o estado interno da partida atual de Poker já foi inicializado.
-     * @return true se o jogo começou, false se está parado em espera no lobby.
+     * @brief Verifica se a partida já começou.
+     * @return true quando iniciada; false caso contrário.
      */
     bool partidaIniciada() const;
 
     /**
-     * @brief Processa e valida os índices das cartas que um jogador escolheu trocar.
-     * @param idJogador ID do assento do jogador.
-     * @param indices Vetor com as posições (0 a 4) das cartas a serem substituídas.
-     * @return true se a troca foi agendada/confirmada com sucesso, false caso contrário.
+     * @brief Confirma a troca de cartas de um jogador.
+     * @param idJogador Identificador do jogador.
+     * @param indices Índices das cartas escolhidas.
+     * @return true quando a troca for aceita; false caso contrário.
      */
     bool confirmarTroca(int idJogador, const std::vector<int>& indices);
 
     /**
-     * @brief Comanda o motor lógico do jogo para avançar e iniciar um novo turno de Poker.
-     * @return true se uma nova rodada pôde ser iniciada com sucesso.
+     * @brief Inicia uma nova rodada.
+     * @return true quando iniciada; false caso contrário.
      */
     bool iniciarNovaRodada();
 
     /**
-     * @brief Serializa o cenário público ou privado atual da sala num formato JSON.
-     * @param idJogador ID do jogador que solicita a atualização (usado para ocultar as mãos dos adversários).
-     * @return Objeto nlohmann::json pronto para trafegar na rede.
+     * @brief Gera o estado da partida para um jogador.
+     * @param idJogador Identificador do jogador solicitante.
+     * @return Objeto JSON contendo o estado da sala.
      */
     json gerarJson(int idJogador) const;
 
     /**
-     * @brief Retorna uma referência constante para o vetor interno de conexões de rede da sala.
-     * @return Referência constante para o `std::vector<ConexaoPoker>`.
+     * @brief Retorna o motor lógico da partida.
+     * @return Referência para MesaPoker.
+     */
+    MesaPoker& jogo();
+
+    /**
+     * @brief Retorna o motor lógico da partida para consulta.
+     * @return Referência constante para MesaPoker.
+     */
+    const MesaPoker& jogo() const;
+
+    /**
+     * @brief Retorna as conexões da sala.
+     * @return Referência para o vetor de conexões.
+     */
+    std::vector<ConexaoPoker>& conexoes();
+
+    /**
+     * @brief Retorna as conexões da sala para consulta.
+     * @return Referência constante para o vetor de conexões.
      */
     const std::vector<ConexaoPoker>& conexoes() const;
 };

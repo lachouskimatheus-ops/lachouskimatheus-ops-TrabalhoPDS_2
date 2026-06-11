@@ -61,7 +61,7 @@ public:
      * @return Um ponteiro para o objeto MesaFDP interno.
      */
     MesaFDP* getMesa() {
-        return &mesa;
+        return &mesa_;
     }
 
     /**

@@ -2,8 +2,8 @@
  * @file PokerWebSocket.hpp
  * @brief Camada de rede por WebSockets dedicada às ações e eventos do Poker.
  *
- * Escuta os ganchos do Crow, trata o fluxo de mensagens de rede e despacha as
- * atualizações de estado e erros para os clientes conectados nas salas de Poker.
+ * Escuta os eventos do Crow, processa mensagens recebidas e sincroniza
+ * o estado das partidas de Poker com os clientes conectados.
  */
 
 #pragma once
@@ -20,100 +20,115 @@
 
 /**
  * @class PokerWebSocket
- * @brief Controlador de eventos de rede em tempo real via WebSocket para o Poker.
- *
- * Centraliza as rotas do Crow para gerir a entrada de utilizadores, troca de cartas,
- * pulso de sincronização (ping) e a transmissão orientada a objetos do estado da mesa.
+ * @brief Controla as conexões e ações de Poker transmitidas por WebSocket.
  */
 class PokerWebSocket {
 private:
     /**
-     * @brief Associa conexões WebSocket de baixo nível do Crow às suas respetivas instâncias de SessaoWebSocket.
+     * @brief Associa cada conexão WebSocket à sua sessão ativa.
      */
     static std::map<crow::websocket::connection*, SessaoWebSocket> sessoes_;
 
     /**
-     * @brief Processa a requisição inicial de entrada ou registo de um jogador numa SalaPoker.
-     * @param conexao Referência para a conexão WebSocket ativa do Crow.
-     * @param dados Objeto JSON do Crow contendo os parâmetros (ID da sala, nome do jogador, token).
+     * @brief Processa a entrada ou reconexão de um jogador em uma sala.
+     * @param conexao Conexão WebSocket do jogador.
+     * @param dados Dados JSON enviados pelo cliente.
      */
-    static void entrarNaSala(crow::websocket::connection& conexao, const crow::json::rvalue& dados);
+    static void entrarNaSala(crow::websocket::connection& conexao,
+                             const crow::json::rvalue& dados);
 
     /**
-     * @brief Interpeta as intenções e ações lógicas disparadas pelo cliente de Poker.
-     * @param conexao Referência para a conexão WebSocket do Crow.
-     * @param dados Objeto JSON descrevendo o tipo de comando e os seus argumentos.
+     * @brief Processa uma ação de jogo enviada pelo cliente.
+     * @param conexao Conexão WebSocket do jogador.
+     * @param dados Dados JSON contendo a ação.
      */
-    static void processarAcao(crow::websocket::connection& conexao, const crow::json::rvalue& dados);
+    static void processarAcao(crow::websocket::connection& conexao,
+                              const crow::json::rvalue& dados);
 
     /**
-     * @brief Trata os pacotes de verificação de atividade (Heartbeat / Ping) para manter a sessão estável.
-     * @param conexao Referência para a conexão avaliada.
+     * @brief Responde a uma mensagem de verificação da conexão.
+     * @param conexao Conexão WebSocket do cliente.
      */
     static void processarPing(crow::websocket::connection& conexao);
 
     /**
-     * @brief Submete a confirmação de troca de cartas de um jogador específico.
-     * @param conexao Referência para o canal de rede do Crow.
-     * @param sala Referência à SalaPoker onde a partida ocorre.
-     * @param idJogador ID numérico do assento do jogador que está a realizar a ação.
-     * @param dados Objeto JSON contendo o array com os índices das cartas a descartar.
+     * @brief Confirma a troca de cartas de um jogador.
+     * @param conexao Conexão WebSocket do jogador.
+     * @param sala Sala onde a partida está ocorrendo.
+     * @param idJogador Identificador do jogador.
+     * @param dados JSON contendo os índices das cartas.
      */
-    static void confirmarTroca(crow::websocket::connection& conexao, SalaPoker& sala, int idJogador, const crow::json::rvalue& dados);
+    static void confirmarTroca(crow::websocket::connection& conexao,
+                               SalaPoker& sala,
+                               int idJogador,
+                               const crow::json::rvalue& dados);
 
     /**
-     * @brief Solicita o início de uma nova rodada de apostas/distribuição na sala.
-     * @param conexao Referência para o canal do cliente que efetuou a requisição.
-     * @param sala Referência à SalaPoker alvo.
+     * @brief Solicita o início de uma nova rodada.
+     * @param conexao Conexão WebSocket do solicitante.
+     * @param sala Sala onde a partida está ocorrendo.
      */
-    static void iniciarNovaRodada(crow::websocket::connection& conexao, SalaPoker& sala);
+    static void iniciarNovaRodada(crow::websocket::connection& conexao,
+                                  SalaPoker& sala);
 
     /**
-     * @brief Extrai e valida um array de inteiros (índices das cartas) contidos no JSON recebido.
-     * @param dados Objeto JSON de origem.
-     * @param indices Vetor de inteiros que será preenchido com os índices extraídos.
-     * @return true se a extração foi bem-sucedida, false caso ocorra alguma anomalia na estrutura.
+     * @brief Extrai os índices das cartas selecionadas para troca.
+     * @param dados JSON recebido do cliente.
+     * @param indices Vetor que receberá os índices.
+     * @return true se os índices forem válidos; false caso contrário.
      */
-    static bool extrairIndicesTroca(const crow::json::rvalue& dados, std::vector<int>& indices);
+    static bool extrairIndicesTroca(const crow::json::rvalue& dados,
+                                    std::vector<int>& indices);
 
     /**
-     * @brief Envia um payload JSON estruturado (usando nlohmann::json) para um cliente.
-     * @param conexao Referência para a conexão WebSocket de destino.
-     * @param mensagem Estrutura contendo o objeto JSON a ser transmitido.
+     * @brief Verifica se um token de reconexão possui formato válido.
+     * @param tokenReconexao Token que será validado.
+     * @return true se o tamanho do token for válido; false caso contrário.
      */
-    static void enviarMensagem(crow::websocket::connection& conexao, const json& mensagem);
+    static bool tokenValido(const std::string& tokenReconexao);
 
     /**
-     * @brief Fabrica e envia uma string de erro padronizada em formato JSON para o cliente.
-     * @param conexao Referência para a ligação que receberá o alerta.
-     * @param mensagem Texto detalhado explicitando o erro ou jogada inválida.
+     * @brief Envia uma mensagem JSON para um cliente.
+     * @param conexao Conexão WebSocket de destino.
+     * @param mensagem Mensagem que será enviada.
      */
-    static void enviarErro(crow::websocket::connection& conexao, const std::string& mensagem);
+    static void enviarMensagem(crow::websocket::connection& conexao,
+                               const json& mensagem);
 
     /**
-     * @brief Transmite o panorama público atualizado da mesa para todos os participantes síncronos da sala.
-     * @param sala Ponteiro para a sala de Poker ativa.
+     * @brief Envia uma mensagem de erro para um cliente.
+     * @param conexao Conexão WebSocket de destino.
+     * @param mensagem Descrição do erro.
+     */
+    static void enviarErro(crow::websocket::connection& conexao,
+                           const std::string& mensagem);
+
+    /**
+     * @brief Envia o estado atualizado para todos os jogadores da sala.
+     * @param sala Sala cujo estado será enviado.
      */
     static void enviarEstadoSala(SalaPoker* sala);
 
     /**
-     * @brief Envia dados privados (ex: cartas ocultas da mão) especificamente para o respetivo jogador.
-     * @param sala Ponteiro para a sala onde a partida está a decorrer.
-     * @param idJogador ID numérico do assento do jogador.
-     * @param conexao Referência para a ligação WebSocket recetora.
+     * @brief Envia o estado personalizado para um jogador.
+     * @param sala Sala da partida.
+     * @param idJogador Identificador do jogador.
+     * @param conexao Conexão WebSocket do jogador.
      */
-    static void enviarEstadoJogador(SalaPoker* sala, int idJogador, crow::websocket::connection& conexao);
+    static void enviarEstadoJogador(SalaPoker* sala,
+                                    int idJogador,
+                                    crow::websocket::connection& conexao);
 
     /**
-     * @brief Desvincula e apaga uma conexão fechada ou instável do histórico de sessões do servidor.
-     * @param conexao Referência para a ligação do Crow que terminou.
+     * @brief Remove uma conexão do controle de sessões.
+     * @param conexao Conexão que será removida.
      */
     static void removerConexao(crow::websocket::connection& conexao);
 
 public:
     /**
-     * @brief Acopla e regista as rotas e ganchos (hooks) de WebSocket do Poker na app principal do Crow.
-     * @param app Instância orquestradora global do Crow (SimpleApp).
+     * @brief Registra a rota WebSocket do Poker no servidor Crow.
+     * @param app Aplicação principal do Crow.
      */
     static void registrar(crow::SimpleApp& app);
 };
