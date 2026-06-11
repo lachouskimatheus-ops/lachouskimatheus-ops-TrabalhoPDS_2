@@ -5,49 +5,181 @@
 <title>Lobby Paciência</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  * { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+  }
+  
   body {
     min-height: 100vh;
-    background: #0a0a0a;
+    background-color: #0a0a0a;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-family: 'Cinzel', serif;
+    position: relative;
+    overflow-x: hidden;
   }
+
+  /* --- Fundo Estilo Cassino --- */
+  .bg {
+    position: fixed;
+    inset: 0;
+    background-image: url('../assets/fundo.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.35);
+    z-index: 0;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.85) 100%);
+    z-index: 1;
+  }
+  
+  /* --- Container Central --- */
   .container {
-    background: rgba(15, 15, 20, 0.75);
-    border: 1px solid rgba(255, 200, 50, 0.3);
+    position: relative;
+    z-index: 2;
+    background: rgba(15, 15, 20, 0.6);
+    border: 1px solid rgba(255, 200, 50, 0.2);
     padding: 40px;
     width: 100%;
     max-width: 600px;
-    border-radius: 12px;
+    border-radius: 16px;
     text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
   }
-  h1 { font-family: 'Cinzel Decorative', serif; color: #fff; margin-bottom: 5px; }
-  h1 span { color: #f0c040; }
-  .saudacao { color: #aaa; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; font-size: 14px; }
   
-  /* Caixa de Regras Estilo FDP */
+  h1 { 
+    font-family: 'Cinzel Decorative', serif; 
+    font-size: 38px;
+    color: #fff; 
+    margin-bottom: 5px; 
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px rgba(255,200,50,0.5);
+  }
+  
+  h1 span { 
+    color: #f0c040; 
+  }
+  
+  .saudacao { 
+    color: rgba(255,255,255,0.7); 
+    margin-bottom: 30px; 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    font-size: 14px; 
+    font-weight: 600;
+  }
+  
+  /* --- Caixa de Regras --- */
   .regras-box {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.4);
     border-left: 4px solid #f0c040;
-    padding: 20px 25px;
+    border-radius: 0 8px 8px 0;
+    padding: 25px;
     margin-bottom: 30px;
     text-align: left;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
   }
-  .regras-box h3 { color: #f0c040; margin-bottom: 15px; letter-spacing: 2px; }
-  .regras-lista { list-style: none; color: #ddd; line-height: 1.8; }
-  .regras-lista li { margin-bottom: 12px; position: relative; padding-left: 20px; }
-  .regras-lista li::before { content: "♦"; position: absolute; left: 0; color: #f0c040; }
   
-  /* Botões */
-  .acoes { display: flex; gap: 15px; }
-  .btn { flex: 1; padding: 15px; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 600; text-align: center; }
-  .btn-voltar { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; }
-  .btn-jogar { background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%); border: 1px solid rgba(240,192,64,0.6); color: #f0c040; }
+  .regras-box h3 { 
+    color: #f0c040; 
+    margin-bottom: 15px; 
+    letter-spacing: 2px; 
+    font-size: 18px;
+  }
+  
+  .regras-lista { 
+    list-style: none; 
+    color: #ddd; 
+    line-height: 1.8; 
+  }
+  
+  .regras-lista li { 
+    margin-bottom: 12px; 
+    position: relative; 
+    padding-left: 20px; 
+  }
+  
+  .regras-lista li::before { 
+    content: "♦"; 
+    position: absolute; 
+    left: 0; 
+    color: #f0c040; 
+  }
+  
+  /* --- Botões --- */
+  .acoes { 
+    display: flex; 
+    gap: 15px; 
+  }
+  
+  .btn { 
+    flex: 1; 
+    padding: 15px; 
+    border-radius: 8px; 
+    cursor: pointer; 
+    text-decoration: none; 
+    font-family: 'Cinzel', serif;
+    font-weight: 600; 
+    text-align: center; 
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+  }
+  
+  .btn-voltar { 
+    background: rgba(255, 255, 255, 0.05); 
+    border: 1px solid rgba(255, 255, 255, 0.2); 
+    color: #fff; 
+  }
+
+  .btn-voltar:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #fff;
+    transform: translateY(-2px);
+  }
+  
+  .btn-jogar { 
+    background: linear-gradient(135deg, rgba(240,192,64,0.2) 0%, rgba(240,192,64,0.05) 100%); 
+    border: 1px solid rgba(240,192,64,0.5); 
+    color: #f0c040; 
+    box-shadow: 0 4px 15px rgba(240,192,64,0.1);
+  }
+
+  .btn-jogar:hover {
+    background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%);
+    border-color: #f0c040;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(240,192,64,0.35);
+  }
+
+  /* --- Animações de Entrada --- */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .container > * { animation: fadeUp 0.6s ease both; }
+  .container > *:nth-child(1) { animation-delay: 0.0s; }
+  .container > *:nth-child(2) { animation-delay: 0.1s; }
+  .container > *:nth-child(3) { animation-delay: 0.2s; }
+  .container > *:nth-child(4) { animation-delay: 0.3s; }
 </style>
 </head>
 <body>
+
+<!-- Elementos de Fundo -->
+<div class="bg"></div>
+<div class="overlay"></div>
 
 <div class="container">
   <h1>LOBBY <span>PACIÊNCIA</span></h1>

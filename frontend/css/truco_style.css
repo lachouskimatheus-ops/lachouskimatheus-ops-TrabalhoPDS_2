@@ -217,20 +217,41 @@ body {
     margin-top: -12px;
 }
 
+/* --- ESTILOS DAS CARTAS EM SPRITE --- */
+.carta {
+    position: relative;
+    width: 90px;
+    height: 135px;
+    border-radius: 6px;
+    background-color: transparent;
+    background-size: 100% 100%; 
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.38);
+    user-select: none;
+    transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.carta-vazia {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.2);
+    border: 2px dashed #64748b;
+    color: #64748b;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
 .carta-verso {
     width: 40px;
     height: 60px;
-    border: 2px solid #f8fafc;
-    border-radius: 6px;
-    background-color: #1e3a8a;
-    background-image:
-        linear-gradient(135deg, #2563eb 25%, transparent 25%),
-        linear-gradient(225deg, #2563eb 25%, transparent 25%),
-        linear-gradient(45deg, #2563eb 25%, transparent 25%),
-        linear-gradient(315deg, #2563eb 25%, #1e3a8a 25%);
-    background-position: 8px 0, 8px 0, 0 0, 0 0;
-    background-size: 16px 16px;
-    background-repeat: repeat;
+    border-radius: 4px;
+    background-image: url('../assets/cartas/back03.png');
+    background-size: 100% 100%;
+    background-position: center;
+    background-color: transparent;
+    border: none;
     box-shadow: -3px 3px 8px rgba(0, 0, 0, 0.5);
     transition: 0.25s;
 }
@@ -305,48 +326,6 @@ body {
     text-transform: uppercase;
 }
 
-.carta {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 90px;
-    height: 135px;
-    padding: 12px;
-    border-radius: 12px;
-    background: #fff;
-    color: #111827;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.38), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-    font-size: 1.4rem;
-    font-weight: 700;
-    user-select: none;
-    transition: transform 0.25s, box-shadow 0.25s;
-}
-
-.carta::after {
-    content: attr(data-naipe-simbolo);
-    position: absolute;
-    right: 12px;
-    bottom: 10px;
-    font-size: 1.6rem;
-}
-
-.carta-vazia {
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-}
-
-.paus,
-.espadas {
-    color: #1f2937;
-}
-
-.copas,
-.ouros {
-    color: #dc2626;
-}
-
 #cartas-na-mesa .carta {
     animation: surgirNaMesa 0.35s ease forwards;
     transform: rotate(var(--rotacao-mesa, 0deg));
@@ -379,21 +358,6 @@ body {
 
 .mao-jogador .carta.bloqueada:hover {
     transform: rotate(var(--rotacao, 0deg)) translateY(var(--transY, 0));
-}
-
-.figura-centro {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 45%;
-    height: 45%;
-    transform: translate(-50%, -50%);
-    object-fit: contain;
-    pointer-events: none;
-}
-
-.filtro-vermelho {
-    filter: invert(19%) sepia(85%) saturate(3023%) hue-rotate(348deg) brightness(93%) contrast(90%);
 }
 
 .status-box {
@@ -784,14 +748,7 @@ body {
     .carta {
         width: 58px;
         height: 88px;
-        padding: 8px;
         font-size: 1rem;
-    }
-
-    .carta::after {
-        right: 8px;
-        bottom: 6px;
-        font-size: 1.1rem;
     }
 
     .perfil-jogador {
