@@ -1,4 +1,5 @@
 #include "Truco.hpp"
+#include "JuizMineiroTruco.hpp"
 #include <stdexcept>
 
 Truco::Truco(JuizTruco* juiz, Baralho* baralho)
@@ -96,9 +97,18 @@ void Truco::distribuirCartas() {
     baralho_->inicializar();
     baralho_->embaralhar();
 
-    vira_ = baralho_->puxarCarta();
-    if (vira_ != nullptr) cartasDaMao_.push_back(vira_);
+    // Verifica se o juiz instanciado é o do Truco Mineiro
+    bool isMineiro = dynamic_cast<JuizMineiroTruco*>(juiz_) != nullptr;
 
+    // Se NÃO for mineiro (ou seja, Paulista), puxa o vira normalmente
+    if (!isMineiro) {
+        vira_ = baralho_->puxarCarta();
+        if (vira_ != nullptr) cartasDaMao_.push_back(vira_);
+    } else {
+        vira_ = nullptr; // Mineiro não tem vira
+    }
+
+    // Distribui as 3 cartas para os jogadores
     for (int rodada = 0; rodada < 3; ++rodada) {
         for (Jogador_Truco* jogador : jogadores_) {
             Carta* carta = baralho_->puxarCarta();
@@ -229,9 +239,15 @@ void Truco::concluirQueda() {
         cartas.push_back(jogada.carta);
     }
 
-    // FIX: Não forçamos o vencedor pelo naipe para respeitar a regra do empate da 3ª queda
     bool forcarVencedor = false;
-    int indiceVencedor = juiz_->decidirVencedor(cartas, *vira_, forcarVencedor);
+    
+    // --- PROTEÇÃO CONTRA REFERÊNCIA NULA E VAZAMENTO DE MEMÓRIA ---
+    // Cria uma carta lixo na memória local (stack) apenas para enganar
+    // a assinatura da função, garantindo que não deixamos lixo no ponteiro.
+    Carta cartaCoringa(1, Naipe::ouros); 
+    Carta* viraTemporario = vira_ != nullptr ? vira_ : &cartaCoringa;
+
+    int indiceVencedor = juiz_->decidirVencedor(cartas, *viraTemporario, forcarVencedor);
 
     int jogadorVencedor = -1;
     int vencedorQueda = 0;
