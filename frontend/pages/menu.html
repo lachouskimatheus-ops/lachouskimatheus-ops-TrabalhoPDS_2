@@ -4,10 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jogos</title>
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&display=swap');
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
   body {
     min-height: 100vh;
@@ -29,12 +34,16 @@
     background-position: center;
     filter: brightness(0.35);
     z-index: 0;
-}
+  }
 
   .overlay {
     position: fixed;
     inset: 0;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    background: radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0.3) 0%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
     z-index: 1;
   }
 
@@ -44,10 +53,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
     padding: 30px 20px;
     width: 100%;
-    max-width: 400px;
+    max-width: 440px;
   }
 
   h1 {
@@ -56,11 +65,13 @@
     color: #fff;
     text-align: center;
     letter-spacing: 6px;
-    text-shadow: 0 0 20px rgba(255,200,50,0.5);
+    text-shadow: 0 0 20px rgba(255, 200, 50, 0.5);
     margin-bottom: 5px;
   }
 
-  h1 span { color: #f0c040; }
+  h1 span {
+    color: #f0c040;
+  }
 
   .grid {
     display: grid;
@@ -70,15 +81,17 @@
   }
 
   .btn-jogo {
-    background: rgba(255,255,255,0.07);
-    border: 1.5px solid rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px 4px 16px 4px;
     padding: 14px 10px;
+    min-height: 116px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     text-decoration: none;
     position: relative;
@@ -89,42 +102,89 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(255,255,255,0);
+    background: rgba(255, 255, 255, 0);
     transition: background 0.2s;
     border-radius: inherit;
   }
 
-  .btn-jogo:hover::before { background: rgba(255,255,255,0.07); }
+  .btn-jogo:hover::before {
+    background: rgba(255, 255, 255, 0.07);
+  }
 
   .btn-jogo:hover {
     border-color: #f0c040;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(240,192,64,0.2);
+    box-shadow: 0 6px 20px rgba(240, 192, 64, 0.2);
   }
 
-  .btn-jogo:active { transform: translateY(0); }
+  .btn-jogo:active {
+    transform: translateY(0);
+  }
 
   .btn-jogo img {
     width: 100%;
     max-height: 70px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+
+  .icone-blackjack {
+    width: 86px;
+    height: 64px;
+    border-radius: 12px;
+    background:
+      radial-gradient(circle at top left, rgba(240, 192, 64, 0.35), transparent 35%),
+      linear-gradient(135deg, #f7f0dc, #d7c38f);
+    border: 2px solid rgba(240, 192, 64, 0.75);
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, 0.35),
+      inset 0 0 0 3px rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #151515;
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    position: relative;
+  }
+
+  .icone-blackjack::before {
+    content: "♠";
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 16px;
+    color: #151515;
+  }
+
+  .icone-blackjack::after {
+    content: "♥";
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    font-size: 16px;
+    color: #c82020;
   }
 
   .btn-jogo span {
     font-family: 'Cinzel', serif;
     font-size: 11px;
     font-weight: 600;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     letter-spacing: 2px;
     text-transform: uppercase;
+    text-align: center;
   }
 
-  /* --- BOTÃO DE CRÉDITOS DESTACADO --- */
   .btn-creditos {
     width: 100%;
-    background: linear-gradient(135deg, rgba(240,192,64,0.2) 0%, rgba(240,192,64,0.05) 100%);
-    border: 1px solid rgba(240,192,64,0.5);
+    background: linear-gradient(
+      135deg,
+      rgba(240, 192, 64, 0.2) 0%,
+      rgba(240, 192, 64, 0.05) 100%
+    );
+    border: 1px solid rgba(240, 192, 64, 0.5);
     border-radius: 8px 20px 8px 20px;
     padding: 16px;
     cursor: pointer;
@@ -137,18 +197,24 @@
     text-transform: uppercase;
     text-decoration: none;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(240,192,64,0.1);
+    box-shadow: 0 4px 15px rgba(240, 192, 64, 0.1);
   }
 
   .btn-creditos:hover {
-    background: linear-gradient(135deg, rgba(240,192,64,0.3) 0%, rgba(240,192,64,0.1) 100%);
+    background: linear-gradient(
+      135deg,
+      rgba(240, 192, 64, 0.3) 0%,
+      rgba(240, 192, 64, 0.1) 100%
+    );
     border-color: #f0c040;
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 6px 25px rgba(240,192,64,0.35);
+    box-shadow: 0 6px 25px rgba(240, 192, 64, 0.35);
   }
 
-  .btn-creditos:active { transform: translateY(0); }
+  .btn-creditos:active {
+    transform: translateY(0);
+  }
 
   .naipes {
     font-size: 18px;
@@ -158,17 +224,82 @@
   }
 
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
-  .container > * { animation: fadeUp 0.5s ease both; }
-  .container > *:nth-child(1) { animation-delay: 0.0s; }
-  .container > *:nth-child(2) { animation-delay: 0.1s; }
-  .container > *:nth-child(3) { animation-delay: 0.2s; }
-  .container > *:nth-child(4) { animation-delay: 0.4s; }
+  .container > * {
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .container > *:nth-child(1) {
+    animation-delay: 0.0s;
+  }
+
+  .container > *:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  .container > *:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+
+  .container > *:nth-child(4) {
+    animation-delay: 0.4s;
+  }
+
+  @media (max-height: 760px) {
+    body {
+      overflow-y: auto;
+      justify-content: flex-start;
+    }
+
+    .container {
+      padding-top: 24px;
+      padding-bottom: 24px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 30px;
+      letter-spacing: 4px;
+    }
+
+    .container {
+      max-width: 380px;
+    }
+
+    .btn-jogo {
+      min-height: 104px;
+      padding: 12px 8px;
+    }
+
+    .btn-jogo img {
+      max-height: 58px;
+    }
+
+    .icone-blackjack {
+      width: 76px;
+      height: 56px;
+      font-size: 26px;
+    }
+
+    .btn-jogo span {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+    }
+  }
 </style>
 </head>
+
 <body>
 
 <div class="bg"></div>
@@ -180,20 +311,17 @@
 
   <h1>CARTA<span>RALHO</span></h1>
 
-  
   <div class="grid">
 
-    
     <a class="btn-jogo" href="/pages/regras_paciencia.html">
       <img src="../assets/icones/btn_paciencia.png" alt="Paciência">
       <span>Paciência</span>
     </a>
 
-   
-<a class="btn-jogo" href="/pages/pife_config.html">
-  <img src="../assets/icones/btn_pife.png" alt="Pife">
-  <span>Pife</span>
-</a>
+    <a class="btn-jogo" href="/pages/pife_config.html">
+      <img src="../assets/icones/btn_pife.png" alt="Pife">
+      <span>Pife</span>
+    </a>
 
     <a class="btn-jogo" href="/pages/poker_config.html">
       <img src="../assets/icones/btn_poker.png" alt="Poker">
@@ -205,9 +333,14 @@
       <span>Truco</span>
     </a>
 
+    <a class="btn-jogo" href="/pages/blackjack_config.html">
+      <div class="icone-blackjack">21</div>
+      <span>Blackjack</span>
+    </a>
+
     <a class="btn-jogo" href="/pages/roubamonte.html">
-      <img src="../assets/icones/btn_blackjack.png" alt="BlackJack">
-      <span>BlackJack</span>
+      <img src="../assets/icones/btn_roubamonte.png" alt="Rouba Monte">
+      <span>Rouba Monte</span>
     </a>
 
     <a class="btn-jogo" href="/pages/regras_fdp.html">
@@ -217,9 +350,10 @@
 
   </div>
 
- 
-  <a href="/pages/creditos.html" class="btn-creditos">CRÉDITOS</a>
- 
+  <a href="/pages/creditos.html" class="btn-creditos">
+    CRÉDITOS
+  </a>
+
 </div>
 
 </body>
