@@ -2,6 +2,7 @@ CXX := g++
 
 CXXFLAGS := -std=c++17 -Wall -Wextra -pthread \
 	-DASIO_STANDALONE \
+	-I. \
 	-IAPI \
 	-IAPI/include \
 	-IAPI/dependencias \
