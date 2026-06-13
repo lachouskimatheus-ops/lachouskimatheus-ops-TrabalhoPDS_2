@@ -141,13 +141,13 @@ doxygen Doxyfile
 
 O ciclo produtivo do sistema foi segmentado em Sprints estruturadas em modelo ágil. Vale destacar que o grupo obteve **100% de aproveitamento do escopo planejado**, resultando em nenhum item negligenciado ou postergado.
 
-* **Sprint 1: Arquitetura Core e Motores (Início do projeto até 06 de Junho)**
+* **Sprint 1: Arquitetura Core e Motores (Início do projeto até 01 de Maio)**
   * *Objetivo:* Construção da base polimórfica estrutural de Cartas e Baralhos, e implementação inicial dos motores lógicos locais em C++.
   * *Planejado vs. Realizado:* Desenvolvimento integral de todas as classes básicas de dados e os algoritmos internos dos jogos sem atrasos.
-* **Sprint 2: Infraestrutura de Rede e Interface (06 de Junho a 09 de Junho)**
+* **Sprint 2: Infraestrutura de Rede e Interface (01 de Maio a 20 de Maio)**
   * *Objetivo:* Configuração do micro-serviço HTTP/WebSocket utilizando o framework Crow e estruturação das páginas estáticas em HTML/CSS.
   * *Planejado vs. Realizado:* Integração dos canais assíncronos e tratamento de parsing JSON concluídos com estabilidade de tráfego.
-* **Sprint 3: Interface Gráfica Avançada e Integração Geral (09 de Junho a 11 de Junho)**
+* **Sprint 3: Interface Gráfica Avançada e Integração Geral (20 de Maio a 11 de Junho)**
   * *Objetivo:* Polimento estético, inserção de sprites texturizados avançados de cartas, efeitos sonoros dinâmicos e testes exaustivos de concorrência.
   * *Planejado vs. Realizado:* Implementação de mecanismos automáticos de reconexão de pacotes e refatoração completa do CSS de todos os jogos para um padrão premium minimalista unificado.
 
