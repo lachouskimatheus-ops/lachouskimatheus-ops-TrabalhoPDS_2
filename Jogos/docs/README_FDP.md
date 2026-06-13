@@ -26,7 +26,7 @@ O foco deste módulo é atuar como a autoridade (servidor) da partida, gerencian
 * O código deve ser modular, separado em arquivos `.hpp` e `.cpp`.
 * A validação das regras de negócio deve ocorrer de forma centralizada (Server-Side), impedindo manipulações por parte do jogador.
 * O gerenciamento do histórico de danos deve utilizar containers da STL (como `std::map`).
-* A lógica do jogo deve ser independente de interface gráfica, pronta para futura integração em rede.
+* A lógica do jogo deve ser independente de interface gráfica, integrada à camada de rede da API.
 
 ---
 
@@ -93,3 +93,98 @@ A lógica arquitetural do sistema é baseada em:
 * O módulo foi projetado para escalabilidade de Polimorfismo, permitindo instanciar as partidas genéricas através de ponteiros para a classe abstrata `Mesa`.
 * O uso de alocação dinâmica e ponteiros crus garante alta performance.
 * O sistema possui limpezas de memória controladas via destrutores virtuais implementados.
+
+---
+
+### 🌐 Integração com a API
+
+O módulo FDP possui integração com o frontend por meio da API do projeto. A lógica permanece concentrada no backend, enquanto a interface apenas envia ações e apresenta o estado recebido.
+
+#### Arquivos principais da API
+
+* `SalaFDP.hpp` / `SalaFDP.cpp`: mantém a partida, os jogadores e as conexões associadas à sala.
+* `FDPWebSocket.hpp` / `FDPWebSocket.cpp`: recebe mensagens do frontend, identifica o jogador e encaminha as ações para a mesa.
+* `FDPRoutes.hpp` / `FDPRoutes.cpp`: registra rotas HTTP relacionadas à criação e consulta das salas.
+* `GerenciadorSalasFDP.hpp` / `GerenciadorSalasFDP.cpp`: cria, armazena e localiza salas pelo código.
+
+#### Fluxo da comunicação
+
+```text
+Frontend → JSON/WebSocket → FDPWebSocket → SalaFDP → MesaFDP
+MesaFDP → Estado atualizado em JSON → Frontend
+```
+
+Após uma aposta ou jogada de carta, a API atualiza os participantes conectados. Cada mensagem recebida é associada a uma sessão, permitindo identificar a sala e o jogador que realizou a ação.
+
+A API também é responsável por:
+
+* validar a entrada e a reconexão dos jogadores;
+* impedir ações fora do turno ou da fase correta;
+* encaminhar apostas e cartas para `MesaFDP`;
+* informar vidas, apostas, vazas e jogadores conectados;
+* capturar exceções do núcleo e retornar mensagens de erro ao frontend;
+* remover a conexão sem apagar o jogador registrado na partida.
+
+#### Requisitos funcionais adicionais
+
+* Criar salas multiplayer com código de acesso.
+* Permitir entrada de jogadores por nome e token.
+* Permitir reconexão à mesma partida.
+* Enviar o estado atualizado depois de cada ação válida.
+* Informar ao frontend a fase da rodada e o jogador atual.
+* Manter as cartas dos adversários ocultas.
+
+#### Requisitos não funcionais adicionais
+
+* Utilizar JSON para troca de mensagens.
+* Utilizar WebSocket para comunicação durante a partida.
+* Manter regras e validações no servidor.
+* Separar núcleo, gerenciamento de sala, rotas e comunicação.
+* Permitir acesso por jogadores em redes diferentes.
+
+### 🧩 Cartões CRC da API
+
+#### Classe SalaFDP
+
+**Responsabilidades:**
+
+* Manter a instância de `MesaFDP`.
+* Registrar jogadores e conexões.
+* Controlar entrada, saída e reconexão.
+* Informar jogadores conectados e registrados.
+
+**Colabora com:**
+
+* `MesaFDP`
+* `FDPWebSocket`
+* `GerenciadorSalasFDP`
+
+#### Classe FDPWebSocket
+
+**Responsabilidades:**
+
+* Receber mensagens JSON do frontend.
+* Identificar sala e jogador pela sessão.
+* Executar ações na mesa.
+* Enviar estados e mensagens de erro.
+
+**Colabora com:**
+
+* `SalaFDP`
+* `MesaFDP`
+* `GerenciadorSalasFDP`
+
+#### Classe GerenciadorSalasFDP
+
+**Responsabilidades:**
+
+* Criar e armazenar salas.
+* Gerar códigos de acesso.
+* Localizar salas existentes.
+
+**Colabora com:**
+
+* `SalaFDP`
+* `FDPRoutes`
+* `FDPWebSocket`
+
