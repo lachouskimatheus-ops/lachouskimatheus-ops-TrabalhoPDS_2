@@ -63,151 +63,125 @@ Cartaralho/
 │   └── pages/                    # Estruturas HTML estáticas e modais de salas
 │
 └── docs/                         # Documentação técnica gerada automaticamente pelo Doxygen
+```
 
-⚙️ Compilação e Execução
-Requisitos Prévios
+---
 
-    Ambiente configurado via MSYS2 com a Toolchain MinGW64.
+## ⚙️ Compilação e Execução
 
-    Compilador G++ com suporte nativo à especificação C++17.
+### Requisitos Prévios
+* Ambiente configurado via **MSYS2** com a Toolchain **MinGW64**.
+* Compilador G++ com suporte nativo à especificação **C++17**.
+* Utilitário **GNU Make**.
 
-    Utilitário GNU Make.
+### Comandos Exatos de Terminal
 
-Comandos Exatos de Terminal
+1. **Limpeza de resíduos de compilação anterior (Opcional):**
+```bash
+make clean
+```
 
-    Limpeza de resíduos de compilação anterior (Opcional):
+2. **Compilação do projeto:**
+```bash
+make
+```
 
-Bash
+3. **Inicialização do servidor HTTP/WebSocket:**
+```bash
+make run
+```
 
-   make clean
+4. **Acesso:**
+Abra o seu navegador de preferência e acesse o endereço: `http://localhost:8080`
 
-    Compilação do projeto:
+---
 
-Bash
-
-   make
-
-    Inicialização do servidor HTTP/WebSocket:
-
-Bash
-
-   make run
-
-    Acesso:
-    Abra o seu navegador de preferência e acesse o endereço: http://localhost:8080
-
-🕹️ Instruções de Uso e Exemplos práticos
+## 🕹️ Instruções de Uso e Exemplos práticos
 
 O fluxo operacional do sistema concentra-se inteiramente no frontend, fornecendo uma experiência visual intuitiva guiada por formulários HTML e manipulação direta via cliques e arrastes nas cartas.
-Fluxo de Uso Padrão (Exemplo: Blackjack / 21)
 
-    Menu Inicial: O usuário acessa a página central e escolhe o jogo Blackjack. Ele é redirecionado para a tela de configurações (blackjack_config.html).
+### Fluxo de Uso Padrão (Exemplo: Blackjack / 21)
 
-    Entrada de Dados (Lobby):
+1. **Menu Inicial:** O usuário acessa a página central e escolhe o jogo Blackjack. Ele é redirecionado para a tela de configurações (`blackjack_config.html`).
+2. **Entrada de Dados (Lobby):** 
+   * *Ação do Usuário:* Clicar em um dos botões numéricos (`1`, `2`, `3` ou `4`) para definir a quantidade máxima de jogadores suportados na sala.
+   * *Ação do Usuário:* Clicar no botão `CRIAR SALA`.
+3. **Mesa de Espera:** 
+   * *Saída do Sistema:* O backend gera um identificador único alfanumérico para a sala (ex: `R6B9L2`), exibe na tela o link completo de convite e ativa um modal bloqueante aguardando que os oponentes acessem o mesmo link.
+4. **Partida em Andamento:** 
+   * Assim que a capacidade máxima é preenchida, o WebSocket transmite o payload JSON contendo o estado inicial do jogo, renderizando as cartas recebidas.
+   * *Entrada do Usuário:* Clicar nos botões operacionais da mesa, como `PEDIR CARTA` ou `PARAR`.
+   * *Saída do Sistema:* O servidor processa a pontuação em tempo real, atualiza o placar e exibe modais com o veredito final da rodada contra a Banca (Dealer).
 
-        Ação do Usuário: Clicar em um dos botões numéricos (1, 2, 3 ou 4) para definir a quantidade máxima de jogadores suportados na sala.
+---
 
-        Ação do Usuário: Clicar no botão CRIAR SALA.
-
-    Mesa de Espera:
-
-        Saída do Sistema: O backend gera um identificador único alfanumérico para a sala (ex: R6B9L2), exibe na tela o link completo de convite e ativa um modal bloqueante aguardando que os oponentes acessem o mesmo link.
-
-    Partida em Andamento:
-
-        Assim que a capacidade máxima é preenchida, o WebSocket transmite o payload JSON contendo o estado inicial do jogo, renderizando as cartas recebidas.
-
-        Entrada do Usuário: Clicar nos botões operacionais da mesa, como PEDIR CARTA ou PARAR.
-
-        Saída do Sistema: O servidor processa a pontuação em tempo real, atualiza o placar e exibe modais com o veredito final da rodada contra a Banca (Dealer).
-
-🛡️ Programação Defensiva e Tratamento de Exceções
+## 🛡️ Programação Defensiva e Tratamento de Exceções
 
 O projeto foi arquitetado sob os princípios de tolerância a falhas tanto no tráfego de rede quanto na manipulação de memória em C++. Os principais tratamentos estão divididos em:
 
-    Gerenciamento de Erros de WebSocket (API/src/routes/): Captura de exceções de parsing via blocos try-catch ao processar strings JSON recebidas pelo frontend. Se um payload malformado for enviado para travar o servidor, a API o descarta, protege a execução contínua e envia uma resposta estruturada de erro (tipo: "erro") ao remetente.
+* **Gerenciamento de Erros de WebSocket (`API/src/routes/`):** Captura de exceções de parsing via blocos `try-catch` ao processar strings JSON recebidas pelo frontend. Se um payload malformado for enviado para travar o servidor, a API o descarta, protege a execução contínua e envia uma resposta estruturada de erro (`tipo: "erro"`) ao remetente.
+* **Validação de Limites de Estruturas de Dados (`Jogos/src/`):** Métodos como `Baralho::puxarCarta()` e `Jogador::jogarCarta(int posicao)` validam defensivamente os tamanhos dos vetores. Tentar puxar uma carta de um deck vazio dispara um `std::runtime_error`, tratado na camada superior para evitar travamentos abruptos do software.
+* **Prevenção de Referências Nulas (*Null-Pointer Dereferencing*):** Funções e lógicas de rodada criam objetos locais temporários na memória (*stack*) para atuar como coringas de validação quando referências a ponteiros de cartas (como o Vira do Truco) forem avaliados como `nullptr`, blindando a execução contra falhas de segmentação (*Segmentation Faults*).
+* **Proteção Contra Vazamentos de Memória (`API/src/multiplayer/` e `Jogos/src/Core/`):** Desalocação rigorosa via destrutores de ponteiros gerenciados de forma dinâmica (`delete`) ao redefinir mesas ou limpar instâncias de rodadas anteriores, mantendo o consumo de RAM do servidor linear e estável.
 
-    Validação de Limites de Estruturas de Dados (Jogos/src/): Métodos como Baralho::puxarCarta() e Jogador::jogarCarta(int posicao) validam defensivamente os tamanhos dos vetores. Tentar puxar uma carta de um deck vazio dispara um std::runtime_error, tratado na camada superior para evitar travamentos abruptos do software.
+---
 
-    Prevenção de Referências Nulas (Null-Pointer Dereferencing): Funções e lógicas de rodada criam objetos locais temporários na memória (stack) para atuar como coringas de validação quando referências a ponteiros de cartas (como o Vira do Truco) forem avaliados como nullptr, blindando a execução contra falhas de segmentação (Segmentation Faults).
+## 📄 Documentação (Doxygen)
 
-    Proteção Contra Vazamentos de Memória (API/src/multiplayer/ e Jogos/src/Core/): Desalocação rigorosa via destrutores de ponteiros gerenciados de forma dinâmica (delete) ao redefinir mesas ou limpar instâncias de rodadas anteriores, mantendo o consumo de RAM do servidor linear e estável.
-
-📄 Documentação (Doxygen)
-
-Toda a infraestrutura do ecossistema foi comentada seguindo o padrão Doxygen. Os arquivos de visualização técnica ficam disponíveis na pasta local em docs/html/index.html.
+Toda a infraestrutura do ecossistema foi comentada seguindo o padrão Doxygen. Os arquivos de visualização técnica ficam disponíveis na pasta local em `docs/html/index.html`.
 
 Para gerar ou atualizar a documentação técnico-estrutural através do código-fonte, utilize o terminal na raiz do projeto:
-Bash
-
+```bash
 doxygen Doxyfile
+```
 
-⏱️ Ciclo de Desenvolvimento e Gestão de Sprints
+---
 
-O ciclo produtivo do sistema foi segmentado em Sprints estruturadas em modelo ágil. Vale destacar que o grupo obteve 100% de aproveitamento do escopo planejado, resultando em nenhum item negligenciado ou postergado.
+## ⏱️ Ciclo de Desenvolvimento e Gestão de Sprints
 
-    Sprint 1: Arquitetura Core e Motores (Início do projeto até 06 de Junho)
+O ciclo produtivo do sistema foi segmentado em Sprints estruturadas em modelo ágil. Vale destacar que o grupo obteve **100% de aproveitamento do escopo planejado**, resultando em nenhum item negligenciado ou postergado.
 
-        Objetivo: Construção da base polimórfica estrutural de Cartas e Baralhos, e implementação inicial dos motores lógicos locais em C++.
+* **Sprint 1: Arquitetura Core e Motores (Início do projeto até 06 de Junho)**
+  * *Objetivo:* Construção da base polimórfica estrutural de Cartas e Baralhos, e implementação inicial dos motores lógicos locais em C++.
+  * *Planejado vs. Realizado:* Desenvolvimento integral de todas as classes básicas de dados e os algoritmos internos dos jogos sem atrasos.
+* **Sprint 2: Infraestrutura de Rede e Interface (06 de Junho a 09 de Junho)**
+  * *Objetivo:* Configuração do micro-serviço HTTP/WebSocket utilizando o framework Crow e estruturação das páginas estáticas em HTML/CSS.
+  * *Planejado vs. Realizado:* Integração dos canais assíncronos e tratamento de parsing JSON concluídos com estabilidade de tráfego.
+* **Sprint 3: Interface Gráfica Avançada e Integração Geral (09 de Junho a 11 de Junho)**
+  * *Objetivo:* Polimento estético, inserção de sprites texturizados avançados de cartas, efeitos sonoros dinâmicos e testes exaustivos de concorrência.
+  * *Planejado vs. Realizado:* Implementação de mecanismos automáticos de reconexão de pacotes e refatoração completa do CSS de todos os jogos para um padrão premium minimalista unificado.
 
-        Planejado vs. Realizado: Desenvolvimento integral de todas as classes básicas de dados e os algoritmos internos dos jogos sem atrasos.
+---
 
-    Sprint 2: Infraestrutura de Rede e Interface (06 de Junho a 09 de Junho)
+## 👥 Equipe e Detalhamento de Contribuições
 
-        Objetivo: Configuração do micro-serviço HTTP/WebSocket utilizando o framework Crow e estruturação das páginas estáticas em HTML/CSS.
+> **Nota Metodológica:** O volume de linhas detalhado abaixo reflete **exclusivamente o esforço técnico de codificação** do repositório. Dependências diretas de terceiros, arquivos de mídia, artefatos de compilação e documentações geradas automaticamente (Doxygen) foram rigorosamente isolados da contagem para apresentar uma métrica fidedigna do código-fonte.
+>
+> **⚠️ Observação Importante:** Os dados brutos apresentados nativamente na aba "Insights/Contributors" do GitHub **não refletem as mudanças reais** da equipe. As métricas do GitHub foram drasticamente infladas pela inclusão inicial de bibliotecas externas com dezenas de milhares de linhas (como os cabeçalhos do Crow e JSON), bem como por mudanças estruturais e reestruturações de pastas no repositório realizadas ao longo das Sprints. Os valores abaixo representam a extração limpa, filtrada e auditada do código-fonte proprietário digitado.
 
-        Planejado vs. Realizado: Integração dos canais assíncronos e tratamento de parsing JSON concluídos com estabilidade de tráfego.
+* **Matheus Lachouski (85 commits | +25.684 linhas / -17.644 linhas)**
+  * Estruturação da arquitetura base do servidor HTTP e rotas WebSockets na pasta `API/`.
+  * Desenvolvimento lógico e de interface ponta a ponta da modalidade **Pife**.
+  * Construção e automação do processo de compilação com `Makefile`.
+  * *(**Observação:** O volume de linhas gerado é significativamente maior em relação aos demais membros pois ele foi o responsável ativo pela reestruturação das pastas e organização do repositório no GitHub, o que resultou na movimentação e no redirecionamento sistemático de arquivos ao longo do ciclo de desenvolvimento).*
 
-    Sprint 3: Interface Gráfica Avançada e Integração Geral (09 de Junho a 11 de Junho)
+* **Igor Santos Sassano (85 commits | +6.575 linhas / -1.564 linhas)**
+  * Desenvolvimento do motor de turnos e mecânica do jogo **Poker**.
+  * Construção integral do ecossistema do Poker, interligando a inteligência artificial (Computador) e o multiplayer de rede.
 
-        Objetivo: Polimento estético, inserção de sprites texturizados avançados de cartas, efeitos sonoros dinâmicos e testes exaustivos de concorrência.
+* **Cassio Alexandre Rodrigues Leite Junior (76 commits | +4.984 linhas / -649 linhas)**
+  * Implementação da lógica estrutural e mesa gráfica do jogo **Blackjack / 21**.
+  * Codificação das estatísticas da Banca (Dealer) e o sistema de pontuação dinâmica do Ás.
 
-        Planejado vs. Realizado: Implementação de mecanismos automáticos de reconexão de pacotes e refatoração completa do CSS de todos os jogos para um padrão premium minimalista unificado.
+* **Lucas de Almeida Pereira (73 commits | +9.047 linhas / -2.390 linhas)**
+  * Criação das classes base compartilhadas dos motores de jogo (`Carta` e `Baralho`).
+  * Implementação da lógica, *solver* autônomo e interface de renderização gráfica do **Paciência**.
+  * Estruturação do Menu Principal de seleção e documentação técnica unificada via Doxygen.
 
-👥 Equipe e Detalhamento de Contribuições
+* **João Luís Fernandes Mendes Gomes (41 commits | +8.383 linhas / -6.524 linhas)**
+  * Construção das rotas, validações de vazas e controle de pontuação do multiplayer de **FDP**.
+  * Incorporação de assets, sprites gráficos texturizados e trilha sonora da aplicação.
 
-    Nota Metodológica: O volume de linhas detalhado abaixo reflete exclusivamente o esforço técnico de codificação do repositório. Dependências diretas de terceiros, arquivos de mídia, artefatos de compilação e documentações geradas automaticamente (Doxygen) foram rigorosamente isolados da contagem para apresentar uma métrica fidedigna do código-fonte.
-
-    ⚠️ Observação Importante: Os dados brutos apresentados nativamente na aba "Insights/Contributors" do GitHub não refletem as mudanças reais da equipe. As métricas do GitHub foram drasticamente infladas pela inclusão inicial de bibliotecas externas com dezenas de milhares de linhas (como os cabeçalhos do Crow e JSON), bem como por mudanças estruturais e reestruturações de pastas no repositório realizadas ao longo das Sprints. Os valores abaixo representam a extração limpa, filtrada e auditada do código-fonte proprietário digitado.
-
-    Matheus Lachouski (85 commits | +25.684 linhas / -17.644 linhas)
-
-        Estruturação da arquitetura base do servidor HTTP e rotas WebSockets na pasta API/.
-
-        Desenvolvimento lógico e de interface ponta a ponta da modalidade Pife.
-
-        Construção e automação do processo de compilação com Makefile.
-
-        (Observação: O volume de linhas gerado é significativamente maior em relação aos demais membros pois ele foi o responsável ativo pela reestruturação das pastas e organização do repositório no GitHub, o que resultou na movimentação e no redirecionamento sistemático de arquivos ao longo do ciclo de desenvolvimento).
-
-    Igor Santos Sassano (85 commits | +6.575 linhas / -1.564 linhas)
-
-        Desenvolvimento do motor de turnos e mecânica do jogo Poker.
-
-        Construção integral do ecossistema do Poker, interligando a inteligência artificial (Computador) e o multiplayer de rede.
-
-    Cassio Alexandre Rodrigues Leite Junior (76 commits | +4.984 linhas / -649 linhas)
-
-        Implementação da lógica estrutural e mesa gráfica do jogo Blackjack / 21.
-
-        Codificação das estatísticas da Banca (Dealer) e o sistema de pontuação dinâmica do Ás.
-
-    Lucas de Almeida Pereira (73 commits | +9.047 linhas / -2.390 linhas)
-
-        Criação das classes base compartilhadas dos motores de jogo (Carta e Baralho).
-
-        Implementação da lógica, solver autônomo e interface de renderização gráfica do Paciência.
-
-        Estruturação do Menu Principal de seleção e documentação técnica unificada via Doxygen.
-
-    João Luís Fernandes Mendes Gomes (41 commits | +8.383 linhas / -6.524 linhas)
-
-        Construção das rotas, validações de vazas e controle de pontuação do multiplayer de FDP.
-
-        Incorporação de assets, sprites gráficos texturizados e trilha sonora da aplicação.
-
-    Emanuel Freitas Guimarães Costa (22 commits | +3.011 linhas / -561 linhas)
-
-        Implementação das regras regionais, cálculo de manilhas fixas e fluxos lógicos do Truco Mineiro.
-
-        Integração das variáveis do motor central do Truco com a interface web de jogo.
+* **Emanuel Freitas Guimarães Costa (22 commits | +3.011 linhas / -561 linhas)**
+  * Implementação das regras regionais, cálculo de manilhas fixas e fluxos lógicos do **Truco Mineiro**.
+  * Integração das variáveis do motor central do Truco com a interface web de jogo.
