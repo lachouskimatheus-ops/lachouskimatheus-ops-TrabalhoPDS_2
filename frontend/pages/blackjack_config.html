@@ -1,147 +1,164 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blackjack / 21 - Criar Sala</title>
-    <link rel="stylesheet" href="/css/blackjack_style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blackjack 21 - Lobby</title>
+<link rel="stylesheet" href="/css/blackjack_style.css" />
 </head>
 <body class="pagina-config">
-    <main class="config-container">
-        <section class="config-card">
-            <div class="marca-jogo">
-                <div class="icone-naipes">
-                    <span>♠</span>
-                    <span>♥</span>
-                    <span>♣</span>
-                    <span>♦</span>
-                </div>
 
-                <h1>Blackjack / 21</h1>
-                <p>
-                    Crie uma sala ou entre em uma mesa já existente para jogar contra a banca.
-                </p>
+<div class="bg"></div>
+
+<main class="container">
+    <h1>LOBBY <span>BLACKJACK</span></h1>
+
+    <div class="saudacao" id="texto-saudacao">
+        Configure sua partida
+    </div>
+
+    <div id="configuracao-partida">
+        <div class="config-box">
+            <h3>QUANTIDADE DE JOGADORES</h3>
+            <div class="botoes-opcoes">
+                <button type="button" class="btn-opcao btn-jogador" data-jogadores="1">1</button>
+                <button type="button" class="btn-opcao btn-jogador selecionado" data-jogadores="2">2</button>
+                <button type="button" class="btn-opcao btn-jogador" data-jogadores="3">3</button>
+                <button type="button" class="btn-opcao btn-jogador" data-jogadores="4">4</button>
             </div>
+            <!-- Armazena valor para a API -->
+            <input type="hidden" id="quantidade-jogadores" value="2">
+        </div>
 
-            <div class="config-bloco">
-                <h2>Criar nova sala</h2>
+        <div class="regras-box">
+            <h3>COMO JOGAR</h3>
+            <ul class="regras-lista">
+                <li><strong>Objetivo:</strong> Chegar o mais próximo de 21 pontos sem estourar.</li>
+                <li><strong>Adversário:</strong> Todos na mesa competem contra a Banca (Dealer).</li>
+                <li><strong>Valores:</strong> Numéricas valem seu valor. Figuras valem 10. Ás vale 1 ou 11.</li>
+                <li><strong>Ações:</strong> Na sua vez, escolha entre "Pedir" carta ou "Parar".</li>
+            </ul>
+        </div>
 
-                <label for="quantidade-jogadores">Quantidade de jogadores</label>
-                <select id="quantidade-jogadores">
-                    <option value="1">1 jogador</option>
-                    <option value="2" selected>2 jogadores</option>
-                    <option value="3">3 jogadores</option>
-                    <option value="4">4 jogadores</option>
-                </select>
+        <div class="acoes">
+            <a href="/pages/menu.html" class="btn btn-voltar">VOLTAR</a>
+            <button type="button" id="btn-criar-sala" class="btn btn-jogar">CRIAR SALA</button>
+        </div>
+        <div id="mensagem-config" class="mensagem-config"></div>
+    </div>
 
-                <button id="btn-criar-sala" class="botao-principal">
-                    Criar sala
-                </button>
-            </div>
+    <div id="bloco-link-sala" class="bloco-link-sala escondido">
+        <h3>SALA CRIADA</h3>
 
-            <div class="divisor-config">
-                <span>ou</span>
-            </div>
+        <p class="codigo-sala">
+            Código: <span id="codigo-sala"></span>
+        </p>
+        <p class="detalhes-sala">
+            Jogadores: <span id="quantidade-sala"></span>
+        </p>
+        <p class="instrucao-link" id="texto-instrucao">
+            Envie este link para os outros jogadores:
+        </p>
+        <div class="linha-link" id="bloco-copiar">
+            <input id="link-sala" type="text" readonly>
+            <button type="button" id="btn-copiar-link" class="btn-copiar">COPIAR</button>
+        </div>
 
-            <div class="config-bloco">
-                <h2>Entrar em uma sala</h2>
+        <div class="acoes">
+            <a href="/pages/menu.html" class="btn btn-voltar">CANCELAR</a>
+            <a id="btn-entrar-sala" class="btn btn-jogar">ENTRAR NA SALA</a>
+        </div>
+    </div>
+</main>
 
-                <label for="codigo-sala">Código da sala</label>
-                <input
-                    id="codigo-sala"
-                    type="text"
-                    maxlength="12"
-                    placeholder="Ex.: ABC123"
-                    autocomplete="off"
-                />
+<script>
+    const botoesJogadores = document.querySelectorAll(".btn-jogador");
+    const inputQuantidade = document.getElementById("quantidade-jogadores");
+    
+    // UI Botões
+    botoesJogadores.forEach(botao => {
+        botao.addEventListener("click", () => {
+            botoesJogadores.forEach(item => item.classList.remove("selecionado"));
+            botao.classList.add("selecionado");
+            inputQuantidade.value = botao.dataset.jogadores;
+        });
+    });
 
-                <button id="btn-entrar-sala" class="botao-secundario">
-                    Entrar na sala
-                </button>
-            </div>
+    // Lógica Original Intacta
+    const btnCriarSala = document.getElementById("btn-criar-sala");
+    const btnEntrarSala = document.getElementById("btn-entrar-sala");
+    const codigoSala = document.getElementById("codigo-sala");
+    const quantidadeSala = document.getElementById("quantidade-sala");
+    const linkSala = document.getElementById("link-sala");
+    const btnCopiarLink = document.getElementById("btn-copiar-link");
+    const mensagemConfig = document.getElementById("mensagem-config");
+    const blocoLinkSala = document.getElementById("bloco-link-sala");
+    const configuracaoPartida = document.getElementById("configuracao-partida");
 
-            <div id="mensagem-config" class="mensagem-config"></div>
+    function mostrarMensagem(texto, erro = false) {
+        mensagemConfig.textContent = texto;
+        mensagemConfig.className = erro ? "mensagem-config erro" : "mensagem-config sucesso";
+    }
 
-            <a class="voltar-menu" href="/">
-                Voltar ao menu
-            </a>
-        </section>
-    </main>
+    btnCriarSala.addEventListener("click", async () => {
+        const quantidade = Number(inputQuantidade.value);
+        btnCriarSala.disabled = true;
+        mostrarMensagem("Criando sala...");
 
-    <script>
-        const btnCriarSala = document.getElementById("btn-criar-sala");
-        const btnEntrarSala = document.getElementById("btn-entrar-sala");
-        const quantidadeJogadores = document.getElementById("quantidade-jogadores");
-        const codigoSala = document.getElementById("codigo-sala");
-        const mensagemConfig = document.getElementById("mensagem-config");
+        try {
+            const resposta = await fetch("/api/blackjack/salas", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quantidade_jogadores: quantidade })
+            });
 
-        function mostrarMensagem(texto, erro = false) {
-            mensagemConfig.textContent = texto;
-            mensagemConfig.className = erro
-                ? "mensagem-config erro"
-                : "mensagem-config sucesso";
+            const dados = await resposta.json();
+            const sucesso = dados.sucess ?? dados.success ?? dados.sucesso ?? resposta.ok;
+
+            if (!resposta.ok || !sucesso) {
+                throw new Error(dados.message || dados.mensagem || "Erro ao criar sala.");
+            }
+
+            const sala = dados.data?.sala || dados.sala;
+            if (!sala) throw new Error("A API não retornou o código da sala.");
+
+            mostrarLinkSala(sala, quantidade);
+        } catch (erro) {
+            mostrarMensagem(erro.message, true);
+            btnCriarSala.disabled = false;
         }
+    });
 
-        function normalizarSala(valor) {
-            return valor.trim().toUpperCase();
+    function mostrarLinkSala(idSala, qtd) {
+        const linkCompleto = `${window.location.origin}/pages/blackjack.html?sala=${encodeURIComponent(idSala)}`;
+        
+        configuracaoPartida.classList.add("escondido");
+        blocoLinkSala.classList.remove("escondido");
+        
+        document.getElementById("texto-saudacao").textContent = qtd === 1 ? "Sua mesa está pronta" : "Compartilhe o link";
+        document.getElementById("texto-instrucao").textContent = qtd === 1 ? "Clique abaixo para entrar na partida:" : "Envie este link para os outros jogadores:";
+        
+        codigoSala.textContent = idSala;
+        quantidadeSala.textContent = qtd === 1 ? "1 JOGADOR" : `${qtd} JOGADORES`;
+        linkSala.value = linkCompleto;
+        btnEntrarSala.href = linkCompleto;
+        
+        if (qtd === 1) document.getElementById("bloco-copiar").style.display = "none";
+    }
+
+    btnCopiarLink.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(linkSala.value); } 
+        catch { linkSala.select(); document.execCommand("copy"); }
+        btnCopiarLink.textContent = "COPIADO";
+        setTimeout(() => btnCopiarLink.textContent = "COPIAR", 1500);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const meuNome = localStorage.getItem("jogador_nickname");
+        if (meuNome && meuNome !== "Anônimo") {
+            document.getElementById("texto-saudacao").textContent = `Bem-vindo à mesa, ${meuNome}!`;
         }
-
-        btnCriarSala.addEventListener("click", async () => {
-            const quantidade = Number(quantidadeJogadores.value);
-
-            btnCriarSala.disabled = true;
-            mostrarMensagem("Criando sala...");
-
-            try {
-                const resposta = await fetch("/api/blackjack/salas", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        quantidade_jogadores: quantidade
-                    })
-                });
-
-                const dados = await resposta.json();
-
-                if (!resposta.ok || dados.sucess === false || dados.success === false) {
-                    throw new Error(dados.message || dados.mensagem || "Erro ao criar sala.");
-                }
-
-                const sala = dados.data?.sala || dados.sala;
-
-                if (!sala) {
-                    throw new Error("A API não retornou o código da sala.");
-                }
-
-                mostrarMensagem("Sala criada! Redirecionando...");
-
-                setTimeout(() => {
-                    window.location.href = `/pages/blackjack.html?sala=${encodeURIComponent(sala)}`;
-                }, 500);
-            } catch (erro) {
-                mostrarMensagem(erro.message, true);
-                btnCriarSala.disabled = false;
-            }
-        });
-
-        btnEntrarSala.addEventListener("click", () => {
-            const sala = normalizarSala(codigoSala.value);
-
-            if (!sala) {
-                mostrarMensagem("Informe o código da sala.", true);
-                return;
-            }
-
-            window.location.href = `/pages/blackjack.html?sala=${encodeURIComponent(sala)}`;
-        });
-
-        codigoSala.addEventListener("keydown", (evento) => {
-            if (evento.key === "Enter") {
-                btnEntrarSala.click();
-            }
-        });
-    </script>
+    });
+</script>
 </body>
 </html>

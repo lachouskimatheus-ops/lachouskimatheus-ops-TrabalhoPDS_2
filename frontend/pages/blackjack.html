@@ -7,26 +7,25 @@
     <link rel="stylesheet" href="/css/blackjack_style.css" />
 </head>
 <body class="pagina-jogo">
+
+    <div class="bg"></div>
+
+    <!-- TELA MODAL DE ENTRADA -->
     <section id="tela-entrada" class="tela-entrada">
         <div class="entrada-card">
-            <div class="icone-naipes grande">
-                <span>♠</span>
-                <span>♥</span>
-                <span>♣</span>
-                <span>♦</span>
+            <div class="icone-naipes">
+                <span>♠</span><span>♥</span><span>♣</span><span>♦</span>
             </div>
 
-            <h1>Blackjack / 21</h1>
-            <p>
-                Entre na mesa, espere os jogadores conectarem e jogue contra a banca.
-            </p>
+            <h1>BLACKJACK <span>21</span></h1>
+            <p>Entre na mesa, espere os jogadores e jogue contra a banca.</p>
 
             <div class="entrada-info">
                 <span>Sala</span>
                 <strong id="sala-entrada">---</strong>
             </div>
 
-            <label for="nome-jogador">Seu nome</label>
+            <label for="nome-jogador" style="color: #aaa; font-size: 13px; text-transform: uppercase;">Seu nome</label>
             <input
                 id="nome-jogador"
                 type="text"
@@ -36,21 +35,22 @@
             />
 
             <button id="btn-conectar" class="botao-principal">
-                Entrar na mesa
+                ENTRAR NA MESA
             </button>
 
             <div id="mensagem-entrada" class="mensagem-config"></div>
 
-            <a href="/pages/blackjack_config.html" class="voltar-menu">
-                Voltar
+            <a href="/pages/blackjack_config.html" class="btn btn-voltar" style="margin-top: 15px;">
+                VOLTAR
             </a>
         </div>
     </section>
 
+    <!-- MESA DO JOGO -->
     <main id="tela-jogo" class="tela-jogo escondido">
         <header class="topo-jogo">
             <div>
-                <h1>Blackjack / 21</h1>
+                <h1>BLACKJACK <span>21</span></h1>
                 <p id="descricao-fase">Aguardando jogadores...</p>
             </div>
 
@@ -65,17 +65,14 @@
                 <span>Sala</span>
                 <strong id="sala-jogo">---</strong>
             </div>
-
             <div class="info-pill">
                 <span>Rodada</span>
                 <strong id="rodada">0</strong>
             </div>
-
             <div class="info-pill">
                 <span>Jogadores</span>
                 <strong id="jogadores-conectados">0/0</strong>
             </div>
-
             <div class="info-pill">
                 <span>Fase</span>
                 <strong id="fase-jogo">---</strong>
@@ -91,13 +88,11 @@
                         <h2>Banca</h2>
                         <p>Compra até atingir pelo menos 17 pontos.</p>
                     </div>
-
                     <div class="pontuacao-banca">
                         <span>Pontos</span>
                         <strong id="pontos-banca">?</strong>
                     </div>
                 </div>
-
                 <div id="mao-banca" class="mao-cartas banca"></div>
             </section>
 
@@ -105,20 +100,20 @@
                 <div class="monte-cartas">
                     <div class="carta-verso pequena"></div>
                     <div class="carta-verso pequena segunda"></div>
-                    <span>Baralho</span>
+                    <span style="margin-top: 15px;">Baralho</span>
                 </div>
 
                 <div class="mensagem-mesa">
                     <h2 id="mensagem-principal">Aguardando mesa...</h2>
                     <p id="mensagem-secundaria">
-                        Quando todos entrarem, cada jogador receberá duas cartas.
+                        Quando todos entrarem, a rodada começa.
                     </p>
                 </div>
 
                 <div class="ranking-rapido">
                     <h3>Regras rápidas</h3>
                     <ol>
-                        <li>Chegue o mais perto possível de 21.</li>
+                        <li>Chegue o mais perto de 21.</li>
                         <li>Passou de 21, estourou.</li>
                         <li>Ás vale 1 ou 11.</li>
                         <li>Figuras valem 10.</li>
@@ -134,7 +129,6 @@
                         <p>Resultado individual contra a banca.</p>
                     </div>
                 </div>
-
                 <div id="lista-jogadores" class="lista-jogadores"></div>
             </section>
 
@@ -144,7 +138,6 @@
                         <span id="nome-local">Você</span>
                         <strong id="resultado-local">Aguardando</strong>
                     </div>
-
                     <div class="pontuacao-local">
                         <span>Pontos</span>
                         <strong id="pontos-local">0</strong>
@@ -171,7 +164,7 @@
                     </button>
 
                     <a href="/pages/blackjack_config.html" class="botao-link">
-                        Sair
+                        Sair da mesa
                     </a>
                 </div>
             </section>
