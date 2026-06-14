@@ -185,3 +185,16 @@ O ciclo produtivo do sistema foi segmentado em Sprints estruturadas em modelo á
 * **Emanuel Freitas Guimarães Costa (22 commits | +3.011 linhas / -561 linhas)**
   * Implementação das regras regionais, cálculo de manilhas fixas e fluxos lógicos do **Truco Mineiro**.
   * Integração das variáveis do motor central do Truco com a interface web de jogo.
+ 
+  * ## 📚 Cartões CRC e User Stories
+
+A documentação da engenharia de requisitos e a modelagem orientada a objetos desenvolvida para o sistema, contemplando os **Cartões CRC** e as **User Stories**, encontra-se fragmentada e organizada nos diretórios de documentação individuais de cada jogo.
+
+Acesse os documentos de cada motor através dos links diretos abaixo:
+
+* [🃏 Paciência](./Jogos/docs/README_Paciencia.md)
+* [🃏 FDP](./Jogos/docs/README_FDP.md)
+* [🃏 Truco](./Jogos/docs/README_Truco.md)
+* [🃏 Pife](./Jogos/docs/README_Pife.md)
+* [🃏 Poker](./Jogos/docs/README_Poker.md)
+* [🃏 Blackjack](./Jogos/docs/README_Blackjack.md)
