@@ -9,12 +9,10 @@
 #include "routes/BlackJackRoutes.hpp"
 
 void Routes::registrarRotas(crow::SimpleApp& app) {
-
-    CROW_ROUTE(app, "/")
-    ([]() {
-        crow::response res;
-        res.set_static_file_info("frontend/pages/menu.html");
-        return res;
+    CROW_ROUTE(app, "/")([]() {
+        crow::response resposta;
+        resposta.set_static_file_info("frontend/pages/menu.html");
+        return resposta;
     });
 
     FrontendRoutes::registrar(app);
