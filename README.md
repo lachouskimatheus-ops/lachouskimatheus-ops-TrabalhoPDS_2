@@ -186,7 +186,7 @@ O ciclo produtivo do sistema foi segmentado em Sprints estruturadas em modelo á
   * Implementação das regras regionais, cálculo de manilhas fixas e fluxos lógicos do **Truco Mineiro**.
   * Integração das variáveis do motor central do Truco com a interface web de jogo.
  
-  * ## 📚 Cartões CRC e User Stories
+📚 Cartões CRC e User Stories
 
 A documentação da engenharia de requisitos e a modelagem orientada a objetos desenvolvida para o sistema, contemplando os **Cartões CRC** e as **User Stories**, encontra-se fragmentada e organizada nos diretórios de documentação individuais de cada jogo.
 
