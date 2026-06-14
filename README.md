@@ -8,7 +8,7 @@ O sistema consolida um ecossistema de seis jogos clássicos integrados sob uma i
 
 ## 📽️ Demonstração Prática
 > **Atenção:** O vídeo abaixo possui menos de 5 minutos e demonstra o processo exato de compilação, inicialização e execução das principais funcionalidades do sistema.
-- [Clique aqui para assistir ao vídeo de demonstração](INSIRA_O_LINK_DO_SEU_VIDEO_AQUI)
+- [Clique aqui para assistir ao vídeo de demonstração](https://drive.google.com/file/d/16A752Q8NEaFzzyjgjf7nNgYaBz6dyagq/view?usp=drive_link)
 
 ---
 
