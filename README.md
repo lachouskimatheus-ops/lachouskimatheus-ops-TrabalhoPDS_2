@@ -197,4 +197,4 @@ Acesse os documentos de cada motor através dos links diretos abaixo:
 * [🃏 Truco](./Jogos/docs/README_Truco.md)
 * [🃏 Pife](./Jogos/docs/README_Pife.md)
 * [🃏 Poker](./Jogos/docs/README_Poker.md)
-* [🃏 Blackjack](./Jogos/docs/README_Blackjack.md)
+* [🃏 Blackjack](./Jogos/docs/README_BlackJack.md)
